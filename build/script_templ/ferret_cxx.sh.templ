@@ -1,0 +1,12 @@
+#!/bin/sh
+trap "exit 1" SIGINT
+
+echo " >>> CXX CMD     >$1< >$2<" 
+#g++ 
+
+g++ $F_CPPFLAGS -c -o $F_OUT $F_IN
+
+nl $F_IN > $F_OUT2
+
+exit 0
+

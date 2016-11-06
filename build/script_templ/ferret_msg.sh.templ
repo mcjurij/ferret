@@ -1,0 +1,22 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+# Script for $F_IN
+
+#BASE=/home/jur/fifo_wlpfo/srctree
+BASE=srctree
+CLASSPATH=$BASE/build/jar/
+
+NODEDIR=$F_MSG_NODEDIR
+
+#(cd $BASE/core_as/std_session_type/ && java -cp "$BASE/core_as/common/logmsgs/:$CLASSPATH/*"  -Dbase.java.dir=$CLASSPATH -Dlog4j.configuration=file:///$CLASSPATH/log4j.properties \
+#com.atos.poseidon.base.logservice.parser.LogParser cpp $BASE/core_as/std_session_type/src/m_std_session_type.msg )
+
+
+#(cd $BASE/core_as/std_session_type/ && java -cp "../../core_as/common/logmsgs/:../../build/jar/*"  -Dbase.java.dir=../../build/jar  -Dlog4j.configuration=file:../../build/jar/log4j.properties \
+#com.atos.poseidon.base.logservice.parser.LogParser cpp src/$F_MSG_IN )
+
+
+(cd $NODEDIR && java -cp "../../core_as/common/logmsgs/:../../build/jar/*"  -Dbase.java.dir=../../build/jar  -Dlog4j.configuration=file:../../build/jar/log4j.properties \
+com.atos.poseidon.base.logservice.parser.LogParser cpp src/$F_MSG_IN )
+

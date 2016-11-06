@@ -1,0 +1,28 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+export LANG=C
+
+OUTDIR=$F_OUTDIR
+cd $OUTDIR
+
+rm -f $F_OUT $F_OUT2
+rm -f $F_INTERM_OUT $F_INTERM_OUT2
+
+echo "bison -d $F_IN"
+bison -d $F_IN
+
+if [ -f $F_INTERM_OUT ]; then
+   mv -f $F_INTERM_OUT $F_OUT
+else
+   exit 1
+fi
+
+if [ -f $F_INTERM_OUT2 ]; then
+   mv -f $F_INTERM_OUT2 $F_OUT2
+else
+   exit 1
+fi
+
+exit 0

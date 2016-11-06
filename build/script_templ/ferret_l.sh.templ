@@ -1,0 +1,11 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+# rm -f $F_OUT
+
+echo "$F_TARGET -> $F_OUT"
+echo "g++  -o $F_OUT  $F_LFLAGS $F_IN  $F_LIBS $F_PLTF_LIBS $F_TOOL_LIBS $F_LIBDIRS $F_PLTF_LIBDIRS $F_TOOL_LIBDIRS"
+g++ -o $F_OUT  $F_LFLAGS $F_IN  $F_LIBS $F_PLTF_LIBS $F_TOOL_LIBS $F_LIBDIRS $F_PLTF_LIBDIRS $F_TOOL_LIBDIRS
+
+exit 0

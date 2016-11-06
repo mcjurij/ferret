@@ -1,0 +1,23 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+export LANG=C
+
+OUTDIR=$F_OUTDIR
+cd $OUTDIR
+
+INTERM_OUT=lex.yy.cc
+rm -f $F_OUT
+rm -f $INTERM_OUT
+
+echo "flex $F_IN"
+flex $F_IN
+
+if [ -f $INTERM_OUT ]; then
+   mv -f $INTERM_OUT $F_OUT
+else
+   exit 1
+fi
+
+exit 0
