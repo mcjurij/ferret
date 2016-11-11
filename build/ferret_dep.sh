@@ -1,8 +1,8 @@
 #!/bin/sh
 echo "dependencies for $1"
 #g++ -DCOMPILER_VERSION=531  -DOS_LINUX -DUNIX  -DNO_TRACE -DCARMA_NO_TRACE  -DWITH_NONAMESPACES -m64 -DDEBUG -DCARMA_ORA -DOTL_ORA11G_R2 -DOTL_ORA_TIMESTAMP -DCARMA_STRCASECMP_IN_STRINGS_H -MM -MG $1 > $2
-#echo CWD is `pwd` 
-../bin/ferret_inc $1 > $2
+ 
+build/bin/ferret_inc $1 > $2
 
 exit 0
 
