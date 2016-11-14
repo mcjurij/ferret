@@ -4,6 +4,6 @@
 #include <iostream>
 
 void print_localtime() {
-  std::time_t result = std::time(nullptr);
+  std::time_t result = std::time(0);
   std::cout << std::asctime(std::localtime(&result));
 }
