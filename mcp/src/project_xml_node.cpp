@@ -12,31 +12,6 @@
 
 using namespace std;
 
-//#define USE_CPP_RELATIVE_TO_SRC_HACK
-
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-static string join_hack( const string &sep1, const vector<string> &a, bool beforeFirst)
-{
-    size_t i;
-    string s;
-    int n = 0;
-    for( i=0; i < a.size(); i++)
-    {
-        if( a[i].length() > 0 )
-        {
-            if( n==0 && beforeFirst )
-                s.append( sep1 );
-            else if( n>0 )
-                s.append( sep1 );
-            n++;
-            s.append( "../../../" + a[i] );
-        }
-    }
-    
-    return s;
-}
-#endif
-
 static map<string, ProjectXmlNode *> nameToNodeMap;
 
 bool ProjectXmlNode::xmlHasErrors = false;
@@ -521,6 +496,15 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
     cflagss   << " " << cm.getCFlagArgs();
     lflagss   << " " << cm.getLinkerFlagArgs();
     eflagss   << " " << cm.getLinkExecutableFlagArgs();
+
+    if( ps->hasCompileTrait( type ) )
+    {
+        const CompileTrait &ct = ps->getCompileTrait( type );
+        cppflagss << " " << ct.getCppFlagArgs();
+        cflagss   << " " << ct.getCFlagArgs();
+        lflagss   << " " << ct.getLinkerFlagArgs();
+        eflagss   << " " << ct.getLinkExecutableFlagArgs();
+    }
     
     for( i = 0; i < usetools.size(); i++)    // tools used in this node
     {
@@ -542,11 +526,7 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
         toolLibDirss << " " << ts.getLibDirArgs();
     }
 
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-    incss << join_hack( " -I", searchIncDirs, true); // hack to prepend ../../
-#else
     incss << join( " -I", searchIncDirs, true);     // includes from this node
-#endif
     includesArg = incss.str();
     toolIncArg = toolincss.str();
     
@@ -663,11 +643,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
                 fid = fileMan.addCommand( o, "Cpp", this);
                 fileMan.addDependency( fid, tid);
                 
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-                pegCppScript( fid, bn, o, compileMode);
-#else
                 pegCppScript( fid, srcfn, o, compileMode);
-#endif
                 objs.push_back( o );
             }
             else if( ext == ".c" )

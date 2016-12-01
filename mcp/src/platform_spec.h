@@ -90,6 +90,42 @@ private:
 };
 
 
+class CompileTrait
+{
+public:
+    CompileTrait()
+        : type( "INVALID" )
+    {
+    }
+    
+    CompileTrait( const std::string &type )
+        : type(type)
+    {
+    }
+
+    std::string getType() const   // get the type ("library") this trait is for
+    { return type; }
+    
+    void addCppFlag( const std::string &flag );
+    void addCFlag( const std::string &flag );
+    void addLFlag( const std::string &flag );
+    void addLEFlag( const std::string &flag );
+    
+    std::string getCppFlagArgs() const;
+    std::string getCFlagArgs() const;
+    std::string getLinkerFlagArgs() const;
+    std::string getLinkExecutableFlagArgs() const;
+    
+private:
+    std::string type;
+
+    std::vector<std::string> cppflags;         // c++ compiler flags for compile mode
+    std::vector<std::string> cflags;           // c compiler flags for compile mode
+    std::vector<std::string> lflags;           // link library flags for compile mode
+    std::vector<std::string> eflags;           // link executable flags for compile mode
+};
+
+
 class PlatformSpec
 {
     
@@ -102,9 +138,12 @@ public:
     bool read( const std::string &fn );
 
     void addCompileMode( CompileMode cm );
+    void addCompileTrait( CompileTrait ct );
     void addTool( ToolSpec t );
     bool hasCompileMode( const std::string &mode );
     CompileMode getCompileMode( const std::string &mode );
+    bool hasCompileTrait( const std::string &type );
+    CompileTrait getCompileTrait( const std::string &type );
     ToolSpec getTool( const std::string &name );
 
     std::string getCompilerVersion() const;
@@ -137,8 +176,9 @@ private:
     std::vector<std::string> libs;
     std::vector<std::string> libDirs;
     
-    std::vector<CompileMode> compileModes;
-    std::vector<ToolSpec>    tools;
+    std::vector<CompileMode>  compileModes;     // DEBUG, RELEASE...
+    std::vector<CompileTrait> compileTraits;    // library
+    std::vector<ToolSpec>     tools;
     
 };
 
