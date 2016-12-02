@@ -162,11 +162,11 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
     e->downwards = (command_t **)malloc( sizeof(command_t *) * 32 );
     memset( e->downwards, 0, sizeof(command_t *) * 32);  // so I can sleep better...
     e->downward_size = 0;
+    e->downward_deep = true;
 
-    //unsigned int dwn_weak_s;
-    //e->downward_weak = (int *)hash_set_get_as_array( cmd->downward_weak_set, &dwn_weak_s);
-    //e->downward_weak_size = dwn_weak_s;
-
+    if( !e->xmlNode->doDeep() && strcmp( e->dep_type, "L") == 0 )  // do not go deep for shared libraries
+        e->downward_deep = false;
+    
     e->marked_by_deps_changed = cmd->mark_by_deps_changed;
     
     if( hash_set_has_id( global_mbd_set, e->file_id) )
@@ -279,7 +279,9 @@ void Engine::doPointers()
         {
             command_t *d = find_command( c->deps[k] );
             c->upwards[k] = d;
-            add_downward_ptr( d, c);           // downward is from d to c (=d is a prerequisite for c)
+
+            if( d->downward_deep  )
+                add_downward_ptr( d, c);        // downward is from d to c (=d is a prerequisite for c)
         }
 
         if( c->deps_size == 0 )
@@ -288,8 +290,8 @@ void Engine::doPointers()
 }
 
 
-static unsigned char typeind_id = 0x01;
-static unsigned char typeind_ts = 0x05;
+static const unsigned char typeind_id = 0x01;
+static const unsigned char typeind_ts = 0x05;
 void Engine::writeScfsTimes()
 {
     if( !scfs )

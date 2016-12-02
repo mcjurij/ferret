@@ -71,7 +71,9 @@ class Engine : public EngineBase
         int downward_cap;
         struct command **downwards;
         int downward_size;
-
+        bool downward_deep;          /* if true (default) all downward deps are created and thus followed,
+                                        if false no downward deps are created and thus this node becomes a final target
+                                     */
         bool marked_by_deletion, marked_by_deps_changed;
         
         hash_set_t *dominator_set;   // downwards, not to be confused with "dominating set"

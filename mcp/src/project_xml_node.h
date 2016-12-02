@@ -109,6 +109,7 @@ public:
     void createCommands( FileManager &fileMan );
     void pegCppScript( file_id_t cpp_id, const std::string &in, const std::string &out, const std::string &compileMode);
     void pegCScript( file_id_t cpp_id, const std::string &in, const std::string &out, const std::string &compileMode);
+    bool doDeep();   // wether to follow library from this node, via downward pointers, to all downward nodes or not
     
     //file_id_t getTargetFileId() const
     //{ return target_file_id; }

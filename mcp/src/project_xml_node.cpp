@@ -737,6 +737,21 @@ void ProjectXmlNode::pegCScript( file_id_t c_id, const string &in, const string 
 }
 
 
+bool ProjectXmlNode::doDeep()       // wether to follow library, via downward pointers, to all downward nodes or not
+{
+    if( type == "library" )
+    {
+        if( BuildProps::getTheBuildProps()->hasKey( "FERRET_DEEP" ) &&
+            BuildProps::getTheBuildProps()->getBoolValue( "FERRET_DEEP" ) )
+            return true;
+        else
+            return false;
+    }
+    else
+        return true;
+}
+
+
 ProjectXmlNode *ProjectXmlNode::getNodeByName( const string &nodeName )
 {
     if( nodeName.length() == 0 || nodeName == "*" )
