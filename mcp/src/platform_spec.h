@@ -160,6 +160,9 @@ public:
     std::string getSoFileName( const std::string &lib ) const
     { return "lib" + lib + soext; }
     
+    std::string getStaticlibFileName( const std::string &lib ) const
+    { return "lib" + lib + staticext; }
+    
 private:
     static PlatformSpec *thePlatformSpec;
 

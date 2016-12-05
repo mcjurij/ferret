@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static const string ferretVersion = "0.9.5";
+static const string ferretVersion = "0.9.7";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -57,6 +57,7 @@ static void show_usage()
         "   -M <mode> <base_dir>    init with compile mode <mode>\n"
         "   -p <n>                  use <n> processors, default is 1\n"
         "   --stop                  stop on first error, default is ignore\n"
+        "   --deep                  follow dependencies of shared libraries\n"
         "   --prop <properties>     use <properties> file when init, default is build/build_$HOSTNAME.properties\n"
         "   --proj <project_dir>    use <project_dir> as root node, default is build (using build/project.xml)\n"
         "   -q                      quick mode, build project of the sub directory only\n"

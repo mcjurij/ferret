@@ -1,0 +1,11 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+# rm -f $F_OUT
+
+echo "$F_TARGET -> $F_OUT"
+echo "ar rcs $F_AFLAGS $F_OUT $F_IN"
+ar rcs $F_AFLAGS $F_OUT $F_IN
+
+exit 0

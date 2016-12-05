@@ -55,7 +55,7 @@ void FileCleaner::clean( const set<string> &userTargets )
             if( objClean && removeFile( cmd.file_name ) )
                 cnt_obj++;
         }
-        else if( cmd.dep_type == "L" )
+        else if( cmd.dep_type == "L" || cmd.dep_type == "A" )
         {
             if( libexeClean && removeFile( cmd.file_name ) )
                 cnt_lib++;

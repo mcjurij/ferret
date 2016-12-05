@@ -319,7 +319,7 @@ vector<string> ProjectXmlNode::traverseXmlStructureForChildren( int level )
             
             ProjectXmlNode *dep = dirToNodeMap.at( subdir );
             
-            if( dep->getType() == "library" )
+            if( dep->getType() == "library" || dep->getType() == "staticlib" )
             {
                 string t = dep->getTarget();
                 libs.push_back( t );
@@ -537,15 +537,18 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
     cflagsArg = cflagss.str();
     
     lflagsArg = lflagss.str();
+    aflagsArg = "";                      // TODO
     eflagsArg = eflagss.str();
 
     toolLibArg    = toolLibss.str();
     toolLibDirArg = toolLibDirss.str();
     
     if( type == "library" )
-        scriptTarget = ps->getSoFileName( target );            
+        scriptTarget = ps->getSoFileName( target );
     else if( type == "executable" )
         scriptTarget = target;
+    else if( type == "staticlib" )
+        scriptTarget = ps->getStaticlibFileName( target );
 }
 
 
@@ -554,7 +557,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
     string compileMode = fileMan.getCompileMode();
     
-    if( type == "library" || type == "executable" )
+    if( type == "library" || type == "executable" || type == "staticlib" )
     {
         string l_outputdir = getLibDir();
         string b_outputdir = getBinDir();
@@ -577,6 +580,15 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
             setReplKeyValueForId( target_file_id, "F_EFLAGS", eflagsArg);
             setReplKeyValueForId( target_file_id, "F_OUT", t);
         }
+        else if( type == "staticlib" )
+        {
+            string t = l_outputdir + scriptTarget;
+            target_file_id = fileMan.addCommand( t, "A", this);
+
+            setExtensionScriptTemplNameForId( target_file_id, "ferret_a.sh.templ", "ferret_a__#__" + compileMode + ".sh");
+            setReplKeyValueForId( target_file_id, "F_AFLAGS", aflagsArg);
+            setReplKeyValueForId( target_file_id, "F_OUT", t);
+        }
         
         setReplKeyValueForId( target_file_id, "F_ID", target_file_id);
         setReplKeyValueForId( target_file_id, "F_TARGET", scriptTarget);
@@ -589,7 +601,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
     }
     
     
-    if( type == "library" || type == "executable" )
+    if( type == "library" || type == "executable" || type == "staticlib" )
     {
         size_t i;
         

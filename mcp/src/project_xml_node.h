@@ -163,6 +163,7 @@ private:
     std::string              cppflagsArg;
     std::string              cflagsArg;
     std::string              lflagsArg;
+    std::string              aflagsArg;          // flags for static lib (ar), currently unused
     std::string              eflagsArg;
     std::string              pltfLibArg;
     std::string              pltfLibDirArg;
