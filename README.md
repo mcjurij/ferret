@@ -1,9 +1,8 @@
 # ferret
 A fast build system for Linux and C/C++ users
 
-A project with roughly 2100 C++ files (excluding headers) is build in around 4 minutes on a 8 core machine. When the build is up to date, the answer to the question "what do I have to built now?" is given in about 1 second (when the file system cache is hot) for the same amount of files.
+A project with roughly 2100 C++ compilation units is build in around 4 minutes on a 8 core machine. When the build is up to date, the answer to the question "what do I have to built now?" is given in about 1 second (when the file system cache is hot) for the same amount of files.
 
-Ferret reads its configuration from very simple XML files. One with global options (compiler flags, external libraries etc.) and one for each directory called project.xml. Using the sub-tag in a project.xml you can refer to another project.xml. Adding a file to the build is simple: You simply create it in a directory that has a project.xml file and it becomes part of the build.
+Ferret reads its configuration from very simple XML files. One with global options (compiler flags, external libraries etc.) and one for each directory called project.xml. Every executable or library has its own sub directory and project.xml. Using the sub-tag in a project.xml you can refer to another project.xml. Adding a file to the build is simple: You simply put it in the `src` directory that is alongside the project.xml file and it becomes part of the build. 
 
-Stay tuned for more to come.
-
+To get started jump to the wiki [home](https://github.com/mcjurij/ferret/wiki).
