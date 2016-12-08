@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project module="ncurses_example" name="hello" target="hello_ncurses" type="executable">
+  <usetool name="ncurses" />
+</project>
