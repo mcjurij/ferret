@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <platform>
-  <define name="TEST" value="MOTHERFUCKER" />
-  <define name="TEST2" value="-D${TEST}_FROM_HELL" />
     <compiler_version value="GCC"/>
 
     <compiler value="/usr/bin/g++"/>
@@ -33,8 +31,7 @@
       
     <tool name="ncurses">
         <cppflags value="-DDUMMY_EXAMPLE_DEFINE_FOR_CPP"/>
-        <!-- <cflags value="-DDUMMY_EXAMPLE_DEFINE_FOR_C"/> -->
-        <cflags value="$(BOO)" />
+        <cflags value="-DDUMMY_EXAMPLE_DEFINE_FOR_C"/>
         <incdir value="/usr/include"/>
         <libdir value="/usr/lib64"/>
         <lib value="ncurses"/>
