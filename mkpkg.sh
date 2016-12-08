@@ -7,15 +7,12 @@ build/bin/ferret -M RELEASE .
 build/bin/ferret -c
 
 # build
-build/bin/ferret
+build/bin/ferret -p 5 
 
 cp -f bin/RELEASE/ferret     build/bin
 cp -f bin/RELEASE/ferret_inc build/bin
 
-
-mv -f build/temp/ferret  /tmp/
-tar zcvf ferret_build.tgz build
-mv -f /tmp/ferret build/temp/
+tar zcvf ferret_build.tgz build/bin build/platform_$HOSTNAME.xml build/build_$HOSTNAME.properties build/ferret_dep.sh build/script_templ
 
 exit 0
 

@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static const string ferretVersion = "0.9.5";
+static const string ferretVersion = "0.9.7";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -57,6 +57,7 @@ static void show_usage()
         "   -M <mode> <base_dir>    init with compile mode <mode>\n"
         "   -p <n>                  use <n> processors, default is 1\n"
         "   --stop                  stop on first error, default is ignore\n"
+        "   --deep                  follow dependencies of shared libraries\n"
         "   --prop <properties>     use <properties> file when init, default is build/build_$HOSTNAME.properties\n"
         "   --proj <project_dir>    use <project_dir> as root node, default is build (using build/project.xml)\n"
         "   -q                      quick mode, build project of the sub directory only\n"
@@ -257,6 +258,8 @@ int use_cpus = 1;
 bool compileModeSet = false;
 string compileMode;
 bool stopOnErr = false;
+bool downwardDeep = false;
+
 static void readBuildProperties( bool initMode, const string &build_properies, const string &projDir)
 {
     if( verbosity > 0 )
@@ -364,6 +367,22 @@ static void readBuildProperties( bool initMode, const string &build_properies, c
             cout << "Stop on first error turned on by command line argument.\n";
         BuildProps::getTheBuildProps()->setBoolValue( "FERRET_STOP", true);
     }
+
+    if( !downwardDeep )
+    {
+        if( BuildProps::getTheBuildProps()->hasKey( "FERRET_DEEP" ) )
+        {
+            downwardDeep = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_DEEP" );
+            if( downwardDeep && verbosity > 0 )
+                cout << "Deep mode turned on by build properties setting.\n";
+        }
+    }
+    else
+    {
+        if( verbosity > 0 )
+            cout << "Deep mode turned on by command line argument.\n";
+        BuildProps::getTheBuildProps()->setBoolValue( "FERRET_DEEP", true);
+    }
 }
 
 
@@ -436,6 +455,8 @@ int main( int argc, char **argv)
             }
             else if( arg == "--stop" )
                 stopOnErr = true;
+            else if( arg == "--deep" )
+                downwardDeep = true;
             else if( arg == "-t" )
             {
                 if( (i+1)<argc )

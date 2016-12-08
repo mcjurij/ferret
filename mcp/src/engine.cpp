@@ -162,11 +162,11 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
     e->downwards = (command_t **)malloc( sizeof(command_t *) * 32 );
     memset( e->downwards, 0, sizeof(command_t *) * 32);  // so I can sleep better...
     e->downward_size = 0;
+    e->downward_deep = true;
 
-    //unsigned int dwn_weak_s;
-    //e->downward_weak = (int *)hash_set_get_as_array( cmd->downward_weak_set, &dwn_weak_s);
-    //e->downward_weak_size = dwn_weak_s;
-
+    if( e->xmlNode && !e->xmlNode->doDeep() && strcmp( e->dep_type, "L") == 0 )  // do not go deep for shared libraries
+        e->downward_deep = false;
+    
     e->marked_by_deps_changed = cmd->mark_by_deps_changed;
     
     if( hash_set_has_id( global_mbd_set, e->file_id) )
@@ -279,7 +279,8 @@ void Engine::doPointers()
         {
             command_t *d = find_command( c->deps[k] );
             c->upwards[k] = d;
-            add_downward_ptr( d, c);           // downward is from d to c (=d is a prerequisite for c)
+
+            add_downward_ptr( d, c);        // downward is from d to c (=d is a prerequisite for c)
         }
 
         if( c->deps_size == 0 )
@@ -288,8 +289,8 @@ void Engine::doPointers()
 }
 
 
-static unsigned char typeind_id = 0x01;
-static unsigned char typeind_ts = 0x05;
+static const unsigned char typeind_id = 0x01;
+static const unsigned char typeind_ts = 0x05;
 void Engine::writeScfsTimes()
 {
     if( !scfs )
@@ -399,22 +400,32 @@ hash_set_t *Engine::traverse_union_tree( command_t *e, int level)
     if( e->dominator_set != 0 )
         return e->dominator_set;
     
-    hash_set_t *hs = new_hash_set( 307 );
-    hash_set_add( hs, e->file_id);
+    hash_set_t *hs = 0;
     
-    int k;
-    //int i;
-    for( k=0; k < e->downward_size; k++)
+    if( e->downward_deep )
     {
-        command_t *d = e->downwards[ k ];
-        hash_set_t *sub = traverse_union_tree( d, level+1);
-
-        if( sub )
+        int k;
+        
+        hs = new_hash_set( 307 );  // difficult to guess here, headers dominate much more than object files for example
+        hash_set_add( hs, e->file_id);
+        
+        for( k=0; k < e->downward_size; k++)
         {
-            hash_set_union( hs, sub);
+            command_t *d = e->downwards[ k ];
+            hash_set_t *sub = traverse_union_tree( d, level+1);
+            
+            if( sub )
+            {
+                hash_set_union( hs, sub);
+            }
         }
     }
-
+    else
+    {
+        hs = new_hash_set( 3 );
+        hash_set_add( hs, e->file_id);  // this node dominates no other nodes (for shared libraries)
+    }
+    
     e->dominator_set = hs;  // all nodes this node dominates
     
     return hs;
@@ -456,7 +467,7 @@ void Engine::traverse_for_dominator_sets()
         {
             File f = FindFiles::getCachedFile( c->file_name );
             assert( f.getPath().length() > 0 );
-            
+
             if( !scfs )
                 all_dominators.push_back( Dominator( c->file_id, f.getTimeMs(), c->dominator_set) );  // file exists or is D type, no scfs
             else if( c->scfs_time > 0 )
@@ -791,44 +802,6 @@ void Engine::move_wavefront()
         unsigned int i, s;
         int *a = hash_set_get_as_array( wavefront_ids, &s);
         
-#ifdef NOPE_TOO_MUCH_WORK_FOR_GAIN
-        unsigned int max_idx = 0, min_idx = 0;
-        int max_dss, min_dss;
-        
-        if( s > 1 && s < 60 )
-        {
-            for( i = 0; i < s; i++)
-            {
-                command_t *c = find_command( a[i] );
-                int dom_set_size = hash_set_get_size( c->dominator_set );
-
-                if( i == 0 )
-                {
-                    max_dss = min_dss = dom_set_size;
-                    max_idx = min_idx = 0;
-                }
-                else
-                {
-                    if( dom_set_size > max_dss )
-                    {
-                        max_dss = dom_set_size;
-                        max_idx = i;
-                    }
-                    if( dom_set_size < min_dss )
-                    {
-                        min_dss = dom_set_size;
-                        min_idx = i;
-                    }
-                }
-            }
-
-            if( min_idx != max_idx )
-            {
-                cout << "work planner   reordering by swapping " << a[min_idx] << " and " << a[max_idx] << "\n";
-                swap( a[min_idx], a[max_idx]);
-            }
-        }
-#endif 
         for( i = 0; i < s; i++)
         {
             command_t *c = find_command( a[i] );
@@ -881,15 +854,23 @@ void Engine::move_wavefront()
                 
                 hash_set_remove( wavefront_ids, c->file_id);  // towards the end this will remove all final targets
                 activity++;
-                
-                for( int k = 0; k < c->downward_size; k++)
-                {
-                    command_t *down = c->downwards[k];
 
-                    if( verbosity > 2 )
-                        cout << "work planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
-                             << down->file_name << " (" << c->file_id << ")\n";
-                    hash_set_add( wavefront_ids, down->file_id);
+                if( c->downward_deep )
+                {
+                    for( int k = 0; k < c->downward_size; k++)
+                    {
+                        command_t *down = c->downwards[k];
+                        
+                        if( verbosity > 2 )
+                            cout << "work planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
+                                 << down->file_name << " (" << down->file_id << ")\n";
+                        hash_set_add( wavefront_ids, down->file_id);
+                    }
+                }
+                else
+                {
+                    if( verbosity > 1 )
+                         cout << "work planner   not going deep at " << c->file_name << " (" << c->file_id << ")\n";
                 }
             }
         }

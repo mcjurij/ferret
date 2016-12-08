@@ -12,31 +12,6 @@
 
 using namespace std;
 
-//#define USE_CPP_RELATIVE_TO_SRC_HACK
-
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-static string join_hack( const string &sep1, const vector<string> &a, bool beforeFirst)
-{
-    size_t i;
-    string s;
-    int n = 0;
-    for( i=0; i < a.size(); i++)
-    {
-        if( a[i].length() > 0 )
-        {
-            if( n==0 && beforeFirst )
-                s.append( sep1 );
-            else if( n>0 )
-                s.append( sep1 );
-            n++;
-            s.append( "../../../" + a[i] );
-        }
-    }
-    
-    return s;
-}
-#endif
-
 static map<string, ProjectXmlNode *> nameToNodeMap;
 
 bool ProjectXmlNode::xmlHasErrors = false;
@@ -344,7 +319,7 @@ vector<string> ProjectXmlNode::traverseXmlStructureForChildren( int level )
             
             ProjectXmlNode *dep = dirToNodeMap.at( subdir );
             
-            if( dep->getType() == "library" )
+            if( dep->getType() == "library" || dep->getType() == "staticlib" )
             {
                 string t = dep->getTarget();
                 libs.push_back( t );
@@ -521,6 +496,15 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
     cflagss   << " " << cm.getCFlagArgs();
     lflagss   << " " << cm.getLinkerFlagArgs();
     eflagss   << " " << cm.getLinkExecutableFlagArgs();
+
+    if( ps->hasCompileTrait( type ) )
+    {
+        const CompileTrait &ct = ps->getCompileTrait( type );
+        cppflagss << " " << ct.getCppFlagArgs();
+        cflagss   << " " << ct.getCFlagArgs();
+        lflagss   << " " << ct.getLinkerFlagArgs();
+        eflagss   << " " << ct.getLinkExecutableFlagArgs();
+    }
     
     for( i = 0; i < usetools.size(); i++)    // tools used in this node
     {
@@ -542,11 +526,7 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
         toolLibDirss << " " << ts.getLibDirArgs();
     }
 
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-    incss << join_hack( " -I", searchIncDirs, true); // hack to prepend ../../
-#else
     incss << join( " -I", searchIncDirs, true);     // includes from this node
-#endif
     includesArg = incss.str();
     toolIncArg = toolincss.str();
     
@@ -557,15 +537,18 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
     cflagsArg = cflagss.str();
     
     lflagsArg = lflagss.str();
+    aflagsArg = "";                      // TODO
     eflagsArg = eflagss.str();
 
     toolLibArg    = toolLibss.str();
     toolLibDirArg = toolLibDirss.str();
     
     if( type == "library" )
-        scriptTarget = ps->getSoFileName( target );            
+        scriptTarget = ps->getSoFileName( target );
     else if( type == "executable" )
         scriptTarget = target;
+    else if( type == "staticlib" )
+        scriptTarget = ps->getStaticlibFileName( target );
 }
 
 
@@ -574,7 +557,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
     string compileMode = fileMan.getCompileMode();
     
-    if( type == "library" || type == "executable" )
+    if( type == "library" || type == "executable" || type == "staticlib" )
     {
         string l_outputdir = getLibDir();
         string b_outputdir = getBinDir();
@@ -597,6 +580,15 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
             setReplKeyValueForId( target_file_id, "F_EFLAGS", eflagsArg);
             setReplKeyValueForId( target_file_id, "F_OUT", t);
         }
+        else if( type == "staticlib" )
+        {
+            string t = l_outputdir + scriptTarget;
+            target_file_id = fileMan.addCommand( t, "A", this);
+
+            setExtensionScriptTemplNameForId( target_file_id, "ferret_a.sh.templ", "ferret_a__#__" + compileMode + ".sh");
+            setReplKeyValueForId( target_file_id, "F_AFLAGS", aflagsArg);
+            setReplKeyValueForId( target_file_id, "F_OUT", t);
+        }
         
         setReplKeyValueForId( target_file_id, "F_ID", target_file_id);
         setReplKeyValueForId( target_file_id, "F_TARGET", scriptTarget);
@@ -609,7 +601,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
     }
     
     
-    if( type == "library" || type == "executable" )
+    if( type == "library" || type == "executable" || type == "staticlib" )
     {
         size_t i;
         
@@ -663,11 +655,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
                 fid = fileMan.addCommand( o, "Cpp", this);
                 fileMan.addDependency( fid, tid);
                 
-#ifdef USE_CPP_RELATIVE_TO_SRC_HACK
-                pegCppScript( fid, bn, o, compileMode);
-#else
                 pegCppScript( fid, srcfn, o, compileMode);
-#endif
                 objs.push_back( o );
             }
             else if( ext == ".c" )
@@ -758,6 +746,21 @@ void ProjectXmlNode::pegCScript( file_id_t c_id, const string &in, const string 
     setReplKeyValueForId( c_id, "F_OUT", out);
     setReplKeyValueForId( c_id, "F_TARGET", scriptTarget);
     setReplKeyValueForId( c_id, "F_SRCDIR", getSrcDir());
+}
+
+
+bool ProjectXmlNode::doDeep()       // wether to follow library, via downward pointers, to all downward nodes or not
+{
+    if( type == "library" )
+    {
+        if( BuildProps::getTheBuildProps()->hasKey( "FERRET_DEEP" ) &&
+            BuildProps::getTheBuildProps()->getBoolValue( "FERRET_DEEP" ) )
+            return true;
+        else
+            return false;
+    }
+    else
+        return true;
 }
 
 

@@ -1,0 +1,8 @@
+bin
+obj
+build/temp
+ferret_db
+ferret_ignhdr
+last_run.html
+last_run.txt
+

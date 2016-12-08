@@ -182,7 +182,7 @@ file_id_t FileManager::addCommand( const string &fn, const string &cmd, ProjectX
 file_id_t FileManager::addExtensionCommand( const string &fn, const std::string &cmd, ProjectXmlNode *node)
 {
     assert( node );
-    assert( cmd != "D" && cmd != "Cpp" && cmd != "C" && cmd != "L" && cmd != "X" );
+    assert( cmd != "D" && cmd != "Cpp" && cmd != "C" && cmd != "L" && cmd != "X" && cmd != "A" );
     
     return addCommand( fn, cmd, node);
 }

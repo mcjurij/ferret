@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project module="bazel_example" name="bazel_lib" target="bazellib" type="library">
- <cppflags value=" -m64 -fPIC " />
+ <!-- <cppflags value=" -m64 -fPIC " /> -->
 </project>

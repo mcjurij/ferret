@@ -112,6 +112,54 @@ string CompileMode::getLinkExecutableFlagArgs() const
 }
 
 // -----------------------------------------------------------------------------
+void CompileTrait::addCppFlag( const string &flag )
+{
+    cppflags.push_back( flag );
+}
+
+
+void CompileTrait::addCFlag( const string &flag )
+{
+    cflags.push_back( flag );
+}
+
+
+void CompileTrait::addLFlag( const string &flag )
+{
+    lflags.push_back( flag );
+}
+
+
+void CompileTrait::addLEFlag( const string &flag )
+{
+    eflags.push_back( flag );
+}
+
+
+string CompileTrait::getCppFlagArgs() const
+{
+    return join( " ", cppflags, false);
+}
+
+
+string CompileTrait::getCFlagArgs() const
+{
+    return join( " ", cflags, false);
+}
+
+
+string CompileTrait::getLinkerFlagArgs() const
+{
+    return join( " ", lflags, false);
+}
+
+
+string CompileTrait::getLinkExecutableFlagArgs() const
+{
+    return join( " ", eflags, false);
+}
+
+// -----------------------------------------------------------------------------
 PlatformSpec *PlatformSpec::thePlatformSpec = 0;
 
 PlatformSpec *PlatformSpec::getThePlatformSpec()
@@ -135,6 +183,7 @@ bool PlatformSpec::read( const string &fn )
     SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
     ToolSpec currTool;
     CompileMode currCm;
+    CompileTrait currCt;
     
     while( !xmls->AtEnd() )
     {
@@ -189,6 +238,41 @@ bool PlatformSpec::read( const string &fn )
                 
                 if( attr.HasAttribute( "value" ) )
                     currCm.addLEFlag(  attr.Value( "value" ) );
+            }
+            else if( xmls->Path() == "/platform/compile_trait" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "type" ) )
+                    currCt = CompileTrait( attr.Value( "type" ) );
+            }
+            else if( xmls->Path() == "/platform/compile_trait/cppflags" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "value" ) )
+                    currCt.addCppFlag( attr.Value( "value" ) );
+            }
+            else if( xmls->Path() == "/platform/compile_trait/cflags" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "value" ) )
+                    currCt.addCFlag(  attr.Value( "value" ) );
+            }
+            else if( xmls->Path() == "/platform/compile_trait/lflags" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "value" ) )
+                    currCt.addLFlag( attr.Value( "value" ) );
+            }
+            else if( xmls->Path() == "/platform/compile_trait/eflags" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "value" ) )
+                    currCt.addLEFlag( attr.Value( "value" ) );
             }
             else if( xmls->Path() == "/platform/tool" )
             {
@@ -339,6 +423,10 @@ bool PlatformSpec::read( const string &fn )
             {
                 addCompileMode( currCm );
             }
+            else if( xmls->Path() == "/platform" && xmls->Name() == "compile_trait" )
+            {
+                addCompileTrait( currCt );
+            }
             //cout << "\n";
         }
     }
@@ -357,6 +445,10 @@ void PlatformSpec::addCompileMode( CompileMode cm )
     compileModes.push_back( cm );
 }
 
+void PlatformSpec::addCompileTrait( CompileTrait ct )
+{
+    compileTraits.push_back( ct );
+}
 
 void PlatformSpec::addTool( ToolSpec t )
 {
@@ -385,6 +477,30 @@ CompileMode PlatformSpec::getCompileMode( const string &mode )
             return compileModes[i];
     
     return CompileMode( "INVALID" );
+}
+
+
+bool PlatformSpec::hasCompileTrait( const string &type )
+{
+    size_t i;
+    
+    for( i = 0; i < compileTraits.size(); i++)
+        if( type == compileTraits[i].getType() )
+            return true;
+    
+    return false;
+}
+
+
+CompileTrait PlatformSpec::getCompileTrait( const string &type )
+{
+    size_t i;
+    
+    for( i = 0; i < compileTraits.size(); i++)
+        if( type == compileTraits[i].getType() )
+            return compileTraits[i];
+    
+    return CompileTrait( "INVALID" );
 }
 
 

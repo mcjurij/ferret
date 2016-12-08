@@ -4,12 +4,10 @@
     <compiler_version value="GCC492"/>
 
     <compiler value="/usr/bin/g++"/>
-    <cppflags value=" -DCOMPILER_VERSION=492"/>
     <cppflags value=" -DOS_LINUX -DUNIX"/>
     <cppflags value=" -m64 -Wall -march=nocona " />
 
     <compilerc value="/usr/bin/gcc"/>
-    <cflags value=" -DCOMPILER_VERSION=447"/>
     <cflags value=" -DOS_LINUX -DUNIX"/>
     <cflags value=" -m64  -march=nocona " />
 
@@ -26,13 +24,17 @@
         <cppflags value=" -O2 -DRELEASE "/> 
         <cflags value=" -O2 -DRELEASE "/> 
     </compile_mode>
-
-    <depends value="$(OBJSCPP:.o=.d)" />
+    
+    <compile_trait type="library" >
+      <cppflags value=" -fPIC "/> 
+      <cflags value=" -fPIC "/> 
+    </compile_trait>
+    
     <soext value=".so"/>
     <staticext value=".a"/>
 
-    <lflags value=" -m64 -fPIC -g -Wl,-E -shared "/>
-    <eflags value=" -m64 -fPIC -g -Wl,-E "/> 
+    <lflags value=" -m64 -g -Wl,-E -shared "/>
+    <eflags value=" -m64 -g -Wl,-E "/> 
       
     <!-- <lib    value="rt" /> -->
 </platform>
