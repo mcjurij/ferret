@@ -9,8 +9,10 @@
 #include "glob_utility.h"
 #include "extension.h"
 #include "engine.h"
+#include "platform_defines.h"
 
 using namespace std;
+
 
 static map<string, ProjectXmlNode *> nameToNodeMap;
 
@@ -133,24 +135,24 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
                 if( attr.HasAttribute( "value" ) )
-                    incdirs.push_back( attr.Value( "value" ) );
+                    incdirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
             }
             else if( xmls->Path() == "/project/cppflags" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
-                if( attr.HasAttribute( "name" ) )
+                if( attr.HasAttribute( "value" ) )
                 {
-                    cppflags.push_back( attr.Value( "name" ) );
+                    cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
                 }
             }
             else if( xmls->Path() == "/project/cflags" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
-                if( attr.HasAttribute( "name" ) )
+                if( attr.HasAttribute( "value" ) )
                 {
-                    cflags.push_back( attr.Value( "name" ) );
+                    cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
                 }
             }
             else if( xmls->Path() == "/project/usetool" )
