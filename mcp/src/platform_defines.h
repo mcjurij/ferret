@@ -13,8 +13,8 @@ public:
     PlatformDefines()
     {}
 
-    void add( const std::string &name, const std::string &value);
-    std::string getValue( const std::string &name ) const;
+    void set( const std::string &name, const std::string &value);
+    std::string getValue( const std::string &name );
     
     std::string replace( const std::string &in );
     

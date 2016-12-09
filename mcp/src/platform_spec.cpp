@@ -422,7 +422,7 @@ bool PlatformSpec::read( const string &fn )
                         if( attr.HasAttribute( "value" ) )
                             value = PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) );
                         
-                        PlatformDefines::getThePlatformDefines()->add( name, value);
+                        PlatformDefines::getThePlatformDefines()->set( name, value);
                     }
                 }
             }
