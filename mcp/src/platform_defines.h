@@ -2,11 +2,13 @@
 #define FERRET_PLATFORM_DEFINES_H_
 
 #include <string>
-#include <map>
+
+#include "defines.h"
 
 
+// singleton wrapper around defines
 class PlatformDefines {
-
+    
 public:
     static PlatformDefines *getThePlatformDefines();
     
@@ -21,8 +23,7 @@ public:
 private:
     static PlatformDefines *thePlatformDefines;
     
-    std::map<std::string, std::string>  definesMap;
-    
+    Defines defines;    
 };
 
 #endif
