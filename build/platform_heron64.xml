@@ -5,11 +5,11 @@
 
     <compiler value="/usr/bin/g++"/>
     <cppflags value=" -DOS_LINUX -DUNIX"/>
-    <cppflags value=" -Wall " />
+    <cppflags value=" -Wall" />
 
     <compilerc value="/usr/bin/gcc"/>
     <cflags value=" -DOS_LINUX -DUNIX"/>
-    <cflags value=" -Wall " />
+    <cflags value=" -Wall" />
 
     <compile_mode value="DEBUG">
         <cppflags value=" -g "/> 

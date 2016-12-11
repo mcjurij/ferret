@@ -87,3 +87,12 @@ string Defines::replace( const string &in )
     
     return out;
 }
+
+
+void Defines::copyInto( Defines &d )
+{
+    map<string,string>::iterator it = definesMap.begin();
+
+    for( ; it != definesMap.end(); it++)
+        d.set( it->first, it->second);
+}

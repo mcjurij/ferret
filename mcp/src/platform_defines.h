@@ -19,6 +19,8 @@ public:
     std::string getValue( const std::string &name );
     
     std::string replace( const std::string &in );
+
+    void copyInto( Defines &d );
     
 private:
     static PlatformDefines *thePlatformDefines;

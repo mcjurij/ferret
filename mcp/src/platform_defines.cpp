@@ -30,3 +30,9 @@ string PlatformDefines::replace( const string &in )
 {
     return defines.replace( in );
 }
+
+
+void PlatformDefines::copyInto( Defines &d )
+{
+    defines.copyInto( d );
+}

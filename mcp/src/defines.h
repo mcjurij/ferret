@@ -15,9 +15,11 @@ public:
     std::string getValue( const std::string &name );
     
     std::string replace( const std::string &in );
+
+    void copyInto( Defines &d );
     
 private:
-    std::map<std::string, std::string>  definesMap;    
+    std::map<std::string, std::string>  definesMap;
 };
 
 #endif

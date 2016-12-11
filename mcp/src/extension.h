@@ -6,6 +6,7 @@
 #include <set>
 
 #include "file_manager.h"
+#include "defines.h"
 
 void setupExtensions();
 
@@ -25,7 +26,7 @@ public:
     
     ProjectXmlNode *getNode();
     
-    virtual std::string getType() const = 0;   // msg, yac, flex
+    virtual std::string getType() const = 0;           // yac, flex, anything from the xml configuration
 
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node ) = 0;
 
@@ -44,29 +45,6 @@ public:
 private:
     ProjectXmlNode *node;
     std::set<file_id_t> blockedIds;
-    int groupId;
-};
-
-
-class CxxExtension : public ExtensionBase   // test & example
-{
-
-public:
-    CxxExtension( ProjectXmlNode *node )
-        : ExtensionBase(node)
-    {}
-    
-    virtual std::string getType() const;
-
-    virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
-
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
-
-    virtual std::string getScriptTemplName() const
-    { return "ferret_cxx.sh.templ"; }
-    
-    virtual std::string getScriptName() const
-    { return "ferret_cxx__#.sh"; }
 };
 
 
@@ -132,6 +110,30 @@ public:
 };
 
 
+class ExtensionEntry;
+class XmlExtension : public ExtensionBase  // for XML extensions
+{
+    
+public:
+    XmlExtension( ProjectXmlNode *node, const ExtensionEntry *entry)
+        : ExtensionBase(node), entry(entry)
+    {}
+    
+    virtual std::string getType() const;
+    virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
+
+    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
+
+    virtual std::string getScriptTemplName() const;
+        
+    virtual std::string getScriptName() const;
+    
+private:
+    const ExtensionEntry *entry;
+    Defines defines;
+};
+
+
 class ExtensionManager
 {
     
@@ -142,8 +144,11 @@ public:
     {}
     
     void addExtension( ExtensionBase *e );
-
+    void addXmlExtension( const ExtensionEntry *entry );
+    
     ExtensionBase *createExtensionDriver( const std::string &type, ProjectXmlNode *node);
+    
+    bool read( const std::string &fn );
     
 private:
     std::map<std::string,ExtensionBase *> extMap;
