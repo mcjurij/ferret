@@ -1,0 +1,12 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+ROOT=`pwd`/$QT_RCC_ROOT
+
+CMD="$QT_RCC -name $QT_RCC_NAME  $QT_RCC_IN -o $QT_RCC_OUT"
+echo $CMD
+$CMD
+
+
+exit 0

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+trap "exit 1" SIGINT
+
+
+echo "$QT_MOC $QT_DEFINES $QT_INCLUDES -I. $QT_MOC_IN -o $QT_MOC_OUT"
+$QT_MOC $QT_DEFINES $QT_INCLUDES -I. $QT_MOC_IN -o $QT_MOC_OUT
+
+
+exit 0
