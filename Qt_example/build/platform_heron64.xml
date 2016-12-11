@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<platform>
+    <define name="QT_BASEDIR" value="/home/jurij/Qt5.3.0/5.3/gcc_64" />
+    <define name="QT_DEFINES" value="-DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB" />
+    <define name="QT_CPPFLAGS" value="-D_REENTRANT -fPIE ${QT_DEFINES}" />
+    <define name="QT_MOC_DEFINES" value="${QT_DEFINES}" />
+    
+    <compiler_version value="GCC"/>
+    
+    <compiler value="/usr/bin/g++"/>
+    <cppflags value=" -Wall -W" />
+    
+    <compilerc value="/usr/bin/gcc"/>
+    <cflags value=" -Wall" />
+    
+    <compile_mode value="DEBUG">
+      <cppflags value=" -g "/> 
+      <cflags value=" -g "/> 
+    </compile_mode>
+    <compile_mode value="RELDBG">
+      <cppflags value=" -g -O2 -DRELEASE "/> 
+      <cflags value=" -g -02 -DRELEASE "/> 
+    </compile_mode>
+    
+    <compile_mode value="RELEASE">
+      <cppflags value=" -O2 -DRELEASE "/> 
+      <cflags value=" -O2 -DRELEASE "/> 
+    </compile_mode>
+    
+    <compile_trait type="library" >
+      <cppflags value="-fPIC"/> 
+      <cflags value="-fPIC"/> 
+    </compile_trait>
+    
+    <soext value=".so"/>
+    <staticext value=".a"/>
+
+    <lflags value=" -g -shared -Wl,-rpath,${QT_BASEDIR}/lib"/>
+    <eflags value=" -g -Wl,-rpath,${QT_BASEDIR}/lib"/>
+    
+    <tool name="Qt">
+      <cppflags value="${QT_CPPFLAGS}"/>
+      <incdir value="${QT_BASEDIR}/include"/>
+      <incdir value="${QT_BASEDIR}/include/QtWidgets"/>
+      <incdir value="${QT_BASEDIR}/include/QtGui"/>
+      <incdir value="${QT_BASEDIR}/include/QtCore"/>
+      <libdir value="${QT_BASEDIR}/lib"/>
+      <lib value="Qt5Widgets" />
+      <lib value="Qt5Gui" />
+      <lib value="Qt5Core" />
+      <lib value="GL" />
+      <lib value="pthread" />
+    </tool>
+
+    <extension name="qtmoc" > 
+      <selector param="name" fileext=".h">
+        <assign part="full" to="SOURCE" />
+        <assign part="bn_wo_ext" to="SOURCE_WO_EXTENSION" />
+        <assign part="bn" to="SOURCE_BASENAME" />
+      </selector>
+      
+      <file_node name="input">
+        <file_name value="${SOURCE}" />
+        <assign_file_name to="MOC_INPUT" />
+        <block extent="full" />
+      </file_node>
+      
+      <extension_node name="output">
+        <file_name value="${OBJ_DIR}/moc_${SOURCE_WO_EXTENSION}" append=".cpp" />
+        <assign_file_name to="MOC_OUTPUT" />
+        <block extent="include" />
+      </extension_node>
+      
+      <dependency from_node="output" to_node="input" />
+      
+      <script_name value="ferret_qtmoc.sh.templ" />
+      <script_stencil value="ferret_qtmoc__#.sh" />
+      <replace name="QT_MOC"      value="${QT_BASEDIR}/bin/moc" />
+      <replace name="QT_DEFINES"  value="${QT_MOC_DEFINES}" />
+      <replace name="QT_MOC_IN"   value="${MOC_INPUT}" />
+      <replace name="QT_MOC_OUT"  value="${MOC_OUTPUT}" />
+      <replace name="F_NODEDIR"   value="${PROJ_DIR}/" />
+      <replace name="F_TARGET"    value="${PROJ_TARGET}/" />
+
+      <print value="input is ${MOC_INPUT}, output is ${MOC_OUTPUT}" />
+    </extension>
+    
+    <extension name="qtrcc" > 
+      <selector param="name" fileext=".qrc">
+        <assign part="full" to="SOURCE" />
+        <assign part="bn_wo_ext" to="SOURCE_WO_EXTENSION" />
+        <assign part="bn" to="SOURCE_BASENAME" />
+      </selector>
+      <param_def param="rcc_name" to="RCC_NAME" /> <!-- to pass -name argument to rcc via XML like so: <qtrcc rcc_name="application" ... -->
+      
+      <file_node name="input">
+        <file_name value="${SOURCE}" />
+        <assign_file_name to="RCC_INPUT" />
+        <block extent="full" />
+      </file_node>
+      
+      <extension_node name="output">
+        <file_name value="${OBJ_DIR}/qrc_${SOURCE_WO_EXTENSION}" append=".cpp" />
+        <assign_file_name to="RCC_OUTPUT" />
+        <block extent="include" />
+      </extension_node>
+      
+      <dependency from_node="output" to_node="input" />
+      
+      <script_name value="ferret_qtrcc.sh.templ" />
+      <script_stencil value="ferret_qtrcc__#.sh" />
+      <replace name="QT_RCC"      value="${QT_BASEDIR}/bin/rcc" />
+      <replace name="QT_RCC_NAME" value="${RCC_NAME}" />            <!-- from projext XML via rcc_name=..., see above -->
+      <replace name="QT_RCC_IN"   value="${RCC_INPUT}" />
+      <replace name="QT_RCC_OUT"  value="${RCC_OUTPUT}" />
+      <!-- <replace name="QT_RCC_ROOT" value="${PROJ_DIR}/" /> -->
+      <replace name="F_TARGET"    value="${PROJ_TARGET}/" />
+    </extension>
+    
+    <!-- <lib    value="rt" /> -->
+</platform>

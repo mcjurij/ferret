@@ -21,7 +21,7 @@ void setupExtensions()
     
     em->addExtension( new MsgExtension(0) );
 
-    em->read( "ferret_extensions.xml" );
+    // em->read( "ferret_extensions.xml" );
 }
 
 
@@ -40,6 +40,8 @@ private:
     std::string type;
 
 public:
+    std::vector< std::pair< std::string, std::string> > defs;
+    
     std::string selector_param;
     std::string selector_fileext;
     
@@ -67,6 +69,8 @@ public:
     std::string script_stencil;
     
     std::vector< std::pair< std::string, std::string> > script_repl;
+
+    std::vector< std::string > print_vals;
 };
 
 // -----------------------------------------------------------------------------
@@ -368,6 +372,13 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
         return replacements;
     }
     
+    for( i = 0; i < entry->defs.size(); i++)  // regular defines
+    {
+        string name  = entry->defs[i].first;
+        string value = entry->defs[i].second;
+        defines.set( name, defines.replace( value ));
+    }
+    
     vector<File> sources = getNode()->getFiles();
     
     for( i = 0; i < sources.size(); i++)
@@ -494,10 +505,24 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
                 }
                 
                 replacements[ extension_fid ] = repl;
-                getNode()->setExtensionScriptTemplNameForId( extension_fid, entry->script_file_name, entry->script_stencil);
+
+                string stencil;
+                vector<string> p = split( '#', entry->script_stencil);
+
+                if( p.size() == 2 )
+                    stencil = p[0] + "#__" + fileMan.getCompileMode() + p[1];
+                else
+                    stencil = entry->script_stencil;
+                
+                getNode()->setExtensionScriptTemplNameForId( extension_fid, entry->script_file_name, stencil);
             }
             else
-                cerr << entry->getType() << " extension (XML): error: no extension command node created\n";
+                cerr << entry->getType() << " extension (XML): error: no extension command node created\n";            
+            
+            for( size_t p = 0; p < entry->print_vals.size(); p++)  // prints, useful for debugging
+            {
+                cout << entry->getType() << " extension (XML): prints: " << defines.replace( entry->print_vals[p] ) << "\n";
+            }
         }
     }
     
@@ -569,29 +594,18 @@ ExtensionBase *ExtensionManager::createExtensionDriver( const string &type, Proj
 }
 
 
-bool ExtensionManager::read( const string &fn )
+bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
 {
-    FILE *fpXml = fopen( fn.c_str(), "r");
-    if( fpXml == 0 )
-    {
-        cerr << "error: xml extensions configuration file " << fn << " not found\n";
-        return false;
-    }
-    
-    SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
-
     ExtensionEntry *entry = 0;
     
     while( !xmls->AtEnd() )
     {
-        xmls->ReadNext();
-        
         if( xmls->HasError() )
             break;
         
         if( xmls->IsStartElement() )
         {
-            if( xmls->Path() == "/extensions/extension" )
+            if( xmls->Path() == "/extension" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
 
@@ -601,7 +615,7 @@ bool ExtensionManager::read( const string &fn )
 
                 entry = new ExtensionEntry( type );
             }
-            else if( xmls->Path() == "/extensions/extension/selector" )
+            else if( xmls->Path() == "/extension/selector" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
@@ -611,7 +625,7 @@ bool ExtensionManager::read( const string &fn )
                 if( attr.HasAttribute( "fileext" ) )
                     entry->selector_fileext = attr.Value( "fileext" );
             }
-            else if( xmls->Path() == "/extensions/extension/selector/assign" )
+            else if( xmls->Path() == "/extension/selector/assign" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
 
@@ -625,36 +639,36 @@ bool ExtensionManager::read( const string &fn )
                 if( part.length() > 0 && to.length() > 0 )
                     entry->selector_assigns.push_back( make_pair( part, to) );
             }
-            else if( xmls->Path() == "/extensions/extension/file_node" ||
-                     xmls->Path() == "/extensions/extension/extension_node" ||
-                     xmls->Path() == "/extensions/extension/weak_node" ||
-                     xmls->Path() == "/extensions/extension/cpp_node"  ||
-                     xmls->Path() == "/extensions/extension/c_node")
+            else if( xmls->Path() == "/extension/file_node" ||
+                     xmls->Path() == "/extension/extension_node" ||
+                     xmls->Path() == "/extension/weak_node" ||
+                     xmls->Path() == "/extension/cpp_node"  ||
+                     xmls->Path() == "/extension/c_node")
             {
                 ExtensionEntry::Node node;
                 string save_path = xmls->Path();
                 string wait_for;
-                if( xmls->Path() == "/extensions/extension/file_node" )
+                if( xmls->Path() == "/extension/file_node" )
                 {
                     node.node_type = ExtensionEntry::Node::FILE_NODE;
                     wait_for = "file_node";
                 }
-                else if( xmls->Path() == "/extensions/extension/extension_node" )
+                else if( xmls->Path() == "/extension/extension_node" )
                 {
                     node.node_type = ExtensionEntry::Node::EXTENSION_NODE;
                     wait_for = "extension_node";
                 }
-                else if( xmls->Path() == "/extensions/extension/weak_node" )
+                else if( xmls->Path() == "/extension/weak_node" )
                 {
                     node.node_type = ExtensionEntry::Node::WEAK_NODE;
                     wait_for = "weak_node";
                 }
-                else if( xmls->Path() == "/extensions/extension/cpp_node" )
+                else if( xmls->Path() == "/extension/cpp_node" )
                 {
                     node.node_type = ExtensionEntry::Node::CPP_NODE;
                     wait_for = "cpp_node";
                 }
-                else if( xmls->Path() == "/extensions/extension/weak_node" )
+                else if( xmls->Path() == "/extension/weak_node" )
                 {
                     node.node_type = ExtensionEntry::Node::C_NODE;
                     wait_for = "c_node";
@@ -698,14 +712,14 @@ bool ExtensionManager::read( const string &fn )
                     }
                     else if( xmls->IsEndElement() )
                     {
-                        if( xmls->Path() == "/extensions/extension" && xmls->Name() == wait_for )
+                        if( xmls->Path() == "/extension" && xmls->Name() == wait_for )
                             break;
                     }
                 }
 
                 entry->nodes.push_back( node );
             }
-            else if( xmls->Path() == "/extensions/extension/dependency" )
+            else if( xmls->Path() == "/extension/dependency" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
 
@@ -719,21 +733,21 @@ bool ExtensionManager::read( const string &fn )
                 if( from_name.length() > 0 && to_name.length() > 0 )
                     entry->dependencies.push_back( make_pair( from_name, to_name) );
             }
-            else if( xmls->Path() == "/extensions/extension/script_name" )
+            else if( xmls->Path() == "/extension/script_name" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
                 if( attr.HasAttribute( "value" ) )
                     entry->script_file_name = attr.Value( "value" );
             }
-            else if( xmls->Path() == "/extensions/extension/script_stencil" )
+            else if( xmls->Path() == "/extension/script_stencil" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
                 if( attr.HasAttribute( "value" ) )
                     entry->script_stencil = attr.Value( "value" );                
             }
-            else if( xmls->Path() == "/extensions/extension/replace" )
+            else if( xmls->Path() == "/extension/replace" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
@@ -746,7 +760,7 @@ bool ExtensionManager::read( const string &fn )
                 if( name.length() > 0 && value.length() > 0 )
                     entry->script_repl.push_back( make_pair( name, value) );
             }
-            else if( xmls->Path() == "/extensions/extension/param_def" )
+            else if( xmls->Path() == "/extension/param_def" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
@@ -758,6 +772,29 @@ bool ExtensionManager::read( const string &fn )
                 
                 if( param.length() > 0 && to.length() > 0 )
                     entry->param_defs.push_back( make_pair( param, to) );
+            }
+            else if( xmls->Path() == "/extension/print" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                string value;
+                if( attr.HasAttribute( "value" ) )
+                    value = attr.Value( "value" );
+                
+                entry->print_vals.push_back( value );
+            }
+            else if( xmls->Path() == "/extension/define" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                string name, value;
+                if( attr.HasAttribute( "name" ) )
+                    name = attr.Value( "name" );
+                if( attr.HasAttribute( "value" ) )
+                    value = attr.Value( "value" );
+                
+                if( name.length() > 0 && value.length() > 0 )
+                    entry->defs.push_back( make_pair( name, value) );
             }
             
 /*            else if( xmls->Path() == "/platform/define" )
@@ -782,14 +819,57 @@ bool ExtensionManager::read( const string &fn )
         }
         else if( xmls->IsEndElement() )
         {
-            if( xmls->Path() == "/extensions" && xmls->Name() == "extension" )
+            if( xmls->Path() == "" && xmls->Name() == "extension" )
             {
                 if( entry )
                 {
                     addXmlExtension( entry );
                     entry = 0;
                 }
+                break;
             }
+        }
+
+        xmls->ReadNext();
+    }
+
+    bool ok = !xmls->HasError();
+
+    return ok;
+}
+
+
+bool ExtensionManager::read( const string &fn )
+{
+    FILE *fpXml = fopen( fn.c_str(), "r");
+    if( fpXml == 0 )
+    {
+        cerr << "error: xml extensions configuration file " << fn << " not found\n";
+        return false;
+    }
+    
+    SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
+
+    while( !xmls->AtEnd() )
+    {
+        xmls->ReadNext();
+        
+        if( xmls->HasError() )
+            break;
+        
+        if( xmls->IsStartElement() )
+        {
+            if( xmls->Path() == "/extensions/extension" )
+            {
+                xmls->setPathStart( 1 );
+                parseExtension( xmls );
+                xmls->setPathStart( 0 );
+            }
+        }
+        else if( xmls->IsEndElement() )
+        {
+            if( xmls->Path() == "" && xmls->Name() == "extensions" )
+                break;
         }
     }
 

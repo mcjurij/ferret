@@ -134,6 +134,7 @@ private:
 };
 
 
+class SimpleXMLStream;
 class ExtensionManager
 {
     
@@ -148,6 +149,7 @@ public:
     
     ExtensionBase *createExtensionDriver( const std::string &type, ProjectXmlNode *node);
     
+    bool parseExtension( SimpleXMLStream *xmls );
     bool read( const std::string &fn );
     
 private:

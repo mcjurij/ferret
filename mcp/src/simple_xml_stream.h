@@ -105,6 +105,8 @@ public:
 	SimpleXMLAttributes Attributes() const;
 
     std::string Path() const;
+
+    void setPathStart( int start );
     
 private:
 	tag_t *TagConstr( const std::string &tag_name );
@@ -132,7 +134,8 @@ private:
 	bool trim;
 	tag_t *parsestack[ 128 ];
 	int    parsestack_p;
-
+    int path_start;
+    
 	TokenType current_token;
 };
 

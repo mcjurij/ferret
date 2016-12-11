@@ -64,7 +64,7 @@ struct tag_t {
 
 SimpleXMLStream::SimpleXMLStream( FILE *in )
 	: in_fp(in), ateof(false),line_num(0),
-	  curr(0),errors(0), trim(true),parsestack_p(0),
+	  curr(0),errors(0), trim(true),parsestack_p(0),path_start(0),
 	  current_token(INVALID)
 {
 	assert(in);
@@ -602,9 +602,18 @@ std::string SimpleXMLStream::Path() const
 {
     stringstream ss;
     int i;
-    
-    for( i = 0; i < parsestack_p; i++)
+
+    for( i = path_start; i < parsestack_p; i++)
         ss << "/" << parsestack[ i ]->tag_name;
     
     return ss.str();
+}
+
+
+void SimpleXMLStream::setPathStart( int start )
+{
+    path_start = start;
+    
+    if( path_start > parsestack_p )
+        path_start = parsestack_p;
 }

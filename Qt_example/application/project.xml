@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project module="Qt_example" name="application" target="application" type="executable">
+  <usetool name="Qt" />
+  <qtrcc  rcc_name="application" name="application.qrc" />
+  <qtmoc  name="mainwindow.h" />
+</project>

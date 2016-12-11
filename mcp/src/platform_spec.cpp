@@ -6,6 +6,7 @@
 #include "simple_xml_stream.h"
 #include "glob_utility.h"
 #include "platform_defines.h"
+#include "extension.h"
 
 using namespace std;
 
@@ -426,6 +427,12 @@ bool PlatformSpec::read( const string &fn )
                     }
                 }
             }
+            else if( xmls->Path() == "/platform/extension" )
+            {
+                xmls->setPathStart( 1 );
+                ExtensionManager::getTheExtensionManager()->parseExtension( xmls );
+                xmls->setPathStart( 0 );
+            }
             
             //cout << "\n";
         }
@@ -446,7 +453,8 @@ bool PlatformSpec::read( const string &fn )
             {
                 addCompileTrait( currCt );
             }
-            //cout << "\n";
+            else if( xmls->Path() == "" && xmls->Name() == "platform" )
+                break;
         }
     }
 
