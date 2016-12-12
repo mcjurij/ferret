@@ -7,4 +7,4 @@ Ferret reads its configuration from very simple XML files. One with global optio
 
 To get started jump to the wiki [home](https://github.com/mcjurij/ferret/wiki).
 
-After a hard working day, ferret likes to drink a [beer](blob/master/fursty-ferret.jpeg) ...or two.
+After a hard working day, ferret likes to drink a [beer](fursty-ferret.jpeg) ...or two.
