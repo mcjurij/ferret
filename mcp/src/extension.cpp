@@ -408,7 +408,7 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
             {
                 const ExtensionEntry::Node &node = entry->nodes[n];
                 
-                file_id_t fid;
+                file_id_t fid = -1;
                 string base_fn = defines.replace( node.file_name );
                 string fn = base_fn + node.file_name_append;
                 string out_obj_fn;
@@ -796,26 +796,6 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
                 if( name.length() > 0 && value.length() > 0 )
                     entry->defs.push_back( make_pair( name, value) );
             }
-            
-/*            else if( xmls->Path() == "/platform/define" )
-            {
-                SimpleXMLAttributes attr = xmls->Attributes();
-
-                if( attr.HasAttribute( "name" ) )
-                {
-                    string name = attr.Value( "name" );
-
-                    if( name.length() > 0 )
-                    {
-                        string value;
-                        if( attr.HasAttribute( "value" ) )
-                            value = PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) );
-                        
-                        PlatformDefines::getThePlatformDefines()->set( name, value);
-                    }
-                }
-            }
-*/
         }
         else if( xmls->IsEndElement() )
         {
@@ -823,7 +803,10 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
             {
                 if( entry )
                 {
-                    addXmlExtension( entry );
+                    if( checkExtensionDependencies( entry ) )
+                        addXmlExtension( entry );
+                    else
+                        delete entry;
                     entry = 0;
                 }
                 break;
@@ -834,8 +817,46 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
     }
 
     bool ok = !xmls->HasError();
-
+   
+ 
     return ok;
+}
+
+
+bool ExtensionManager::checkExtensionDependencies( const ExtensionEntry *entry )
+{
+    int err = 0;
+    size_t i,n;
+    
+    for( i = 0; i < entry->dependencies.size(); i++)
+    {
+        string from_name = entry->dependencies[i].first;
+        string to_name   = entry->dependencies[i].second;
+        bool from_found = false, to_found = false;
+                        
+        for( n = 0; n < entry->nodes.size(); n++)
+        {
+            string node_name = entry->nodes[n].name;
+            if( from_name == node_name )
+                from_found = true;
+            if( to_name == node_name )
+                to_found = true;
+        }
+                        
+        if( !from_found )
+        {
+            cerr << "error: extension '" << entry->getType() << "' has dependency with unknown from node '" << from_name << "'\n";
+            err++;
+        }
+                        
+        if( !to_found )
+        {
+            cerr << "error: extension '" << entry->getType() << "' has dependency with unknown to node '" << to_name << "'\n";
+            err++;
+        }
+    }
+
+    return err == 0;
 }
 
 
