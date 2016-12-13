@@ -1,4 +1,4 @@
-Source for this example has to be copied over from you Qt 5.x installtion.
+Source for this example has to be copied over from you Qt 5.x installation.
 
 See https://github.com/mcjurij/ferret/wiki/Extensions, which explains
 how moc and rcc can be called from ferret during the build. 

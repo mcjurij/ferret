@@ -1,5 +1,5 @@
 # ferret
-A fast build system for Linux and C/C++ users
+An easy to use and fast build system for Linux and C/C++ users
 
 A project with roughly 2100 C++ compilation units is build in around 4 minutes on a 8 core machine. When the build is up to date, the answer to the question "what do I have to build now?" is given in about 1 second (when the file system cache is hot) for the same amount of files.
 
