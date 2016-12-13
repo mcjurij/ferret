@@ -361,7 +361,6 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
         defines.set( to, getAttrib( xmlAttribs, param));
     }
     
-    map<file_id_t, map<string,string> > replacements;
     string selectorfn = getAttrib( xmlAttribs, entry->selector_param);
     if( selectorfn.length() == 0 )
     {
