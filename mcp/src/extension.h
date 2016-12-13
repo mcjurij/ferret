@@ -30,7 +30,7 @@ public:
 
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node ) = 0;
 
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs) = 0;
+    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs) = 0;
 
     virtual std::string getScriptTemplName() const = 0;
     virtual std::string getScriptName() const = 0;
@@ -59,7 +59,7 @@ public:
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
     
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
+    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
     virtual std::string getScriptTemplName() const
     { return "ferret_flex.sh.templ"; }
@@ -79,7 +79,7 @@ public:
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
 
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
+    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
     virtual std::string getScriptTemplName() const
     { return "ferret_bison.sh.templ"; }
@@ -100,7 +100,7 @@ public:
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
 
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
+    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
     virtual std::string getScriptTemplName() const
     { return "ferret_msg.sh.templ"; }
@@ -122,7 +122,7 @@ public:
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
 
-    virtual std::map<file_id_t, std::map<std::string,std::string> > createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
+    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
     virtual std::string getScriptTemplName() const;
         

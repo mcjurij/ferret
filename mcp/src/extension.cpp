@@ -120,12 +120,10 @@ ExtensionBase *FlexExtension::createExtensionDriver( ProjectXmlNode *node )
 }
 
 
-map<file_id_t, map<string,string> > FlexExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
+void FlexExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
     ScriptManager *sm = ScriptManager::getTheScriptManager();
-    
-    map<file_id_t, map<string,string> > replacements;
     
     size_t i;
     if( verbosity > 0 )
@@ -167,14 +165,11 @@ map<file_id_t, map<string,string> > FlexExtension::createCommands( FileManager &
             addBlockedFileId( cpp_id );
             getNode()->objs.push_back( cpp_o );
             
-            replacements[ fid ] = r;
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
             getNode()->pegCppScript( cpp_id, flex_o, cpp_o, fileMan.getCompileMode());
         }
     }
-    
-    return replacements;
 }
 
 // -----------------------------------------------------------------------------
@@ -190,11 +185,10 @@ ExtensionBase *BisonExtension::createExtensionDriver( ProjectXmlNode *node )
 }
 
 
-map<file_id_t, map<string,string> > BisonExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
+void BisonExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
     ScriptManager *sm = ScriptManager::getTheScriptManager();
-    map<file_id_t, map<string,string> > replacements;
     
     size_t i;
     if( verbosity > 0 )
@@ -246,14 +240,11 @@ map<file_id_t, map<string,string> > BisonExtension::createCommands( FileManager 
             addBlockedFileId( cpp_id );
             getNode()->objs.push_back( cpp_o );
             
-            replacements[ fid ] = r;
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
             getNode()->pegCppScript( cpp_id, bison_o, cpp_o, fileMan.getCompileMode());
         }
     }
-    
-    return replacements;
 }
 
 // -----------------------------------------------------------------------------
@@ -270,12 +261,10 @@ ExtensionBase *MsgExtension::createExtensionDriver( ProjectXmlNode *node )
 }
 
 
-map<file_id_t, map<string,string> > MsgExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
+void MsgExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
     ScriptManager *sm = ScriptManager::getTheScriptManager();
-    map<file_id_t, map<string,string> > replacements;
-    
     size_t i;
 
     if( verbosity > 0 )
@@ -326,14 +315,11 @@ map<file_id_t, map<string,string> > MsgExtension::createCommands( FileManager &f
             //addBlockedFileId( header_id );
             //addBlockedFileId( cpp_id );
             
-            replacements[ fid ] = r;
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
             //getNode()->pegCppScript( cpp_id, msg_o, cpp_o, fileMan.getCompileMode());
         }
     }
-    
-    return replacements;
 }
 
 // -----------------------------------------------------------------------------
@@ -352,7 +338,7 @@ ExtensionBase *XmlExtension::createExtensionDriver( ProjectXmlNode *node )
 }
 
 
-map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
+void XmlExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
     ScriptManager *sm = ScriptManager::getTheScriptManager();
@@ -380,7 +366,7 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
     if( selectorfn.length() == 0 )
     {
         cerr << entry->getType() << " extension (XML): error: '" << entry->selector_param << "' attribute missing.\n";
-        return replacements;
+        return;
     }
     
     for( i = 0; i < entry->defs.size(); i++)  // regular defines
@@ -537,8 +523,6 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
             }
         }
     }
-    
-    return replacements;
 }
 
 
