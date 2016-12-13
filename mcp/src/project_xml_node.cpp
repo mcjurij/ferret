@@ -390,7 +390,7 @@ string ProjectXmlNode::getLibDir()
 void ProjectXmlNode::traverseSrc()
 {
     if( FindFiles::exists( srcdir ) )
-        nodeFiles.traverse( srcdir );
+        nodeFiles.traverse( srcdir,  false /* not deep */);
 }
 
 

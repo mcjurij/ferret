@@ -128,7 +128,7 @@ void FlexExtension::createCommands( FileManager &fileMan, const map<string,strin
     if( verbosity > 0 )
         cout << "FLEX Extension for node " << getNode()->getDir() << ":\n";
     if( getAttrib( xmlAttribs, "prefix").length() > 0 )
-        cerr << "FLEX Extension: internal error: 'prefix' attribute with value '" << getAttrib( xmlAttribs, "prefix") << "' currently ignored.\n";
+        cerr << "FLEX Extension: warning: 'prefix' attribute with value '" << getAttrib( xmlAttribs, "prefix") << "' currently ignored.\n";
     
     string outputdir = getNode()->getSrcDir() + "/";
     string o_outputdir = getNode()->getObjDir();
@@ -375,12 +375,14 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     }
     
     vector<File> sources = getNode()->getFiles();
+    int cnt_match = 0;
     
     for( i = 0; i < sources.size(); i++)
     {
         if( sources[i].extension() == entry->selector_fileext && sources[i].getPath() == getNode()->getSrcDir() + "/" + selectorfn )
         {
             map<string,file_id_t>  nameToFileId;
+            cnt_match++;
             
             size_t a;
             for( a = 0; a < entry->selector_assigns.size(); a++)
@@ -519,6 +521,9 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
             }
         }
     }
+
+    if( cnt_match == 0 )
+        cerr << entry->getType() << " extension (XML): warning: none of the files matched selector at " << getNode()->getDir() << ".\n";
 }
 
 

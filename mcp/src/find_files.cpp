@@ -91,16 +91,59 @@ vector<File> FindFiles::ftwFiles;
 set<string> FindFiles::noexistingFiles;
 
 
-void FindFiles::traverse( const string &start_dir ) 
+void FindFiles::traverse( const string &start_dir, bool deep) 
 {
     int flags = 0;
     
     ftwFiles.clear();
     files.clear();
-    if( nftw( start_dir.c_str(), FindFiles::handle_entry, 20, flags) == -1 ) // see http://linux.die.net/man/3/ftw
+
+    if( deep )
     {
-        cerr << "error: " + start_dir + " not found or not readable\n";
-        perror("nftw");
+        if( nftw( start_dir.c_str(), FindFiles::handle_entry, 20, flags) == -1 ) // see http://linux.die.net/man/3/ftw
+        {
+            perror("nftw");
+            cerr << "error: " + start_dir + " not found or not readable\n";
+        }
+    }
+    else
+    {
+        DIR *dirp = opendir( start_dir.c_str() );
+        struct dirent *dp;
+        
+        if( dirp == 0 )
+        {
+            perror("opendir");
+            cerr << "error: " + start_dir + " not found or not readable\n";
+            return;
+        }
+        
+        do
+        {
+            errno = 0;
+            if( (dp = readdir(dirp)) != 0 )
+            {
+                if( dp->d_name[0] == 0 || dp->d_name[0] == '.' || dp->d_type != DT_REG )
+                    continue;
+
+                struct stat fst;
+
+                string bn = dp->d_name;
+                string fpath = start_dir + "/" + bn;
+                
+                if( stat( fpath.c_str(), &fst) == 0 )
+                {
+                    ftwFiles.push_back( File( fpath, start_dir, bn, &fst) );
+                    allFiles[ fpath ] = File( fpath, start_dir, bn, &fst);
+                }
+                else
+                    cerr << "error: can't stat '" << fpath << "'\n";
+            }
+        } while( dp != 0 );
+        
+        if (errno != 0)
+            perror("readdir: error reading directory");
+        closedir(dirp);
     }
         
     files = ftwFiles;
@@ -280,7 +323,7 @@ int FindFiles::handle_entry( const char *fpath, const struct stat *sb,
         d[ftwbuf->base]=0;
         if( ftwbuf->base>0 && d[ftwbuf->base-1]=='/' )
             d[ftwbuf->base-1]=0;
-        
+
         ftwFiles.push_back( File( fpath, d, bn, sb) );
         allFiles[ fpath ] = File( fpath, d, bn, sb);
     }

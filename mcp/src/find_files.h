@@ -4,11 +4,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#include <dirent.h>
+#include <errno.h>
 #include <string>
 #include <map>
 #include <vector>
 #include <set>
+
 
 class File {
 public:
@@ -73,7 +75,7 @@ public:
     FindFiles()
     {}
     
-    void traverse( const std::string &start_dir );
+    void traverse( const std::string &start_dir, bool deep = true);
     void appendTraverse( const std::string &start_dir );
     
     std::vector<File> getFiles() const

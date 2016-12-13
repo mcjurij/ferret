@@ -9,6 +9,14 @@
 
 using namespace std;
 
+static bool isCppFile( const string &ext )
+{
+    return ext == ".cpp" || ext == ".c" ||
+        ext == ".h" || ext == ".hpp" ||
+        ext == ".C" || ext == ".cxx"; // ||
+//        ext == ".nsmap";
+}
+
 // -----------------------------------------------------------------------------
 IncludeManager *IncludeManager::theIncludeManager = 0;
 
@@ -33,9 +41,7 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
             string dummy, bn, ext;
             breakPath( it.getFile(), dummy, bn, ext);
         
-            if( ext == ".cpp" || ext == ".c" ||
-                ext == ".h" || ext == ".hpp" ||
-                ext == ".C" || ext == ".cxx" )
+            if( isCppFile( ext ) )
             {
                 if( blockedIds.find( it.getId() ) != blockedIds.end() )
                 {
@@ -196,9 +202,7 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writ
             breakPath( it.getFile(), dummy, bn, ext);
             //string cmd = it.getCmd();
             
-            if( ext == ".cpp" || ext == ".c" ||
-                ext == ".h" || ext == ".hpp" ||
-                ext == ".C" || ext == ".cxx" )
+            if( isCppFile( ext ) )
             {
                 if( blockedIds.find( it.getId() ) != blockedIds.end() )
                 {
