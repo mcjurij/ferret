@@ -16,15 +16,15 @@ static map<string,string> fileMap;
 class ScriptTemplate
 {
 public:
-    ScriptTemplate( const std::string &fn )
+    ScriptTemplate( const string &fn )
         : fn(fn)
     {}
 
     bool readTemplate();
 
-    void replace( const std::map<std::string,std::string> &replMap);
+    void replace( const map<string,string> &replMap);
 
-    std::string write( const std::string &scriptfn, int file_id);
+    string write( const string &scriptfn, int file_id);
 
 private:
     bool hasNextChar() const
@@ -36,9 +36,9 @@ private:
     { return templContent[pos]; }
     
 private:
-    std::string fn;
-    std::string templContent;  // we slurp the file in
-    std::string newContent;
+    string fn;
+    string templContent;  // we slurp the file in
+    string newContent;
     size_t pos;
 };
 
@@ -225,7 +225,7 @@ void ScriptInstance::addReplacement( const string &k, const string &v)
 }
 
 
-string ScriptInstance::write( const std::string &target_fn )
+string ScriptInstance::write( const string &target_fn )
 {    
     ScriptTemplate st( templ_name );
     if( !st.readTemplate() )
@@ -290,7 +290,7 @@ void ScriptManager::addReplacement( file_id_t file_id, const string &k, const st
 }
 
 
-string ScriptManager::write( file_id_t file_id, const std::string &target_fn)
+string ScriptManager::write( file_id_t file_id, const string &target_fn)
 {
     map<file_id_t,ScriptInstance>::iterator it = instances.find( file_id );
     

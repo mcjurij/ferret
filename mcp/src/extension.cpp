@@ -31,48 +31,47 @@ class ExtensionEntry      // for XML extensions
 {
 
 public:
-    ExtensionEntry( const std::string &name )
+    ExtensionEntry( const string &name )
         : type(name)
     {}
 
-    std::string getType() const
+    string getType() const
     { return type; }
     
 private:
-    std::string type;
+    string type;
 
 public:
-    std::vector< std::pair< std::string, std::string> > defs;
+    vector< pair<string,string> > defs;
     
-    std::string selector_param;
-    std::string selector_fileext;
+    string selector_param;
+    string selector_fileext;
     
-    std::vector< std::pair< std::string, std::string> > selector_assigns;
-    std::vector< std::pair< std::string, std::string> > param_defs;
+    vector< pair<string,string> > selector_assigns;
+    vector< pair<string,string> > param_defs;
     
     struct Node {
         typedef enum { INVALID, FILE_NODE /* = D type */, EXTENSION_NODE, WEAK_NODE, CPP_NODE, C_NODE} node_t;
         node_t node_type;
-        std::string name;
+        string name;
         
-        std::string file_name;
-        std::string file_name_append;
-        std::string assign_file_name_to;
+        string file_name;
+        string file_name_append;
+        string assign_file_name_to;
         
-        std::string block_extent;
+        string block_extent;
     };
     
-    //std::map< std::string, Node>  nodeMap;            // maps from node name to node
-    std::vector< Node > nodes;
+    vector<Node> nodes;
     
-    std::vector< std::pair< std::string, std::string> > dependencies;
+    vector< pair<string,string> > dependencies;
     
-    std::string script_file_name;
-    std::string script_stencil;
+    string script_file_name;
+    string script_stencil;
     
-    std::vector< std::pair< std::string, std::string> > script_repl;
+    vector< pair<string,string> > script_repl;
 
-    std::vector< std::string > print_vals;
+    vector<string> print_vals;
 };
 
 // -----------------------------------------------------------------------------
