@@ -6,6 +6,8 @@
 
 #include "hash_set.h"
 
+typedef int file_id_t;
+
 extern std::string scriptTemplDir;
 
 extern std::string tempDir;  // where ferret can put all its temporary files

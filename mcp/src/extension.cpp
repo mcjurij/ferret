@@ -7,6 +7,8 @@
 #include "include_manager.h"
 #include "simple_xml_stream.h"
 #include "platform_defines.h"
+#include "platform_spec.h"
+#include "script_template.h"
 
 using namespace std;
 
@@ -121,6 +123,7 @@ ExtensionBase *FlexExtension::createExtensionDriver( ProjectXmlNode *node )
 map<file_id_t, map<string,string> > FlexExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
     
     map<file_id_t, map<string,string> > replacements;
     
@@ -165,7 +168,8 @@ map<file_id_t, map<string,string> > FlexExtension::createCommands( FileManager &
             getNode()->objs.push_back( cpp_o );
             
             replacements[ fid ] = r;
-            getNode()->setExtensionScriptTemplNameForId( fid, getScriptTemplName(), getScriptName());
+            sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
+            sm->addReplacements( fid, r);
             getNode()->pegCppScript( cpp_id, flex_o, cpp_o, fileMan.getCompileMode());
         }
     }
@@ -189,6 +193,7 @@ ExtensionBase *BisonExtension::createExtensionDriver( ProjectXmlNode *node )
 map<file_id_t, map<string,string> > BisonExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
     map<file_id_t, map<string,string> > replacements;
     
     size_t i;
@@ -242,7 +247,8 @@ map<file_id_t, map<string,string> > BisonExtension::createCommands( FileManager 
             getNode()->objs.push_back( cpp_o );
             
             replacements[ fid ] = r;
-            getNode()->setExtensionScriptTemplNameForId( fid, getScriptTemplName(), getScriptName());
+            sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
+            sm->addReplacements( fid, r);
             getNode()->pegCppScript( cpp_id, bison_o, cpp_o, fileMan.getCompileMode());
         }
     }
@@ -267,7 +273,7 @@ ExtensionBase *MsgExtension::createExtensionDriver( ProjectXmlNode *node )
 map<file_id_t, map<string,string> > MsgExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
-    
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
     map<file_id_t, map<string,string> > replacements;
     
     size_t i;
@@ -321,7 +327,8 @@ map<file_id_t, map<string,string> > MsgExtension::createCommands( FileManager &f
             //addBlockedFileId( cpp_id );
             
             replacements[ fid ] = r;
-            getNode()->setExtensionScriptTemplNameForId( fid, getScriptTemplName(), getScriptName());
+            sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
+            sm->addReplacements( fid, r);
             //getNode()->pegCppScript( cpp_id, msg_o, cpp_o, fileMan.getCompileMode());
         }
     }
@@ -348,13 +355,17 @@ ExtensionBase *XmlExtension::createExtensionDriver( ProjectXmlNode *node )
 map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
 {
     assert( getNode() != 0 );
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
     
     PlatformDefines::getThePlatformDefines()->copyInto( defines );
     
-    defines.set( "PROJ_TARGET", getNode()->getScriptTarget());
-    defines.set( "PROJ_DIR",    getNode()->getDir());
-    defines.set( "SRC_DIR",     getNode()->getSrcDir());
-    defines.set( "OBJ_DIR",     getNode()->getObjDir());
+    defines.set( "PROJ_TARGET",        getNode()->getScriptTarget());
+    defines.set( "PROJ_DIR",           getNode()->getDir());
+    defines.set( "PROJ_INCLUDES",      getNode()->getIncludes());
+    defines.set( "PROJ_TOOL_INCLUDES", getNode()->getToolIncludes());
+    defines.set( "PLTF_INCLUDES",      PlatformSpec::getThePlatformSpec()->getIncCommandArgs());
+    defines.set( "SRC_DIR",            getNode()->getSrcDir());
+    defines.set( "OBJ_DIR",            getNode()->getObjDir());
     
     size_t i;
     for( i = 0; i < entry->param_defs.size(); i++)  // defines from the XML attributes
@@ -514,7 +525,8 @@ map<file_id_t, map<string,string> > XmlExtension::createCommands( FileManager &f
                 else
                     stencil = entry->script_stencil;
                 
-                getNode()->setExtensionScriptTemplNameForId( extension_fid, entry->script_file_name, stencil);
+                sm->setTemplateFileName( extension_fid, entry->script_file_name, stencil);
+                sm->addReplacements( extension_fid, repl);
             }
             else
                 cerr << entry->getType() << " extension (XML): error: no extension command node created\n";            

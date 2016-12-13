@@ -50,7 +50,7 @@ public:
     ProjectXmlNode( const std::string &d, const std::string &module, const std::string &name,
                     const std::string &target, const std::string &type,
                     const std::vector<std::string> &cppflags, const std::vector<std::string> &cflags,
-                    const std::vector<std::string> &usetools);
+                    const std::vector<std::string> &usetools, const std::vector<std::string> &localLibs);
     
     static ProjectXmlNode *traverseXml( const std::string &start, int level=0);
     static bool hasXmlErrors();
@@ -87,8 +87,6 @@ public:
     
     void traverseIncdir( const std::string &incdir );
     
-    //std::vector<File> getIncdirFiles() const;
-    
     void addDatabaseFile( const std::string &fn )
     { databaseFiles.push_back( fn ); }
     
@@ -111,9 +109,6 @@ public:
     void pegCScript( file_id_t cpp_id, const std::string &in, const std::string &out, const std::string &compileMode);
     bool doDeep();   // wether to follow library from this node, via downward pointers, to all downward nodes or not
     
-    //file_id_t getTargetFileId() const
-    //{ return target_file_id; }
-    
     std::string getNodeName() const
     { return nodeName; }
     
@@ -126,20 +121,18 @@ public:
     void createExtensionCommands( FileManager &fileMan );
     
 private:
-    std::set<file_id_t> blockedIds;
+    std::set<file_id_t> blockedIds;   // used by extensions
     
-public:
-    //void addExtensionSourceId( file_id_t id );
-    void setReplMapForId( const std::map<file_id_t,std::map<std::string,std::string> > &re);
-    void setReplKeyValueForId( file_id_t id, const std::string &key, const std::string &val);
-    void setReplKeyValueForId( file_id_t id, const std::string &key, int val);
-    std::map<std::string,std::string> getReplMapForId( file_id_t id );
-    void        setExtensionScriptTemplNameForId( file_id_t id, const std::string &scriptTempl, const std::string &script);
-    std::string getExtensionScriptTemplNameForId( file_id_t id );
-    std::string getExtensionScriptNameForId( file_id_t id );
-
+public:    
     std::string getScriptTarget() const
     { return scriptTarget; }
+
+    std::string getIncludes() const
+    { return includesArg; }
+    std::string getToolIncludes() const
+    { return toolIncArg; }
+    //std::string getPltfIncludes() const
+    //{ return pltfIncArg; }
     
 private:
     static bool xmlHasErrors;
@@ -148,13 +141,14 @@ private:
     FindFiles nodeFiles, incdirFiles;
     std::vector<file_id_t>   sourceIds;
     std::set<file_id_t>      fileIds;
-    std::string target, type;          // from XML
-    std::vector<std::string> cppflags;
-    std::vector<std::string> cflags;
+    std::string target, type;             // from XML
+    std::vector<std::string> cppflags;    // from XML
+    std::vector<std::string> cflags;      // from XML
+    std::vector<std::string> localLibs;   // from XML
     std::vector<std::string> databaseFiles;  // files and commands in the ferret file database
     
-    std::string              module;   // from XML
-    std::string              name;     // from XML
+    std::string              module;      // from XML
+    std::string              name;        // from XML
     std::string              nodeName;
     
     std::string              includesArg;
@@ -176,10 +170,6 @@ private:
     std::vector<std::string> usetools;
     std::vector<Extension>   extensions;
     std::map<std::string,std::string> extensionUsed;
-    
-    std::map<file_id_t,std::map<std::string,std::string> > replacements;
-    std::map<file_id_t,std::string>  extensionScriptTemplNames;
-    std::map<file_id_t,std::string>  extensionScriptNames;
     
     file_id_t   target_file_id;
     std::string scriptTarget;   // the "human readable" form of the target, to be displayed in the echo in the scripts

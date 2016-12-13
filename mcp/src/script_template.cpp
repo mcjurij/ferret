@@ -174,3 +174,101 @@ char ScriptTemplate::consume()
     assert( pos < templContent.length() );
     return templContent[pos++];
 }
+
+
+void ScriptInstance::addReplacements( const map<string,string> &repl )
+{
+    if( replacements.size() == 0 )
+        replacements = repl;
+    else
+    {
+        map<string,string>::const_iterator it = repl.begin();
+        for( ; it != repl.end(); it++)
+            replacements[ it->first ] = it->second;
+    }
+}
+
+
+void ScriptInstance::addReplacement( const string &k, const string &v)
+{
+    replacements[ k ] = v;
+}
+
+
+string ScriptInstance::write( const std::string &target_fn )
+{    
+    ScriptTemplate st( templ_name );
+    if( !st.readTemplate() )
+    {
+        cerr << "error: command for file " << target_fn << " (" << file_id << "): error while reading script template.\n";
+        return "";
+    }
+    
+    st.replace( replacements );
+    
+    return st.write( stencil, file_id);  // returns file name of the written script
+}
+
+
+ScriptManager *ScriptManager::theScriptManager = 0;
+
+ScriptManager *ScriptManager::getTheScriptManager()
+{
+    if( theScriptManager == 0 )
+        theScriptManager = new ScriptManager;
+
+    return theScriptManager;
+}
+
+
+void ScriptManager::setTemplateFileName( file_id_t file_id, const string &fn, const string &st)
+{
+    map<file_id_t,ScriptInstance>::iterator  it = instances.find( file_id );
+
+    if( it == instances.end() )
+        instances[ file_id ] = ScriptInstance( file_id, fn, st);
+    else
+    {
+        cerr << "internal error: attempt to change script template file name\n";
+    }
+}
+
+
+void ScriptManager::addReplacements( file_id_t file_id, const map<string,string> &repl)
+{
+    map<file_id_t,ScriptInstance>::iterator it = instances.find( file_id );
+    
+    if( it != instances.end() )
+        it->second.addReplacements( repl );
+    else
+    {
+        cerr << "internal error: unknown script template for adding replacements\n";
+    }
+}
+
+
+void ScriptManager::addReplacement( file_id_t file_id, const string &k, const string &v)
+{
+    map<file_id_t,ScriptInstance>::iterator it = instances.find( file_id );
+    
+    if( it != instances.end() )
+        it->second.addReplacement( k, v);
+    else
+    {
+        cerr << "internal error: unknown script template for adding replacement\n";
+    }
+}
+
+
+string ScriptManager::write( file_id_t file_id, const std::string &target_fn)
+{
+    map<file_id_t,ScriptInstance>::iterator it = instances.find( file_id );
+    
+    if( it != instances.end() )
+        return it->second.write( target_fn );
+    else
+    {
+        cerr << "internal error: command for file " << target_fn << " (" << file_id << ") does not have a script template attached to it.\n";
+        return "";
+    }
+}

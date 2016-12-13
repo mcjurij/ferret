@@ -24,33 +24,9 @@ static int fe_b( int file_id )
 }
 
 
-static string genScript( ProjectXmlNode *xmlNode, const string &file_name, file_id_t file_id)
+static string genScript( const string &file_name, file_id_t file_id)
 {
-    string templ = xmlNode->getExtensionScriptTemplNameForId( file_id );
-    
-    if( templ == "MISSING" )
-    {
-        cerr << "error: command for file " << file_name << " (" << file_id << ") does not have a script template attached to it.\n";
-        return "";
-    }
-    
-    ScriptTemplate st( templ );
-    if( !st.readTemplate() )
-    {
-        cerr << "error: command for file " << file_name << " (" << file_id << "): error while reading script template.\n";
-        return "";
-    }
-    
-    st.replace( xmlNode->getReplMapForId( file_id ) );
-    
-    string script = xmlNode->getExtensionScriptNameForId( file_id );
-    if( script == "MISSING" )
-    {
-        cerr << "error: command for file " << file_name << " (" << file_id << ") does not have a script attached to it.\n";
-        return "";
-    }
-    
-    return st.write( script, file_id);
+    return ScriptManager::getTheScriptManager()->write( file_id, file_name);
 }
 
 // -----------------------------------------------------------------------------
@@ -215,7 +191,7 @@ void Engine::addCommand( data_t *cmd )
 {
     command_t *c = init_entry( cmd );
     int b = fe_b( cmd->file_id );
-
+    
     file_ids.push_back( c->file_id );
     
     if( files[ b ].entry == 0 )
@@ -624,7 +600,7 @@ bool Engine::prereqs_done( command_t *c )
 
 string Engine::generateScript( command_t *c )
 {
-    return genScript( c->xmlNode, c->file_name, c->file_id);
+    return genScript( c->file_name, c->file_id);
 }
 
 
@@ -1384,7 +1360,7 @@ void MakefileEngine::writeCommands()
 
 string MakefileEngine::generateScript( data_t *c )
 {
-    return genScript( c->xmlNode, c->file_name, c->file_id);
+    return genScript( c->file_name, c->file_id);
 }
 
 

@@ -10,6 +10,7 @@
 #include "extension.h"
 #include "engine.h"
 #include "platform_defines.h"
+#include "script_template.h"
 
 using namespace std;
 
@@ -21,9 +22,10 @@ bool ProjectXmlNode::xmlHasErrors = false;
 ProjectXmlNode::ProjectXmlNode( const string &d, const string &module, const string &name,
                                 const string &target, const string &type,
                                 const vector<string> &cppflags, const vector<string> &cflags,
-                                const vector<string> &usetools)
-    : dir(d), target(target), type(type), cppflags(cppflags), cflags(cflags), module(module), name(name),
-      madeObjDir(false), madeBinDir(false), madeLibDir(false), usetools(usetools), target_file_id(-1)
+                                const vector<string> &usetools, const vector<string> &localLibs)
+    : dir(d), target(target), type(type), cppflags(cppflags), cflags(cflags), localLibs(localLibs),
+      module(module), name(name), madeObjDir(false), madeBinDir(false), madeLibDir(false), usetools(usetools),
+      target_file_id(-1)
 {
     nodeName = module + "*" + name;
     nameToNodeMap[ nodeName ] = this;
@@ -82,9 +84,10 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
     string name;
     string target;
     string type;
-    vector<string> incdirs;  // incdir tag allows direct setting of additional include directory
-    vector<string> cppflags; // c++ flags valid only for this node
-    vector<string> cflags;   // c flags valid only for this node
+    vector<string> incdirs;    // incdir tag allows direct setting of additional include directory
+    vector<string> cppflags;   // c++ flags valid only for this node
+    vector<string> cflags;     // c flags valid only for this node
+    vector<string> localLibs;  // lib tag allows adding external libs
     vector<string> usetools;
     vector<Extension> extensions;
     
@@ -142,18 +145,21 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
                 if( attr.HasAttribute( "value" ) )
-                {
                     cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
-                }
             }
             else if( xmls->Path() == "/project/cflags" )
             {
                 SimpleXMLAttributes attr = xmls->Attributes();
                 
                 if( attr.HasAttribute( "value" ) )
-                {
                     cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
-                }
+            }
+            else if( xmls->Path() == "/project/lib" )
+            {
+                SimpleXMLAttributes attr = xmls->Attributes();
+                
+                if( attr.HasAttribute( "value" ) )
+                    localLibs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
             }
             else if( xmls->Path() == "/project/usetool" )
             {
@@ -167,7 +173,7 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
         {
             if( xmls->Path() == "/project" && xmls->Name() != "sub" && xmls->Name() != "incdir" &&
                 xmls->Name() != "cppflags" && xmls->Name() != "cflags" && xmls->Name() != "lflags" && xmls->Name() != "eflags" &&
-                xmls->Name() != "usetool"  )
+                xmls->Name() != "usetool"  && xmls->Name() != "lib"  )
             {
                 map<string,string> attribs;
                 SimpleXMLAttributes attr = xmls->Attributes();
@@ -184,7 +190,7 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
     if( !xmls->HasError() )
     {
         node = new ProjectXmlNode( start, module, name, target, type,
-                                   cppflags, cflags, usetools);
+                                   cppflags, cflags, usetools, localLibs);
         size_t i;
         for( i = 0; i < subDirs.size(); i++)
         {
@@ -223,9 +229,9 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
         
         for( size_t i=0; i < node->subDirs.size(); i++)
         {
-            string entrypoint = node->subDirs[ i ];
+            string sub_start = join( "/", split( '/', node->subDirs[ i ]), false);
             
-            ProjectXmlNode *d = traverseXml( entrypoint, level + 1);
+            ProjectXmlNode *d = traverseXml( sub_start, level + 1);
             if( d )
             {
                 node->workingSubDirs.push_back( node->subDirs[ i ] );
@@ -321,7 +327,7 @@ vector<string> ProjectXmlNode::traverseXmlStructureForChildren( int level )
             
             ProjectXmlNode *dep = dirToNodeMap.at( subdir );
             
-            if( dep->getType() == "library" || dep->getType() == "staticlib" )
+            if( dep->getType() == "library" || dep->getType() == "staticlib"  || dep->getType() == "static" )
             {
                 string t = dep->getTarget();
                 libs.push_back( t );
@@ -549,7 +555,7 @@ void ProjectXmlNode::createCommandArguments( const string &compileMode )
         scriptTarget = ps->getSoFileName( target );
     else if( type == "executable" )
         scriptTarget = target;
-    else if( type == "staticlib" )
+    else if( type == "staticlib" || type == "static" )
         scriptTarget = ps->getStaticlibFileName( target );
 }
 
@@ -558,52 +564,61 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
 {
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
     string compileMode = fileMan.getCompileMode();
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
     
-    if( type == "library" || type == "executable" || type == "staticlib" )
+    if( type == "library" || type == "executable" || type == "staticlib" || type == "static" )
     {
         string l_outputdir = getLibDir();
         string b_outputdir = getBinDir();
+        map<string,string> repl;
         
         if( type == "library" )
         {
             string t = l_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "L", this);
             
-            setExtensionScriptTemplNameForId( target_file_id, "ferret_l.sh.templ", "ferret_l__#__" + compileMode + ".sh");
-            setReplKeyValueForId( target_file_id, "F_LFLAGS", lflagsArg);
-            setReplKeyValueForId( target_file_id, "F_OUT", t);
+            sm->setTemplateFileName( target_file_id, "ferret_l.sh.templ", "ferret_l__#__" + compileMode + ".sh");
+
+            repl[ "F_LFLAGS" ] = lflagsArg;
+            repl[ "F_OUT" ] = t;
         }
         else if( type == "executable" )
         {
             string t = b_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "X", this);
 
-            setExtensionScriptTemplNameForId( target_file_id, "ferret_x.sh.templ", "ferret_x__#__" + compileMode + ".sh");
-            setReplKeyValueForId( target_file_id, "F_EFLAGS", eflagsArg);
-            setReplKeyValueForId( target_file_id, "F_OUT", t);
+            sm->setTemplateFileName( target_file_id, "ferret_x.sh.templ", "ferret_x__#__" + compileMode + ".sh");
+            
+            repl[ "F_EFLAGS" ] = eflagsArg;
+            repl[ "F_OUT" ] = t;
         }
-        else if( type == "staticlib" )
+        else if( type == "staticlib" || type == "static" )
         {
             string t = l_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "A", this);
 
-            setExtensionScriptTemplNameForId( target_file_id, "ferret_a.sh.templ", "ferret_a__#__" + compileMode + ".sh");
-            setReplKeyValueForId( target_file_id, "F_AFLAGS", aflagsArg);
-            setReplKeyValueForId( target_file_id, "F_OUT", t);
+            sm->setTemplateFileName( target_file_id, "ferret_a.sh.templ", "ferret_a__#__" + compileMode + ".sh");
+            
+            repl[ "F_AFLAGS" ] = aflagsArg;
+            repl[ "F_OUT" ] = t;
         }
         
-        setReplKeyValueForId( target_file_id, "F_ID", target_file_id);
-        setReplKeyValueForId( target_file_id, "F_TARGET", scriptTarget);
-        setReplKeyValueForId( target_file_id, "F_LIBS", join( " -l", libs, true));
-        setReplKeyValueForId( target_file_id, "F_LIBDIRS", joinUniq( " -L", searchLibDirs, true));
-        setReplKeyValueForId( target_file_id, "F_PLTF_LIBS", pltfLibArg);
-        setReplKeyValueForId( target_file_id, "F_PLTF_LIBDIRS", pltfLibDirArg);
-        setReplKeyValueForId( target_file_id, "F_TOOL_LIBS", toolLibArg);       
-        setReplKeyValueForId( target_file_id, "F_TOOL_LIBDIRS", toolLibDirArg);
+        stringstream con;
+        con << target_file_id;
+        repl[ "F_ID" ] = con.str();
+        repl[ "F_TARGET" ] = scriptTarget;
+        repl[ "F_LIBS" ] = join( " -l", libs, true) + join( " -l", localLibs, true);
+        repl[ "F_LIBDIRS" ] = joinUniq( " -L", searchLibDirs, true);
+        repl[ "F_PLTF_LIBS" ] = pltfLibArg;
+        repl[ "F_PLTF_LIBDIRS" ] = pltfLibDirArg;
+        repl[ "F_TOOL_LIBS" ] = toolLibArg;
+        repl[ "F_TOOL_LIBDIRS" ] = toolLibDirArg;
+        
+        sm->addReplacements( target_file_id, repl);
     }
     
     
-    if( type == "library" || type == "executable" || type == "staticlib" )
+    if( type == "library" || type == "executable" || type == "staticlib" || type == "static" )
     {
         size_t i;
         
@@ -700,7 +715,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
                 }*/
             fileMan.addDependency( target_file_id, obj_id);
         }
-        setReplKeyValueForId( target_file_id, "F_IN", join( " ", objs, false));   // linker input files
+        sm->addReplacement( target_file_id, "F_IN", join( " ", objs, false));   // linker input files
         
         for( i = 0; i < libs.size(); i++)
         {
@@ -716,38 +731,50 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
 void ProjectXmlNode::pegCppScript( file_id_t cpp_id, const string &in, const string &out, const string &compileMode)
 {
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
+    map<string,string> repl;
     
-    setExtensionScriptTemplNameForId( cpp_id, "ferret_cpp.sh.templ", "ferret_cpp__#__" + compileMode + ".sh");
+    sm->setTemplateFileName( cpp_id, "ferret_cpp.sh.templ", "ferret_cpp__#__" + compileMode + ".sh");
 
-    setReplKeyValueForId( cpp_id, "F_COMPILER", ps->getCppCompiler());
-    setReplKeyValueForId( cpp_id, "F_ID", cpp_id);
-    setReplKeyValueForId( cpp_id, "F_CPPFLAGS", cppflagsArg);
-    setReplKeyValueForId( cpp_id, "F_PLTF_INCDIRS", pltfIncArg);
-    setReplKeyValueForId( cpp_id, "F_INCLUDES", includesArg);
-    setReplKeyValueForId( cpp_id, "F_TOOL_INCDIRS", toolIncArg);
-    setReplKeyValueForId( cpp_id, "F_IN", in);
-    setReplKeyValueForId( cpp_id, "F_OUT", out);
-    setReplKeyValueForId( cpp_id, "F_TARGET", scriptTarget);
-    setReplKeyValueForId( cpp_id, "F_SRCDIR", getSrcDir());
+    repl[ "F_COMPILER" ] = ps->getCppCompiler();
+    stringstream con;
+    con << cpp_id;
+    repl[ "F_ID" ] = con.str();
+    repl[ "F_CPPFLAGS" ] = cppflagsArg;
+    repl[ "F_PLTF_INCDIRS" ] = pltfIncArg;
+    repl[ "F_INCLUDES" ] = includesArg;
+    repl[ "F_TOOL_INCDIRS" ] = toolIncArg;
+    repl[ "F_IN" ] = in;
+    repl[ "F_OUT" ] = out;
+    repl[ "F_TARGET" ] = scriptTarget;
+    repl[ "F_SRCDIR" ] = getSrcDir();
+    
+    sm->addReplacements( cpp_id, repl);
 }
 
 
 void ProjectXmlNode::pegCScript( file_id_t c_id, const string &in, const string &out, const string &compileMode)
 {
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
+    ScriptManager *sm = ScriptManager::getTheScriptManager();
+    map<string,string> repl;
     
-    setExtensionScriptTemplNameForId( c_id, "ferret_c.sh.templ", "ferret_c__#__" + compileMode + ".sh");
+    sm->setTemplateFileName( c_id, "ferret_c.sh.templ", "ferret_c__#__" + compileMode + ".sh");
     
-    setReplKeyValueForId( c_id, "F_COMPILER", ps->getCCompiler());
-    setReplKeyValueForId( c_id, "F_ID", c_id);
-    setReplKeyValueForId( c_id, "F_CFLAGS", cflagsArg);
-    setReplKeyValueForId( c_id, "F_PLTF_INCDIRS", pltfIncArg);
-    setReplKeyValueForId( c_id, "F_INCLUDES", includesArg);
-    setReplKeyValueForId( c_id, "F_TOOL_INCDIRS", toolIncArg);
-    setReplKeyValueForId( c_id, "F_IN", in);
-    setReplKeyValueForId( c_id, "F_OUT", out);
-    setReplKeyValueForId( c_id, "F_TARGET", scriptTarget);
-    setReplKeyValueForId( c_id, "F_SRCDIR", getSrcDir());
+    repl[ "F_COMPILER" ] = ps->getCCompiler();
+    stringstream con;
+    con << c_id;
+    repl[ "F_ID" ] = con.str();
+    repl[ "F_CFLAGS" ] = cflagsArg;
+    repl[ "F_PLTF_INCDIRS" ] = pltfIncArg;
+    repl[ "F_INCLUDES" ] = includesArg;
+    repl[ "F_TOOL_INCDIRS" ] = toolIncArg;
+    repl[ "F_IN" ] = in;
+    repl[ "F_OUT" ] = out;
+    repl[ "F_TARGET" ] = scriptTarget;
+    repl[ "F_SRCDIR" ] = getSrcDir();
+    
+    sm->addReplacements( c_id, repl);
 }
 
 
@@ -815,8 +842,7 @@ void ProjectXmlNode::createExtensionCommands( FileManager &fileMan )
         }
         else
         {
-            map<file_id_t, map<string,string> > re = e->createCommands( fileMan, extensions[i].attribs);
-            setReplMapForId( re );
+            e->createCommands( fileMan, extensions[i].attribs);
             
             set<file_id_t> bids = e->getBlockedIds();            
             blockedIds.insert( bids.begin(), bids.end());
@@ -833,88 +859,3 @@ void ProjectXmlNode::addExtensionSourceId( file_id_t id )
     sourceIds.push_back( id );
 }
 */
-
-void ProjectXmlNode::setReplMapForId( const map<file_id_t,map<string,string> > &re)
-{
-    map<file_id_t, map<string,string> >::iterator it;
-    map<file_id_t, map<string,string> >::const_iterator itn;
-    map<string,string>::const_iterator in;
-    
-    for( itn = re.begin(); itn != re.end(); itn++)
-    {
-        file_id_t id = itn->first;
-        it = replacements.find( id );
-
-        if( it != replacements.end() )
-        {
-            for( in = re.at( id ).begin(); in != re.at( id ).end(); in++)
-            {
-                replacements[ id ][ in->first ] = in->second;  // merge stuff with same file id
-            }
-        }
-        else
-            replacements[ id ] = re.at( id );
-    }
-}
-
-
-void ProjectXmlNode::setReplKeyValueForId( file_id_t id, const string &key, const string &val)
-{
-    map<string,string> m;
-    m[ key ] = val;
-    map<int,map<string,string> > re;
-    re[ id ] = m;
-    
-    setReplMapForId( re );
-}
-
-
-void ProjectXmlNode::setReplKeyValueForId( file_id_t id, const string &key, int val)
-{
-    stringstream vss;
-    vss << val;
-    map<string,string> m;
-    m[ key ] = vss.str();
-    map<int,map<string,string> > re;
-    re[ id ] = m;
-    
-    setReplMapForId( re );
-}
-
-
-map<string,string> ProjectXmlNode::getReplMapForId( file_id_t id )
-{
-    map<file_id_t, map<string,string> >::iterator it = replacements.find( id );
-    
-    if( it != replacements.end() )
-        return it->second;
-    else
-        return map<string,string>();
-}
-
-
-void ProjectXmlNode::setExtensionScriptTemplNameForId( file_id_t id, const string &scriptTempl, const string &script)
-{
-    extensionScriptTemplNames[ id ] = scriptTempl;
-    extensionScriptNames[ id ] = script;
-}
-
-
-string ProjectXmlNode::getExtensionScriptTemplNameForId( file_id_t id )
-{
-    map<file_id_t,string>::iterator it = extensionScriptTemplNames.find( id );
-    if( it != extensionScriptTemplNames.end() )
-        return it->second;
-    else
-        return "MISSING";
-}
-
-
-string ProjectXmlNode::getExtensionScriptNameForId( file_id_t id )
-{
-    map<file_id_t,string>::iterator it = extensionScriptNames.find( id );
-    if( it != extensionScriptNames.end() )
-        return it->second;
-    else
-        return "MISSING";
-}

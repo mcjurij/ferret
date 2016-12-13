@@ -8,10 +8,10 @@
 
 #include "hash_set.h"
 #include "engine.h"
+#include "glob_utility.h"
+
 
 class ProjectXmlNode;
-
-typedef int file_id_t;
 
 class FileManager {
 public:
