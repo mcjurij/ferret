@@ -501,8 +501,6 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
                     repl[ name ] = defines.replace( value );
                 }
                 
-                replacements[ extension_fid ] = repl;
-
                 string stencil;
                 vector<string> p = split( '#', entry->script_stencil);
 
