@@ -19,7 +19,7 @@
     </compile_mode>
     <compile_mode value="RELDBG">
       <cppflags value=" -g -O2 -DRELEASE "/> 
-      <cflags value=" -g -02 -DRELEASE "/> 
+      <cflags value=" -g -O2 -DRELEASE "/> 
     </compile_mode>
     
     <compile_mode value="RELEASE">
