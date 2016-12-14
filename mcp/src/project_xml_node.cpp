@@ -403,7 +403,7 @@ vector<File> ProjectXmlNode::getFiles() const
 void ProjectXmlNode::traverseIncdir( const string &incdir )
 {
     if( FindFiles::exists( incdir ) )
-        incdirFiles.appendTraverse( incdir );
+        incdirFiles.appendTraverse( incdir, false /* not deep */);
     else
         cerr << "warning: incdir '" << incdir << "' not found\n";
 }

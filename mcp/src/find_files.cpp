@@ -105,68 +105,52 @@ void FindFiles::traverse( const string &start_dir, bool deep)
             perror("nftw");
             cerr << "error: " + start_dir + " not found or not readable\n";
         }
+
+        files = ftwFiles;
+        ftwFiles.clear();
     }
     else
     {
-        DIR *dirp = opendir( start_dir.c_str() );
-        struct dirent *dp;
-        
-        if( dirp == 0 )
-        {
-            perror("opendir");
-            cerr << "error: " + start_dir + " not found or not readable\n";
-            return;
-        }
-        
-        do
-        {
-            errno = 0;
-            if( (dp = readdir(dirp)) != 0 )
-            {
-                if( dp->d_name[0] == 0 || dp->d_name[0] == '.' || dp->d_type != DT_REG )
-                    continue;
+        vector<File> dir_files = readDirectory( start_dir );
 
-                struct stat fst;
-
-                string bn = dp->d_name;
-                string fpath = start_dir + "/" + bn;
-                
-                if( stat( fpath.c_str(), &fst) == 0 )
-                {
-                    ftwFiles.push_back( File( fpath, start_dir, bn, &fst) );
-                    allFiles[ fpath ] = File( fpath, start_dir, bn, &fst);
-                }
-                else
-                    cerr << "error: can't stat '" << fpath << "'\n";
-            }
-        } while( dp != 0 );
-        
-        if (errno != 0)
-            perror("readdir: error reading directory");
-        closedir(dirp);
+        files = dir_files;
+        for( size_t i = 0; i < dir_files.size(); i++)
+            allFiles[ dir_files[i].getPath() ] = dir_files[i];
     }
-        
-    files = ftwFiles;
-    ftwFiles.clear();
 }
 
 
-void FindFiles::appendTraverse( const string &start_dir ) 
+void FindFiles::appendTraverse( const string &start_dir, bool deep)
 {
     int flags = 0;
     
     ftwFiles.clear();
-    
-    if( nftw( start_dir.c_str(), FindFiles::handle_entry, 20, flags) == -1 ) // see http://linux.die.net/man/3/ftw
-    {
-        cerr << "error: " + start_dir + " not found or not readable\n";
-        perror("nftw");
-    }
 
-    files.reserve( files.size() + ftwFiles.size() );
-    files.insert( files.end(), ftwFiles.begin(), ftwFiles.end());
+    if( deep )
+    {
+        if( nftw( start_dir.c_str(), FindFiles::handle_entry, 20, flags) == -1 ) // see http://linux.die.net/man/3/ftw
+        {
+            cerr << "error: " + start_dir + " not found or not readable\n";
+            perror("nftw");
+        }
+
+        files.reserve( files.size() + ftwFiles.size() );
+        files.insert( files.end(), ftwFiles.begin(), ftwFiles.end());  
     
-    ftwFiles.clear();
+        ftwFiles.clear();
+    }
+    else
+    {
+        vector<File> dir_files = readDirectory( start_dir );
+        
+        files.reserve( files.size() + dir_files.size() );
+        
+        for( size_t i = 0; i < dir_files.size(); i++)
+        {
+            files.push_back( dir_files[i] );
+            allFiles[ dir_files[i].getPath() ] = dir_files[i];
+        }
+    }
 }
 
 
@@ -329,6 +313,48 @@ int FindFiles::handle_entry( const char *fpath, const struct stat *sb,
     }
     
     return 0;           // tell nftw() to continue
+}
+
+
+vector<File> FindFiles::readDirectory( const string &dir )
+{
+    DIR *dirp = opendir( dir.c_str() );
+    struct dirent *dp;
+    vector<File> dir_files;
+    
+    if( dirp == 0 )
+    {
+        perror("opendir");
+        cerr << "error: " + dir + " not found or not readable\n";
+        return dir_files;
+    }
+    
+    do
+    {
+        errno = 0;
+        if( (dp = readdir(dirp)) != 0 )
+        {
+            if( dp->d_name[0] == 0 || dp->d_name[0] == '.' || dp->d_type != DT_REG )
+                continue;
+            
+            struct stat fst;
+            
+            string bn = dp->d_name;
+            string fpath = dir + "/" + bn;
+            
+            if( stat( fpath.c_str(), &fst) == 0 )
+                dir_files.push_back( File( fpath, dir, bn, &fst) );
+            else
+                cerr << "error: can't stat '" << fpath << "'\n";
+        }
+    }
+    while( dp != 0 );
+    
+    if (errno != 0)
+        perror("readdir: error reading directory");
+    closedir(dirp);
+
+    return dir_files;
 }
 
 

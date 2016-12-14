@@ -75,8 +75,8 @@ public:
     FindFiles()
     {}
     
-    void traverse( const std::string &start_dir, bool deep = true);
-    void appendTraverse( const std::string &start_dir );
+    void traverse( const std::string &start_dir, bool deep);
+    void appendTraverse( const std::string &start_dir, bool deep);
     
     std::vector<File> getFiles() const
     {
@@ -92,6 +92,9 @@ public:
     static bool existsUncached( const std::string &path );
     
     static void clearCache();
+
+private:
+    std::vector<File> readDirectory( const std::string &dir );
     
 private:
     static std::map<std::string,File> allFiles;
