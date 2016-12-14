@@ -46,6 +46,7 @@ public:
     
     string selector_param;
     string selector_fileext;
+    string selector_trydir;
     
     vector< pair<string,string> > selector_assigns;
     vector< pair<string,string> > param_defs;
@@ -376,10 +377,19 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     
     vector<File> sources = getNode()->getFiles();
     int cnt_match = 0;
+    vector<string> selector_parts = split( '/', selectorfn);
+    string compare_to;
+    
+    if( entry->selector_trydir.length() == 0 )
+        compare_to = getNode()->getSrcDir() + "/" + selectorfn;
+    else if( selector_parts.size() == 1 )
+        compare_to = getNode()->getDir() + "/" + entry->selector_trydir + "/" + selector_parts[0];
+    else // more than 1 part => ignore trydir
+        compare_to = getNode()->getDir() + "/" + join( "/", selector_parts, false);
     
     for( i = 0; i < sources.size(); i++)
     {
-        if( sources[i].extension() == entry->selector_fileext && sources[i].getPath() == getNode()->getSrcDir() + "/" + selectorfn )
+        if( sources[i].extension() == entry->selector_fileext && sources[i].getPath() == compare_to )
         {
             map<string,file_id_t>  nameToFileId;
             cnt_match++;
@@ -523,7 +533,7 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     }
 
     if( cnt_match == 0 )
-        cerr << entry->getType() << " extension (XML): warning: none of the files matched selector at " << getNode()->getDir() << ".\n";
+        cerr << entry->getType() << " extension (XML): warning: none of the files matched selector '" << compare_to << "' at " << getNode()->getDir() << ".\n";
 }
 
 
@@ -621,6 +631,9 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
                 
                 if( attr.HasAttribute( "fileext" ) )
                     entry->selector_fileext = attr.Value( "fileext" );
+
+                if( attr.HasAttribute( "trydir" ) )
+                    entry->selector_trydir = attr.Value( "trydir" );
             }
             else if( xmls->Path() == "/extension/selector/assign" )
             {
