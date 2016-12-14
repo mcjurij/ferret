@@ -377,15 +377,19 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     
     vector<File> sources = getNode()->getFiles();
     int cnt_match = 0;
-    vector<string> selector_parts = split( '/', selectorfn);
     string compare_to;
     
     if( entry->selector_trydir.length() == 0 )
         compare_to = getNode()->getSrcDir() + "/" + selectorfn;
-    else if( selector_parts.size() == 1 )
-        compare_to = getNode()->getDir() + "/" + entry->selector_trydir + "/" + selector_parts[0];
-    else // more than 1 part => ignore trydir
-        compare_to = getNode()->getDir() + "/" + join( "/", selector_parts, false);
+    else
+    {
+        vector<string> selector_parts = split( '/', selectorfn);
+        
+        if( selector_parts.size() == 1 )
+            compare_to = getNode()->getDir() + "/" + entry->selector_trydir + "/" + selector_parts[0];
+        else // more than 1 part => ignore trydir
+            compare_to = getNode()->getDir() + "/" + join( "/", selector_parts, false);
+    }
     
     for( i = 0; i < sources.size(); i++)
     {
