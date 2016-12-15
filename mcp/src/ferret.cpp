@@ -561,7 +561,7 @@ int main( int argc, char **argv)
     if( getenv( "HOSTNAME" ) == 0 )
     {
         cerr << "HOSTNAME must be set. exiting.\n";
-        exit( 13 );
+        emergency_exit( 13 );
     }
 
     if( compileModeSet )
