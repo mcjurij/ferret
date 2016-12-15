@@ -823,7 +823,7 @@ int main( int argc, char **argv)
     
     if( !initMode && verbosity > 1 )
     {
-        cout << " CHANGED -2: \n";
+        cout << "CHANGED 1: \n";
         filesDb.printWhatsChanged();
     }
     
@@ -844,7 +844,7 @@ int main( int argc, char **argv)
     
     if( verbosity > 1 )
     {
-        cout << " CHANGED 1: \n";
+        cout << "CHANGED 2: \n";
         filesDb.printWhatsChanged();
     }
     
@@ -855,7 +855,7 @@ int main( int argc, char **argv)
     
     if( verbosity > 1 )
     {
-        cout << " CHANGED 2: \n";
+        cout << "CHANGED 3: \n";
         filesDb.printWhatsChanged();
     }
 
@@ -877,7 +877,7 @@ int main( int argc, char **argv)
     {
         if( verbosity > 1 )
         {
-            cout << " CHANGED 3: \n";
+            cout << "CHANGED 4: \n";
             filesDb.printWhatsChanged();
         }
         
