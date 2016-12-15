@@ -340,7 +340,10 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
                     {
                         node = ProjectXmlNode::getNodeByName( node_name );
                         if( node == 0 )
-                            cerr << "error: line "<< line << ": module or name '" << node_name << "' unknown.\n";                        
+                        {
+                            cerr << "error: line "<< line << ": module or name '" << node_name << "' unknown.\n";
+                            errors++;
+                        }
                         else
                             node->addDatabaseFile( file_name );
                     }

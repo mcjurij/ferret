@@ -557,6 +557,12 @@ int main( int argc, char **argv)
     
     if( arg_err )
         show_usage();
+    
+    if( getenv( "HOSTNAME" ) == 0 )
+    {
+        cerr << "HOSTNAME must be set. exiting.\n";
+        exit( 13 );
+    }
 
     if( compileModeSet )
         initMode = true;
