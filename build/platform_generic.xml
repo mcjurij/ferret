@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<platform>
+
+    <compiler_version value="GCC"/>
+
+    <compiler value="/usr/bin/g++"/>
+    <cppflags value=" -DOS_LINUX -DUNIX"/>
+    <cppflags value=" -Wall" />
+
+    <compilerc value="/usr/bin/gcc"/>
+    <cflags value=" -DOS_LINUX -DUNIX"/>
+    <cflags value=" -Wall" />
+
+    <compile_mode value="DEBUG">
+        <cppflags value=" -g "/> 
+        <cflags value=" -g "/> 
+    </compile_mode>
+    <compile_mode value="RELDBG">
+        <cppflags value=" -g -O2 -DRELEASE "/> 
+        <cflags value=" -g -O2 -DRELEASE "/> 
+    </compile_mode>
+    
+    <compile_mode value="RELEASE">
+        <cppflags value=" -O2 -DRELEASE "/> 
+        <cflags value=" -O2 -DRELEASE "/> 
+    </compile_mode>
+    
+    <compile_trait type="library" >
+      <cppflags value="-fPIC"/> 
+      <cflags value="-fPIC"/> 
+    </compile_trait>
+    
+    <soext value=".so"/>
+    <staticext value=".a"/>
+
+    <lflags value=" -g -shared "/>
+    <eflags value=" -g "/> 
+      
+    <lib    value="rt" />
+</platform>
