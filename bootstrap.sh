@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "x$HOSTNAME" == "x" ]
+then
+    echo "HOSTNAME must be set"
+    exit 1
+fi
+
 mkdir -p build/bin
 
 if [ ! -x build/bin/ferret_inc ]
