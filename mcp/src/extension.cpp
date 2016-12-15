@@ -21,8 +21,6 @@ void setupExtensions()
     
     em->addExtension( new BisonExtension(0) );
     
-    em->addExtension( new MsgExtension(0) );
-
     // em->read( "ferret_extensions.xml" );
 }
 
@@ -243,81 +241,6 @@ void BisonExtension::createCommands( FileManager &fileMan, const map<string,stri
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
             getNode()->pegCppScript( cpp_id, bison_o, cpp_o, fileMan.getCompileMode());
-        }
-    }
-}
-
-// -----------------------------------------------------------------------------
-
-string MsgExtension::getType() const
-{
-    return "msg";
-}
-
-
-ExtensionBase *MsgExtension::createExtensionDriver( ProjectXmlNode *node )
-{
-    return new MsgExtension( node );
-}
-
-
-void MsgExtension::createCommands( FileManager &fileMan, const map<string,string> &xmlAttribs)
-{
-    assert( getNode() != 0 );
-    ScriptManager *sm = ScriptManager::getTheScriptManager();
-    size_t i;
-
-    if( verbosity > 0 )
-        cout << "MSG Extension for node " << getNode()->getDir() << ":\n";
-    
-    string msgfn = getAttrib( xmlAttribs, "name");
-    if( msgfn.length() == 0 )
-        cerr << "MSG Extension: error: 'name' attribute missing.\n";
-    
-    string m_outputdir = getNode()->getDir() + "/";
-    string o_outputdir = getNode()->getObjDir();
-    
-    file_id_t fid, tid;
-    vector<File> sources = getNode()->getFiles();
-    
-    for( i = 0; i < sources.size(); i++)
-    {
-        if( sources[i].extension() == ".msg" && sources[i].getPath() == getNode()->getDir() + "/" + msgfn )
-        {
-            map<string,string> r;
-            
-            string msg_o = m_outputdir + "src/" + sources[i].woExtension() + ".cpp";  // msg produces 2 output files, a .cpp
-            string msg_o2 = m_outputdir + "src/" + sources[i].woExtension() + ".h";   // and a header
-            //string cpp_o = o_outputdir + sources[i].woExtension() + ".o";
-
-            if( verbosity > 0 )
-                cout << "Ext cmd for node " << getNode()->getDir() << ": msg " << msg_o << " and " << msg_o2 << "\n";
-            fid = fileMan.addExtensionCommand( msg_o, getType(), getNode());     // call msg, generates the .h and .cpp file
-            tid = fileMan.addFile( sources[i].getPath(), getNode());             // input to msg
-            fileMan.addDependency( fid, tid);
-            
-            file_id_t header_id = fileMan.addCommand( msg_o2, "W", getNode());
-            //file_id_t cpp_id = fileMan.addCommand( cpp_o, "Cpp", getNode());     // compile msg output
-            //fileMan.addDependency( cpp_id, fid);
-            //fileMan.addDependency( cpp_id, header_id);                           
-            fileMan.addWeakDependency( fid, header_id);  /* string a wait node to the msg node, to make sure we do not continue
-                                                                                    without the header being generated */
-            
-            r[ "F_IN" ] = sources[i].getPath();
-            r[ "F_MSG_IN" ] = sources[i].getBasename();
-            r[ "F_MSG_NODEDIR" ] = getNode()->getDir() + "/";
-            // r[ "F_OUT" ] =    not needed. Output is fixed
-
-            //getNode()->addExtensionSourceId( fid );
-            addBlockIncludesFileId( fid );
-            //addBlockedFileId( fid );
-            addBlockedFileId( tid );
-            //addBlockedFileId( header_id );
-            //addBlockedFileId( cpp_id );
-            
-            sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
-            sm->addReplacements( fid, r);
-            //getNode()->pegCppScript( cpp_id, msg_o, cpp_o, fileMan.getCompileMode());
         }
     }
 }

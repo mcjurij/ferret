@@ -89,27 +89,6 @@ public:
 };
 
 
-class MsgExtension : public ExtensionBase  // for *.msg files
-{
-
-public:
-    MsgExtension( ProjectXmlNode *node )
-        : ExtensionBase(node)
-    {}
-    
-    virtual std::string getType() const;
-    virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
-
-    virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
-
-    virtual std::string getScriptTemplName() const
-    { return "ferret_msg.sh.templ"; }
-    
-    virtual std::string getScriptName() const
-    { return "ferret_msg__#.sh"; }
-};
-
-
 class ExtensionEntry;
 class XmlExtension : public ExtensionBase  // for XML extensions
 {
