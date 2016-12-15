@@ -266,7 +266,7 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
     fp = fopen( fn.c_str(), "r");
     if( !fp )
     {
-        cout << "No ferret db '" << fn << "' found.\n";
+        cerr << "error: No ferret db '" << fn << "' found.\n";
         return false;
     }
     
@@ -286,7 +286,7 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
         {
             if( strcmp( "FERRET", linebuf) != 0 )
             {
-                fprintf( stderr, "line %d: %s\n", line, "Not a ferret file.");
+                cerr << "error: line "<< line << ": not a ferret file.\n";
                 errors++;
                 break;
             }
@@ -326,14 +326,14 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
             file_cnt++;
             if( file_cnt > no_of_files )
             {
-                fprintf( stderr, "line %d: more files than expected.\n", line);
+                cerr << "error: line "<< line << ": more files than expected.\n";
                 errors++;
                 break;
             }
             else if( allDeps.hasId( file_id ) == 0 )
             {
                 ProjectXmlNode *node = 0;
-
+                
                 if( !ignoreXmlNodes )
                 {
                     if( strcmp( node_name, "*") != 0 )
@@ -341,8 +341,9 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
                         node = ProjectXmlNode::getNodeByName( node_name );
                         if( node == 0 )
                         {
-                            cerr << "error: line "<< line << ": module or name '" << node_name << "' unknown.\n";
+                            cerr << "error: line "<< line << ": module or name '" << node_name << "' unknown. do --init run.\n";
                             errors++;
+                            break;
                         }
                         else
                             node->addDatabaseFile( file_name );
@@ -362,7 +363,7 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
             }
             else
             {
-                fprintf( stderr, "line %d: file id %d already used.\n", line, file_id);
+                cerr << "error: line "<< line << ": file id " << file_id << " already used.\n";
                 errors++;
                 break;
             }
@@ -384,7 +385,7 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
             }
             else
             {
-                fprintf( stderr, "line %d: unknown file id(s).\n", line);
+                cerr << "error: line "<< line << ": unknown file id(s).\n";
                 errors++;
             }
         }
