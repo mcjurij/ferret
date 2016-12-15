@@ -91,103 +91,103 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
     vector<string> usetools;
     vector<Extension> extensions;
     
-    while( !xmls->AtEnd() )
+    while( !xmls->atEnd() )
     {
-        xmls->ReadNext();
+        xmls->readNext();
 
-        if( xmls->HasError() )
+        if( xmls->hasError() )
             break;
         
-        if( xmls->IsStartElement() )  // start or self closing
+        if( xmls->isStartElement() )  // start or self closing
         {
-            if( xmls->Path() == "/project" )
+            if( xmls->path() == "/project" )
             {
-                 SimpleXMLAttributes attr = xmls->Attributes();
+                 SimpleXMLAttributes attr = xmls->attributes();
 
-                 if( attr.HasAttribute( "module" ) )
+                 if( attr.hasAttribute( "module" ) )
                  {
-                     module = attr.Value( "module" );
+                     module = attr.value( "module" );
                  }
 
-                 if( attr.HasAttribute( "name" ) )
+                 if( attr.hasAttribute( "name" ) )
                  {
-                     name = attr.Value( "name" );
+                     name = attr.value( "name" );
                  }
                  
-                 if( attr.HasAttribute( "target" ) )
+                 if( attr.hasAttribute( "target" ) )
                  {
-                     target = attr.Value( "target" );
+                     target = attr.value( "target" );
                  }
 
-                 if( attr.HasAttribute( "type" ) )
+                 if( attr.hasAttribute( "type" ) )
                  {
-                     type = attr.Value( "type" );
+                     type = attr.value( "type" );
                  }
             }
-            else if( xmls->Path() == "/project/sub" )
+            else if( xmls->path() == "/project/sub" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "name" ) )
+                if( attr.hasAttribute( "name" ) )
                 {
-                    subDirs.push_back( attr.Value( "name" ) );
+                    subDirs.push_back( attr.value( "name" ) );
                 }
             }
-            else if( xmls->Path() == "/project/incdir" )
+            else if( xmls->path() == "/project/incdir" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    incdirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    incdirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/project/cppflags" )
+            else if( xmls->path() == "/project/cppflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/project/cflags" )
+            else if( xmls->path() == "/project/cflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/project/lib" )
+            else if( xmls->path() == "/project/lib" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    localLibs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    localLibs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/project/usetool" )
+            else if( xmls->path() == "/project/usetool" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "name" ) )
-                    usetools.push_back( attr.Value( "name" ) );
+                if( attr.hasAttribute( "name" ) )
+                    usetools.push_back( attr.value( "name" ) );
             }
         }
-        else if( xmls->IsEndElement() )
+        else if( xmls->isEndElement() )
         {
-            if( xmls->Path() == "/project" && xmls->Name() != "sub" && xmls->Name() != "incdir" &&
-                xmls->Name() != "cppflags" && xmls->Name() != "cflags" && xmls->Name() != "lflags" && xmls->Name() != "eflags" &&
-                xmls->Name() != "usetool"  && xmls->Name() != "lib"  )
+            if( xmls->path() == "/project" && xmls->name() != "sub" && xmls->name() != "incdir" &&
+                xmls->name() != "cppflags" && xmls->name() != "cflags" && xmls->name() != "lflags" && xmls->name() != "eflags" &&
+                xmls->name() != "usetool"  && xmls->name() != "lib"  )
             {
                 map<string,string> attribs;
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 size_t i;
                 for( i = 0; i < attr.size(); i++)
-                    attribs[ attr[i].Name() ] = attr[i].Value();
+                    attribs[ attr[i].name() ] = attr[i].value();
                 
-                extensions.push_back( Extension( xmls->Name(), attribs) );
+                extensions.push_back( Extension( xmls->name(), attribs) );
             }
         }
     }
     
     ProjectXmlNode *node = 0;
-    if( !xmls->HasError() )
+    if( !xmls->hasError() )
     {
         node = new ProjectXmlNode( start, module, name, target, type,
                                    cppflags, cflags, usetools, localLibs);

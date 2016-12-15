@@ -1,4 +1,3 @@
-
 #ifndef FERRET_SIMPLEXMLSTREAM_H
 #define FERRET_SIMPLEXMLSTREAM_H
 
@@ -11,18 +10,18 @@
 class SimpleXMLAttribute
 {
 public:
-	SimpleXMLAttribute( const std::string &name, const std::string &value)
-		: name(name), value(value)
-	{}
-
-	std::string Name() const
-	{ return name; }
-
-	std::string Value() const
-	{ return value; }
-
+    SimpleXMLAttribute( const std::string &name, const std::string &value)
+        : n(name), v(value)
+    {}
+    
+    std::string name() const
+    { return n; }
+    
+    std::string value() const
+    { return v; }
+    
 private:
-	std::string name,value;
+    std::string n,v;
 };
 
 
@@ -30,14 +29,14 @@ private:
 class SimpleXMLAttributes : public std::vector<SimpleXMLAttribute>
 {
 public:
-	void Append( const std::string &name, const std::string &value)
-	{ push_back( SimpleXMLAttribute( name, value) ); }
+    void append( const std::string &name, const std::string &value)
+    { push_back( SimpleXMLAttribute( name, value) ); }
 
-	void Append( const SimpleXMLAttribute &attr )
-	{ push_back( attr ); }
+    void append( const SimpleXMLAttribute &attr )
+    { push_back( attr ); }
 
-	bool HasAttribute( const std::string &name );
-	std::string Value( const std::string &name );
+    bool hasAttribute( const std::string &name );
+    std::string value( const std::string &name );
 };
 
 
@@ -53,90 +52,91 @@ class SimpleXMLStream
 {
 
 public:
-	
-	enum TokenType {
-		INVALID = 0,ERROR,
-		START_ELEMENT,
-		END_ELEMENT,
+    
+    enum TokenType {
+        INVALID = 0,ERROR,
+        START_ELEMENT,
+        END_ELEMENT,
         SELF_CLOSE_ELEMENT,
-		TEXT = 6,
-		COMMENT,
+        TEXT = 6,
+        COMMENT,
         XML_HEADER = 40
-	};
-	
-	SimpleXMLStream( FILE *in );
-	~SimpleXMLStream();
-	
-	bool Parse();       // TESTING
-	
-	SimpleXMLStream::TokenType ReadNext();
-	bool ReadNextStartElement();
-	std::string ReadElementText();
+    };
+    
+    SimpleXMLStream( FILE *in );
+    ~SimpleXMLStream();
+    
+    bool Parse();       // TESTING
+    
+    SimpleXMLStream::TokenType readNext();
+    bool readNextStartElement();
+    std::string readElementText();
 
-	void SkipCurrentElement();
-	
-	int LineNumber() const
-	{ return line_num; }
+    void skipCurrentElement();
+    
+    int lineNumber() const
+    { return line_num; }
 
-	bool IsStartElement() const
-	{ return current_token == START_ELEMENT || current_token == SELF_CLOSE_ELEMENT; }
-	
-	bool IsEndElement() const
-	{ return current_token == END_ELEMENT; }
+    bool isStartElement() const
+    { return current_token == START_ELEMENT || current_token == SELF_CLOSE_ELEMENT; }
+    
+    bool isEndElement() const
+    { return current_token == END_ELEMENT; }
 
-	bool IsCharacters() const
-	{ return IsText(); }
+    bool IsCharacters() const
+    { return IsText(); }
 
-	bool IsText() const
-	{ return current_token == TEXT; }
+    bool IsText() const
+    { return current_token == TEXT; }
 
-	bool HasError() const;
+    bool hasError() const;
 
-	bool AtEnd() const
-	{ return ateof; }
+    bool atEnd() const
+    { return ateof; }
 
-	void DoTrim(bool t)
-	{ trim = t; }
-	
-	std::string Name() const;
-	
-	std::string Text() const;
-	
-	SimpleXMLAttributes Attributes() const;
+    void doTrim(bool t)
+    { trim = t; }
+    
+    std::string name() const;
+    
+    std::string text() const;
+    
+    SimpleXMLAttributes attributes() const;
 
-    std::string Path() const;
+    std::string path() const;
 
     void setPathStart( int start );
     
 private:
-	tag_t *TagConstr( const std::string &tag_name );
-	void  StackPush( tag_t *tag );
-	void  StackPop();
-	tag_t* StackTop() const;
-	int   StackSize() const;
-	bool  StackCompTop( const std::string &vs );
-	int   StackLineTop();
-	void  Consume();
-	bool  HasNextChar();
-	void  SkipWhite();
-	void  ParseTag();
-	void  ParseNext();
-	void  ReadUntilMatch();
-	std::string Trim( const std::string &s ) const;
-	
-	FILE *in_fp;
-	bool ateof;
-	int line_num;
-	char input_buf[3];
-	int input_length;
-	int curr;
-	int errors;
-	bool trim;
-	tag_t *parsestack[ 128 ];
-	int    parsestack_p;
+    tag_t *tagConstr( const std::string &tag_name );
+    void  stackPush( tag_t *tag );
+    void  stackPop();
+    tag_t* stackTop() const;
+    int   stackSize() const;
+    bool  stackCompTop( const std::string &vs );
+    int   stackLineTop();
+    void  consume();
+    bool  hasNextChar();
+    void  skipWhite();
+    void  print_err( const std::string &s );
+    void  parseTag();
+    void  parseNext();
+    void  readUntilMatch();
+    std::string trimString( const std::string &s ) const;
+    
+    FILE *in_fp;
+    bool ateof;
+    int line_num;
+    char input_buf[3];
+    int input_length;
+    int curr;
+    int errors;
+    bool trim;
+    tag_t *parsestack[ 128 ];
+    int    parsestack_p;
     int path_start;
     
-	TokenType current_token;
+    TokenType current_token;
 };
 
 #endif

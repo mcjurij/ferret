@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- mcp = master control program -->
-<project dir="mcp" module="mcp" name="ferret" target="ferret" type="executable">
+<project dir="mcp" module="ferret" name="ferret" target="ferret" type="executable">
 </project>

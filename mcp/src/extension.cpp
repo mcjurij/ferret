@@ -609,211 +609,211 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
 {
     ExtensionEntry *entry = 0;
     
-    while( !xmls->AtEnd() )
+    while( !xmls->atEnd() )
     {
-        if( xmls->HasError() )
+        if( xmls->hasError() )
             break;
         
-        if( xmls->IsStartElement() )
+        if( xmls->isStartElement() )
         {
-            if( xmls->Path() == "/extension" )
+            if( xmls->path() == "/extension" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
 
                 string type;
-                if( attr.HasAttribute( "name" ) )
-                     type = attr.Value( "name" );
+                if( attr.hasAttribute( "name" ) )
+                     type = attr.value( "name" );
 
                 entry = new ExtensionEntry( type );
             }
-            else if( xmls->Path() == "/extension/selector" )
+            else if( xmls->path() == "/extension/selector" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "param" ) )
-                    entry->selector_param = attr.Value( "param" );
+                if( attr.hasAttribute( "param" ) )
+                    entry->selector_param = attr.value( "param" );
                 
-                if( attr.HasAttribute( "fileext" ) )
-                    entry->selector_fileext = attr.Value( "fileext" );
+                if( attr.hasAttribute( "fileext" ) )
+                    entry->selector_fileext = attr.value( "fileext" );
 
-                if( attr.HasAttribute( "trydir" ) )
-                    entry->selector_trydir = attr.Value( "trydir" );
+                if( attr.hasAttribute( "trydir" ) )
+                    entry->selector_trydir = attr.value( "trydir" );
             }
-            else if( xmls->Path() == "/extension/selector/assign" )
+            else if( xmls->path() == "/extension/selector/assign" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
 
                 string part, to;
-                if( attr.HasAttribute( "part" ) )
-                    part = attr.Value( "part" );
+                if( attr.hasAttribute( "part" ) )
+                    part = attr.value( "part" );
 
-                if( attr.HasAttribute( "to" ) )
-                    to = attr.Value( "to" );
+                if( attr.hasAttribute( "to" ) )
+                    to = attr.value( "to" );
                 
                 if( part.length() > 0 && to.length() > 0 )
                     entry->selector_assigns.push_back( make_pair( part, to) );
             }
-            else if( xmls->Path() == "/extension/file_node" ||
-                     xmls->Path() == "/extension/extension_node" ||
-                     xmls->Path() == "/extension/weak_node" ||
-                     xmls->Path() == "/extension/cpp_node"  ||
-                     xmls->Path() == "/extension/c_node")
+            else if( xmls->path() == "/extension/file_node" ||
+                     xmls->path() == "/extension/extension_node" ||
+                     xmls->path() == "/extension/weak_node" ||
+                     xmls->path() == "/extension/cpp_node"  ||
+                     xmls->path() == "/extension/c_node")
             {
                 ExtensionEntry::Node node;
-                string save_path = xmls->Path();
+                string save_path = xmls->path();
                 string wait_for;
-                if( xmls->Path() == "/extension/file_node" )
+                if( xmls->path() == "/extension/file_node" )
                 {
                     node.node_type = ExtensionEntry::Node::FILE_NODE;
                     wait_for = "file_node";
                 }
-                else if( xmls->Path() == "/extension/extension_node" )
+                else if( xmls->path() == "/extension/extension_node" )
                 {
                     node.node_type = ExtensionEntry::Node::EXTENSION_NODE;
                     wait_for = "extension_node";
                 }
-                else if( xmls->Path() == "/extension/weak_node" )
+                else if( xmls->path() == "/extension/weak_node" )
                 {
                     node.node_type = ExtensionEntry::Node::WEAK_NODE;
                     wait_for = "weak_node";
                 }
-                else if( xmls->Path() == "/extension/cpp_node" )
+                else if( xmls->path() == "/extension/cpp_node" )
                 {
                     node.node_type = ExtensionEntry::Node::CPP_NODE;
                     wait_for = "cpp_node";
                 }
-                else if( xmls->Path() == "/extension/weak_node" )
+                else if( xmls->path() == "/extension/weak_node" )
                 {
                     node.node_type = ExtensionEntry::Node::C_NODE;
                     wait_for = "c_node";
                 }
                 
-                SimpleXMLAttributes attr = xmls->Attributes();
-                if( attr.HasAttribute( "name" ) )
-                    node.name = attr.Value( "name" );
+                SimpleXMLAttributes attr = xmls->attributes();
+                if( attr.hasAttribute( "name" ) )
+                    node.name = attr.value( "name" );
                 
-                while( !xmls->AtEnd() )
+                while( !xmls->atEnd() )
                 {
-                    xmls->ReadNext();
+                    xmls->readNext();
                     
-                    if( xmls->HasError() )
+                    if( xmls->hasError() )
                         break;
                     
-                    if( xmls->IsStartElement() )
+                    if( xmls->isStartElement() )
                     {
-                         if( xmls->Path() == save_path + "/file_name" )
+                         if( xmls->path() == save_path + "/file_name" )
                          {
-                             SimpleXMLAttributes attr = xmls->Attributes();
+                             SimpleXMLAttributes attr = xmls->attributes();
                              
-                             if( attr.HasAttribute( "value" ) )
-                                 node.file_name = attr.Value( "value" );
+                             if( attr.hasAttribute( "value" ) )
+                                 node.file_name = attr.value( "value" );
                              
-                             if( attr.HasAttribute( "append" ) )
-                                 node.file_name_append = attr.Value( "append" );
+                             if( attr.hasAttribute( "append" ) )
+                                 node.file_name_append = attr.value( "append" );
                          }
-                         else if( xmls->Path() == save_path + "/assign_file_name" )
+                         else if( xmls->path() == save_path + "/assign_file_name" )
                          {
-                             SimpleXMLAttributes attr = xmls->Attributes();
-                             if( attr.HasAttribute( "to" ) )
-                                 node.assign_file_name_to = attr.Value( "to" );
+                             SimpleXMLAttributes attr = xmls->attributes();
+                             if( attr.hasAttribute( "to" ) )
+                                 node.assign_file_name_to = attr.value( "to" );
                          }
-                         else if( xmls->Path() == save_path + "/block" )
+                         else if( xmls->path() == save_path + "/block" )
                          {
-                             SimpleXMLAttributes attr = xmls->Attributes();
-                             if( attr.HasAttribute( "extent" ) )
-                                 node.block_extent = attr.Value( "extent" );
+                             SimpleXMLAttributes attr = xmls->attributes();
+                             if( attr.hasAttribute( "extent" ) )
+                                 node.block_extent = attr.value( "extent" );
                          }
                     }
-                    else if( xmls->IsEndElement() )
+                    else if( xmls->isEndElement() )
                     {
-                        if( xmls->Path() == "/extension" && xmls->Name() == wait_for )
+                        if( xmls->path() == "/extension" && xmls->name() == wait_for )
                             break;
                     }
                 }
 
                 entry->nodes.push_back( node );
             }
-            else if( xmls->Path() == "/extension/dependency" )
+            else if( xmls->path() == "/extension/dependency" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
 
                 string from_name, to_name;
-                if( attr.HasAttribute( "from_node" ) )
-                    from_name = attr.Value( "from_node" );
+                if( attr.hasAttribute( "from_node" ) )
+                    from_name = attr.value( "from_node" );
                 
-                if( attr.HasAttribute( "to_node" ) )
-                    to_name = attr.Value( "to_node" );
+                if( attr.hasAttribute( "to_node" ) )
+                    to_name = attr.value( "to_node" );
                 
                 if( from_name.length() > 0 && to_name.length() > 0 )
                     entry->dependencies.push_back( make_pair( from_name, to_name) );
             }
-            else if( xmls->Path() == "/extension/script_name" )
+            else if( xmls->path() == "/extension/script_name" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    entry->script_file_name = attr.Value( "value" );
+                if( attr.hasAttribute( "value" ) )
+                    entry->script_file_name = attr.value( "value" );
             }
-            else if( xmls->Path() == "/extension/script_stencil" )
+            else if( xmls->path() == "/extension/script_stencil" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    entry->script_stencil = attr.Value( "value" );                
+                if( attr.hasAttribute( "value" ) )
+                    entry->script_stencil = attr.value( "value" );                
             }
-            else if( xmls->Path() == "/extension/replace" )
+            else if( xmls->path() == "/extension/replace" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
                 string name, value;
-                if( attr.HasAttribute( "name" ) )
-                    name = attr.Value( "name" );
-                if( attr.HasAttribute( "value" ) )
-                    value = attr.Value( "value" );
+                if( attr.hasAttribute( "name" ) )
+                    name = attr.value( "name" );
+                if( attr.hasAttribute( "value" ) )
+                    value = attr.value( "value" );
                 
                 if( name.length() > 0 && value.length() > 0 )
                     entry->script_repl.push_back( make_pair( name, value) );
             }
-            else if( xmls->Path() == "/extension/param_def" )
+            else if( xmls->path() == "/extension/param_def" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
                 string param, to;
-                if( attr.HasAttribute( "param" ) )
-                    param = attr.Value( "param" );
-                if( attr.HasAttribute( "to" ) )
-                    to = attr.Value( "to" );
+                if( attr.hasAttribute( "param" ) )
+                    param = attr.value( "param" );
+                if( attr.hasAttribute( "to" ) )
+                    to = attr.value( "to" );
                 
                 if( param.length() > 0 && to.length() > 0 )
                     entry->param_defs.push_back( make_pair( param, to) );
             }
-            else if( xmls->Path() == "/extension/print" )
+            else if( xmls->path() == "/extension/print" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
                 string value;
-                if( attr.HasAttribute( "value" ) )
-                    value = attr.Value( "value" );
+                if( attr.hasAttribute( "value" ) )
+                    value = attr.value( "value" );
                 
                 entry->print_vals.push_back( value );
             }
-            else if( xmls->Path() == "/extension/define" )
+            else if( xmls->path() == "/extension/define" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
                 string name, value;
-                if( attr.HasAttribute( "name" ) )
-                    name = attr.Value( "name" );
-                if( attr.HasAttribute( "value" ) )
-                    value = attr.Value( "value" );
+                if( attr.hasAttribute( "name" ) )
+                    name = attr.value( "name" );
+                if( attr.hasAttribute( "value" ) )
+                    value = attr.value( "value" );
                 
                 if( name.length() > 0 && value.length() > 0 )
                     entry->defs.push_back( make_pair( name, value) );
             }
         }
-        else if( xmls->IsEndElement() )
+        else if( xmls->isEndElement() )
         {
-            if( xmls->Path() == "" && xmls->Name() == "extension" )
+            if( xmls->path() == "" && xmls->name() == "extension" )
             {
                 if( entry )
                 {
@@ -827,11 +827,10 @@ bool ExtensionManager::parseExtension( SimpleXMLStream *xmls )
             }
         }
 
-        xmls->ReadNext();
+        xmls->readNext();
     }
 
-    bool ok = !xmls->HasError();
-   
+    bool ok = !xmls->hasError();
  
     return ok;
 }
@@ -885,33 +884,33 @@ bool ExtensionManager::read( const string &fn )
     
     SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
 
-    while( !xmls->AtEnd() )
+    while( !xmls->atEnd() )
     {
-        xmls->ReadNext();
+        xmls->readNext();
         
-        if( xmls->HasError() )
+        if( xmls->hasError() )
             break;
         
-        if( xmls->IsStartElement() )
+        if( xmls->isStartElement() )
         {
-            if( xmls->Path() == "/extensions/extension" )
+            if( xmls->path() == "/extensions/extension" )
             {
                 xmls->setPathStart( 1 );
                 parseExtension( xmls );
                 xmls->setPathStart( 0 );
             }
         }
-        else if( xmls->IsEndElement() )
+        else if( xmls->isEndElement() )
         {
-            if( xmls->Path() == "" && xmls->Name() == "extensions" )
+            if( xmls->path() == "" && xmls->name() == "extensions" )
                 break;
         }
     }
 
-    bool err = !xmls->HasError();
+    bool ok = !xmls->hasError();
     
     delete xmls;
     fclose( fpXml );
 
-    return err;
+    return ok;
 }

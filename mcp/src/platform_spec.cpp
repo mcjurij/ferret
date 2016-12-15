@@ -187,247 +187,247 @@ bool PlatformSpec::read( const string &fn )
     CompileMode currCm;
     CompileTrait currCt;
     
-    while( !xmls->AtEnd() )
+    while( !xmls->atEnd() )
     {
-        xmls->ReadNext();
+        xmls->readNext();
         
-        if( xmls->HasError() )
+        if( xmls->hasError() )
             break;
         
-        if( xmls->IsStartElement() )
+        if( xmls->isStartElement() )
         {
             //cout << "  -- START Line: " << xmls->LineNumber() << ":";
             
-            //cout << " START  Current path: >" << xmls->Path()  << "< ";
-            if( xmls->Path() == "/platform/compiler_version" )
+            //cout << " START  Current path: >" << xmls->path()  << "< ";
+            if( xmls->path() == "/platform/compiler_version" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                     
-                if( attr.HasAttribute( "value" ) )
-                    compilerVersion = attr.Value( "value" );
+                if( attr.hasAttribute( "value" ) )
+                    compilerVersion = attr.value( "value" );
             }
-            else if( xmls->Path() == "/platform/compile_mode" )
+            else if( xmls->path() == "/platform/compile_mode" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                     
-                if( attr.HasAttribute( "value" ) )
-                    currCm = CompileMode( attr.Value( "value" ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCm = CompileMode( attr.value( "value" ) );
             }
-            else if( xmls->Path() == "/platform/compile_mode/cppflags" )
+            else if( xmls->path() == "/platform/compile_mode/cppflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCm.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCm.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_mode/cflags" )
+            else if( xmls->path() == "/platform/compile_mode/cflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCm.addCFlag( PlatformDefines::getThePlatformDefines()->replace(  attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCm.addCFlag( PlatformDefines::getThePlatformDefines()->replace(  attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_mode/lflags" )
+            else if( xmls->path() == "/platform/compile_mode/lflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCm.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCm.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_mode/eflags" )
+            else if( xmls->path() == "/platform/compile_mode/eflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCm.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCm.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_trait" )
+            else if( xmls->path() == "/platform/compile_trait" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "type" ) )
-                    currCt = CompileTrait( attr.Value( "type" ) );
+                if( attr.hasAttribute( "type" ) )
+                    currCt = CompileTrait( attr.value( "type" ) );
             }
-            else if( xmls->Path() == "/platform/compile_trait/cppflags" )
+            else if( xmls->path() == "/platform/compile_trait/cppflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCt.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCt.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_trait/cflags" )
+            else if( xmls->path() == "/platform/compile_trait/cflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCt.addCFlag( PlatformDefines::getThePlatformDefines()->replace(  attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCt.addCFlag( PlatformDefines::getThePlatformDefines()->replace(  attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_trait/lflags" )
+            else if( xmls->path() == "/platform/compile_trait/lflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCt.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCt.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compile_trait/eflags" )
+            else if( xmls->path() == "/platform/compile_trait/eflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currCt.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currCt.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool" )
+            else if( xmls->path() == "/platform/tool" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                     
-                if( attr.HasAttribute( "name" ) )
-                    currTool = ToolSpec( attr.Value( "name" ) );
+                if( attr.hasAttribute( "name" ) )
+                    currTool = ToolSpec( attr.value( "name" ) );
             }
-            else if( xmls->Path() == "/platform/tool/incdir" )
+            else if( xmls->path() == "/platform/tool/incdir" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addIncDir( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addIncDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/cppflags" )
+            else if( xmls->path() == "/platform/tool/cppflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/cflags" )
+            else if( xmls->path() == "/platform/tool/cflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addCFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addCFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/lflags" )
+            else if( xmls->path() == "/platform/tool/lflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/eflags" )
+            else if( xmls->path() == "/platform/tool/eflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/lib" )
+            else if( xmls->path() == "/platform/tool/lib" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addLib( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addLib( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/tool/libdir" )
+            else if( xmls->path() == "/platform/tool/libdir" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    currTool.addLibDir( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    currTool.addLibDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/compiler" )
+            else if( xmls->path() == "/platform/compiler" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    compiler = PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) );  // c++ compiler
+                if( attr.hasAttribute( "value" ) )
+                    compiler = PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) );  // c++ compiler
             }
-            if( xmls->Path() == "/platform/compilerc" )
+            if( xmls->path() == "/platform/compilerc" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    compilerc = PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) );  // c compiler
+                if( attr.hasAttribute( "value" ) )
+                    compilerc = PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) );  // c compiler
             }
-            else if( xmls->Path() == "/platform/incdir" )
+            else if( xmls->path() == "/platform/incdir" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    incdirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    incdirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/cppflags" )
+            else if( xmls->path() == "/platform/cppflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    cppflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/cflags" )
+            else if( xmls->path() == "/platform/cflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    cflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/soext" )
+            else if( xmls->path() == "/platform/soext" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    soext = attr.Value( "value" );
+                if( attr.hasAttribute( "value" ) )
+                    soext = attr.value( "value" );
             }
-            else if( xmls->Path() == "/platform/staticext" )
+            else if( xmls->path() == "/platform/staticext" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    staticext = attr.Value( "value" );
+                if( attr.hasAttribute( "value" ) )
+                    staticext = attr.value( "value" );
             }
-            else if( xmls->Path() == "/platform/lflags" )
+            else if( xmls->path() == "/platform/lflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    lflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    lflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/eflags" )
+            else if( xmls->path() == "/platform/eflags" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    eflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    eflags.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/lib" )
+            else if( xmls->path() == "/platform/lib" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    libs.push_back( attr.Value( "value" ) );
+                if( attr.hasAttribute( "value" ) )
+                    libs.push_back( attr.value( "value" ) );
             }
-            else if( xmls->Path() == "/platform/libdir" )
+            else if( xmls->path() == "/platform/libdir" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
                 
-                if( attr.HasAttribute( "value" ) )
-                    libDirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) ) );
+                if( attr.hasAttribute( "value" ) )
+                    libDirs.push_back( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
-            else if( xmls->Path() == "/platform/define" )
+            else if( xmls->path() == "/platform/define" )
             {
-                SimpleXMLAttributes attr = xmls->Attributes();
+                SimpleXMLAttributes attr = xmls->attributes();
 
-                if( attr.HasAttribute( "name" ) )
+                if( attr.hasAttribute( "name" ) )
                 {
-                    string name = attr.Value( "name" );
+                    string name = attr.value( "name" );
 
                     if( name.length() > 0 )
                     {
                         string value;
-                        if( attr.HasAttribute( "value" ) )
-                            value = PlatformDefines::getThePlatformDefines()->replace( attr.Value( "value" ) );
+                        if( attr.hasAttribute( "value" ) )
+                            value = PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) );
                         
                         PlatformDefines::getThePlatformDefines()->set( name, value);
                     }
                 }
             }
-            else if( xmls->Path() == "/platform/extension" )
+            else if( xmls->path() == "/platform/extension" )
             {
                 xmls->setPathStart( 1 );
                 ExtensionManager::getTheExtensionManager()->parseExtension( xmls );
@@ -436,29 +436,29 @@ bool PlatformSpec::read( const string &fn )
             
             //cout << "\n";
         }
-        else if( xmls->IsEndElement() )
-        {  //cout << "  -- END   tag: " << xmls->Name() << " ";
+        else if( xmls->isEndElement() )
+        {  //cout << "  -- END   tag: " << xmls->name() << " ";
            // cout << "Line: " << xmls->LineNumber() << ":";
-           // cout << "  Current path: >" << xmls->Path()  << "< ";
+           // cout << "  Current path: >" << xmls->path()  << "< ";
             
-            if( xmls->Path() == "/platform" && xmls->Name() == "tool" )
+            if( xmls->path() == "/platform" && xmls->name() == "tool" )
             {
                 addTool( currTool );
             }
-            else if( xmls->Path() == "/platform" && xmls->Name() == "compile_mode" )
+            else if( xmls->path() == "/platform" && xmls->name() == "compile_mode" )
             {
                 addCompileMode( currCm );
             }
-            else if( xmls->Path() == "/platform" && xmls->Name() == "compile_trait" )
+            else if( xmls->path() == "/platform" && xmls->name() == "compile_trait" )
             {
                 addCompileTrait( currCt );
             }
-            else if( xmls->Path() == "" && xmls->Name() == "platform" )
+            else if( xmls->path() == "" && xmls->name() == "platform" )
                 break;
         }
     }
 
-    bool err = !xmls->HasError();
+    bool err = !xmls->hasError();
     
     delete xmls;
     fclose( fpXml );

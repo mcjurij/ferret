@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project dir="inc" module="inc" name="ferret_inc" target="ferret_inc" type="executable">
+<project dir="inc" module="ferret" name="ferret_inc" target="ferret_inc" type="executable">
   
 </project>
