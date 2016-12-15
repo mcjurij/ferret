@@ -340,7 +340,7 @@ void SimpleXMLStream::parseTag()
                 }
                 else
                 {
-                    fprintf( stderr,"line %d: closing tag does not match (open tag at line %d)\n", line_num, stackLineTop());
+                    std::cerr << "error: line " << line_num << ": closing tag does not match (open tag at line " << stackLineTop() << ")\n";
                     errors++;
                     current_token = ERROR;
                 }
@@ -387,7 +387,7 @@ void SimpleXMLStream::parseTag()
         {
             current_token = ERROR;
             errors++;
-            fprintf( stderr, "'%c' is not an expected char at begin of tag\n", get_char());
+            std::cerr << "error: '" << get_char() << "' is not an expected character at begin of tag\n";
         }
     }
 
