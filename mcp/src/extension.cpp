@@ -165,7 +165,7 @@ void FlexExtension::createCommands( FileManager &fileMan, const map<string,strin
             
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
-            getNode()->pegCppScript( cpp_id, flex_o, cpp_o, fileMan.getCompileMode());
+            getNode()->pegCppScript( cpp_id, flex_o, cpp_o);
         }
     }
 }
@@ -240,7 +240,7 @@ void BisonExtension::createCommands( FileManager &fileMan, const map<string,stri
             
             sm->setTemplateFileName( fid, getScriptTemplName(), getScriptName());
             sm->addReplacements( fid, r);
-            getNode()->pegCppScript( cpp_id, bison_o, cpp_o, fileMan.getCompileMode());
+            getNode()->pegCppScript( cpp_id, bison_o, cpp_o);
         }
     }
 }
@@ -370,7 +370,7 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
                         
                         out_obj_fn = base_fn + ".o";
                         getNode()->objs.push_back( out_obj_fn );
-                        getNode()->pegCppScript( fid, fn, out_obj_fn, fileMan.getCompileMode());
+                        getNode()->pegCppScript( fid, fn, out_obj_fn);
                         break;
                         
                     case ExtensionEntry::Node::C_NODE:
@@ -378,7 +378,7 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
                         
                         out_obj_fn = base_fn + ".o";
                         getNode()->objs.push_back( out_obj_fn );
-                        getNode()->pegCScript( fid, fn, out_obj_fn, fileMan.getCompileMode());
+                        getNode()->pegCScript( fid, fn, out_obj_fn);
                         break;
                 }
                 
@@ -438,15 +438,7 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
                     repl[ name ] = defines.replace( value );
                 }
                 
-                string stencil;
-                vector<string> p = split( '#', entry->script_stencil);
-
-                if( p.size() == 2 )
-                    stencil = p[0] + "#__" + fileMan.getCompileMode() + p[1];
-                else
-                    stencil = entry->script_stencil;
-                
-                sm->setTemplateFileName( extension_fid, entry->script_file_name, stencil);
+                sm->setTemplateFileName( extension_fid, entry->script_file_name, entry->script_stencil);
                 sm->addReplacements( extension_fid, repl);
             }
             else

@@ -20,6 +20,7 @@
 #include "include_manager.h"
 #include "file_cleaner.h"
 #include "output_collector.h"
+#include "script_template.h"
 
 using namespace std;
 
@@ -879,6 +880,8 @@ int main( int argc, char **argv)
     
     if( printTimes )
         cout << "writing files db took " << get_diff() << "s\n";
+
+    ScriptManager::getTheScriptManager()->setCompileMode( compileMode );
     
     if( !initMode )
     {

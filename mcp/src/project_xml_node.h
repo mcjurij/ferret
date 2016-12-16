@@ -105,8 +105,8 @@ public:
     void manageChangedDependencies( FileManager &fileMan, std::set<file_id_t> &blockedIds);
     void createCommandArguments( const std::string &compileMode );
     void createCommands( FileManager &fileMan );
-    void pegCppScript( file_id_t cpp_id, const std::string &in, const std::string &out, const std::string &compileMode);
-    void pegCScript( file_id_t cpp_id, const std::string &in, const std::string &out, const std::string &compileMode);
+    void pegCppScript( file_id_t cpp_id, const std::string &in, const std::string &out);
+    void pegCScript( file_id_t cpp_id, const std::string &in, const std::string &out);
     bool doDeep();   // wether to follow library from this node, via downward pointers, to all downward nodes or not
     
     std::string getNodeName() const
