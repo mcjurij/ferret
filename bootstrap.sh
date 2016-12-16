@@ -10,6 +10,7 @@ then
         exit 1
     fi
 fi
+export HOSTNAME
 
 mkdir -p build/bin
 
