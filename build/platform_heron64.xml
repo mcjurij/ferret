@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <platform>
-
     <compiler_version value="GCC"/>
 
     <compiler value="/usr/bin/g++"/>
@@ -35,6 +34,6 @@
 
     <lflags value=" -g -shared "/>
     <eflags value=" -g "/> 
-      
+    
     <!-- <lib    value="rt" /> -->
 </platform>

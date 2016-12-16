@@ -125,6 +125,17 @@ bool ToolSpec::parseToolSpec( SimpleXMLStream *xmls )
                 if( attr.hasAttribute( "value" ) )
                     addLibDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
             }
+            else if( xmls->path() == "/tool/sync" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "use" ) )
+                    sync_use = PlatformDefines::getThePlatformDefines()->replace( attr.value( "use" ) );
+                if( attr.hasAttribute( "source" ) )
+                    sync_source = PlatformDefines::getThePlatformDefines()->replace( attr.value( "source" ) );
+                if( attr.hasAttribute( "target" ) )
+                    sync_target = PlatformDefines::getThePlatformDefines()->replace( attr.value( "target" ) );
+            }
         }
         else if( xmls->isEndElement() )
         {
@@ -620,4 +631,40 @@ string PlatformSpec::getLibArgs() const
 string PlatformSpec::getLibDirArgs() const
 {
     return join( " -L", libDirs, true);
+}
+
+
+void PlatformSpec::syncTools( Executor &executor, bool printTimes)
+{
+    if( tools.size() == 0 )
+        return;
+    
+    size_t i;
+    SyncEngine se;
+    
+    for( i = 0; i < tools.size(); i++)
+    {
+        const ToolSpec &ts = tools[i];
+
+        if( ts.getSyncUse().length() > 0 && ts.getSyncSource().length() > 0 && ts.getSyncTarget().length() > 0 )
+        {
+            string script_fn = buildDir + "/ferret_sync_" + ts.getSyncUse() + ".sh";
+            vector<string> args;
+            args.push_back( ts.getSyncSource() );
+            args.push_back( ts.getSyncTarget() );
+            
+            se.addSyncCommand( ExecutorCommand( "EXSH", script_fn, args) );
+        }
+    }
+
+    if( se.hasCommands() )
+    {
+        if( verbosity > 0 )
+            cout << "platform tools sync start\n";
+        
+        se.doWork( executor, printTimes);
+        
+        if( verbosity > 0 )
+            cout << "platform tools sync end\n";
+    }
 }

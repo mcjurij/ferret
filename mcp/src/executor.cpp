@@ -133,7 +133,6 @@ string ExecutorCommand::getErrOut()
 
 static pid_t execCmd( const string &ex, ExecutorCommand &cmd, vector<string> args)
 {
-    //pid_t my_pid;
     pid_t child_pid;
     int out_filedes[2], err_filedes[2];
     
@@ -251,7 +250,7 @@ void Executor::readOutputs()
     for( pit = pidToCmdMap.begin(); pit != pidToCmdMap.end(); pit++)
     {
         ExecutorCommand &cmd = pit->second;
-        if( cmd.getFileId()!=-1 && cmd.state == ExecutorCommand::PROCESSING )
+        if( cmd.state == ExecutorCommand::PROCESSING )
         {
             int count;
             char buffer[1025];

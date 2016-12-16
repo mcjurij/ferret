@@ -69,6 +69,39 @@ ExecutorCommand DepEngine::nextCommand()
 
 // -----------------------------------------------------------------------------
 
+void SyncEngine::addSyncCommand( ExecutorCommand ec )
+{
+    commands.push_back( ec );
+}
+
+
+int SyncEngine::doWork( ExecutorBase &executor, bool printTime, const set<string> &userTargets)
+{
+    pos = 0;
+    
+    if( commands.size() >  0 )
+        executor.processCommands( *this );
+       
+    ofstream osh( "last_sync_run.html" );
+    OutputCollector::getTheOutputCollector()->html( osh );
+
+    ofstream ost( "last_sync_run.txt" );
+    OutputCollector::getTheOutputCollector()->text( ost );
+    
+    return 0;
+}
+
+
+ExecutorCommand SyncEngine::nextCommand()
+{
+    if( pos < commands.size() )
+        return commands[ pos++ ];
+    else
+        return ExecutorCommand( "FINALIZE" );
+}
+
+// -----------------------------------------------------------------------------
+
 Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
     : EngineBase(), dbProjDir(dbProjDir), rootDomSearchNode(0), round(0), scfs(doScfs), stopOnError(false)
 {
