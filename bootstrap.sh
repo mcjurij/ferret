@@ -2,8 +2,13 @@
 
 if [ "x$HOSTNAME" == "x" ]
 then
-    echo "HOSTNAME must be set"
-    exit 1
+    if HOSTNAME=$(hostname)
+    then
+        true
+    else
+        echo "HOSTNAME must be set"
+        exit 1
+    fi
 fi
 
 mkdir -p build/bin
