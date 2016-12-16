@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project dir="ferret" module="ferret" name="ferret">
+<project module="ferret" name="ferret">
   <sub name="mcp" />
   <sub name="inc" />
 </project>
