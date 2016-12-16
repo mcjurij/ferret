@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+
+class SimpleXMLStream;
+
 class ToolSpec
 {
 public:
@@ -40,6 +43,8 @@ public:
     std::string getLinkExecutableFlagArgs() const;
     std::string getLibArgs() const;
     std::string getLibDirArgs() const;
+
+    bool parseToolSpec( SimpleXMLStream *xmls );
     
 private:
     std::string name;
