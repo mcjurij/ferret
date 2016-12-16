@@ -252,6 +252,7 @@ static bool checkBuildPropsTime( const string &propsfn, const string &projDir)
 }
 
 
+namespace {
 bool doScfs = false;
 bool hasUseCpu = false;   
 int use_cpus = 1; 
@@ -259,6 +260,7 @@ bool compileModeSet = false;
 string compileMode;
 bool stopOnErr = false;
 bool downwardDeep = false;
+}
 
 static void readBuildProperties( bool initMode, const string &build_properies, const string &projDir)
 {
