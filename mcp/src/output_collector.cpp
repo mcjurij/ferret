@@ -344,6 +344,13 @@ void OutputCollector::setError( int file_id, bool err)
 }
 
 
+void OutputCollector::clear()
+{
+    file_ids.clear();
+    entryMap.clear();
+}
+
+
 void OutputCollector::setProjectNodesDir( const string &dir )
 {
     projectdir = dir;

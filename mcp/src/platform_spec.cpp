@@ -7,6 +7,7 @@
 #include "glob_utility.h"
 #include "platform_defines.h"
 #include "extension.h"
+#include "output_collector.h"
 
 using namespace std;
 
@@ -663,6 +664,7 @@ void PlatformSpec::syncTools( Executor &executor, bool printTimes)
             cout << "platform tools sync start\n";
         
         se.doWork( executor, printTimes);
+        OutputCollector::getTheOutputCollector()->clear();
         
         if( verbosity > 0 )
             cout << "platform tools sync end\n";
