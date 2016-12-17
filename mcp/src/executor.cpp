@@ -342,7 +342,7 @@ void Executor::checkExitState( ExecutorCommand &cmd, int status, EngineBase &eng
                 {
                     cout << "Removing unfinished output '" << ftorem[i] << "'\n";
                     ::remove( ftorem[i].c_str() );
-                    }*/
+                }*/
             }
         }
     }

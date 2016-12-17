@@ -994,7 +994,7 @@ ExecutorCommand Engine::nextCommand()
             {
                 if( verbosity > 0 )
                     cout << "using " << script << " to produce " << c->file_name << "\n";
-                ec = ExecutorCommand( "EXSH", script, c->file_id);
+                ec = ExecutorCommand( script, c->file_id);
                 validCmds++;
 
                 ec.addFileToRemoveAfterSignal( c->file_name );

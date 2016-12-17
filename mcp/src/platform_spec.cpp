@@ -653,7 +653,7 @@ void PlatformSpec::syncTools( Executor &executor, bool printTimes)
             args.push_back( ts.getSyncSource() );
             args.push_back( ts.getSyncTarget() );
             
-            se.addSyncCommand( ExecutorCommand( "EXSH", script_fn, args) );
+            se.addSyncCommand( ExecutorCommand( script_fn, args) );
         }
     }
 
