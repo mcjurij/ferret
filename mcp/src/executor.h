@@ -54,6 +54,10 @@ public:
     {
     }
     
+    ExecutorCommand( const std::vector<std::string> &args )    // for dependency file generation
+        : cmdType("DEP"), args(args), file_id(-1), state(WAITING), pid(-1)
+    {
+    }
 
     state_t getState() const
     { return state; }
