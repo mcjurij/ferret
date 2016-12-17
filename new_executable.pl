@@ -39,7 +39,7 @@ while( $sublib = <STDIN> )
     }
 }
 
-my $proj_templ = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project module=\"$module\" name=\"$name\" target=\"$name\" type=\"library\">\n$subs</project>\n";
+my $proj_templ = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project module=\"$module\" name=\"$name\" target=\"$name\" type=\"executable\">\n$subs</project>\n";
 
 open(my $fh, '>', "$name/project.xml");
 print $fh $proj_templ;
