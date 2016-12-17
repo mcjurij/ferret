@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 # yum install perl-File-Slurp
+# aptitude install libfile-slurp-perl
 
 use File::Slurp qw(read_file write_file);
  
