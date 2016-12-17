@@ -80,7 +80,7 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                         args.push_back( it.getFile() );
                         args.push_back( depfn );
                     
-                        ExecutorCommand ec = ExecutorCommand( "DEP", args);
+                        ExecutorCommand ec = ExecutorCommand( args );
                         ec.addFileToRemoveAfterSignal( depfn );
                         ::remove( depfn.c_str() );
                     

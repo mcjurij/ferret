@@ -44,18 +44,18 @@ public:
     {
     }
     
-    ExecutorCommand( const std::string &type, const std::vector<std::string> &args)
-        : cmdType(type), args(args), file_id(-1), state(WAITING), pid(-1)
-    {
-    }
-    
-    ExecutorCommand( const std::string &type, const std::string &fn, int file_id)
-        : cmdType(type), fileName(fn), file_id(file_id), state(WAITING), pid(-1)
+    ExecutorCommand( const std::string &fn, int file_id)
+        : cmdType("EXSH"), fileName(fn), file_id(file_id), state(WAITING), pid(-1)
     {
     }
 
-    ExecutorCommand( const std::string &type, const std::string &fn, const std::vector<std::string> &args)
-        : cmdType(type), fileName(fn), args(args), file_id(-1), state(WAITING), pid(-1)
+    ExecutorCommand( const std::string &fn, const std::vector<std::string> &args)
+        : cmdType("EXSH"), fileName(fn), args(args), file_id(-1), state(WAITING), pid(-1)
+    {
+    }
+    
+    ExecutorCommand( const std::vector<std::string> &args )    // for dependency file generation
+        : cmdType("DEP"), args(args), file_id(-1), state(WAITING), pid(-1)
     {
     }
 

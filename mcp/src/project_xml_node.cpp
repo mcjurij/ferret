@@ -577,7 +577,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
             string t = l_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "L", this);
             
-            sm->setTemplateFileName( target_file_id, "ferret_l.sh.templ", "ferret_l__#__" + compileMode + ".sh");
+            sm->setTemplateFileName( target_file_id, "ferret_l.sh.templ", "ferret_l__#.sh");
 
             repl[ "F_LFLAGS" ] = lflagsArg;
             repl[ "F_OUT" ] = t;
@@ -587,7 +587,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
             string t = b_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "X", this);
 
-            sm->setTemplateFileName( target_file_id, "ferret_x.sh.templ", "ferret_x__#__" + compileMode + ".sh");
+            sm->setTemplateFileName( target_file_id, "ferret_x.sh.templ", "ferret_x__#.sh");
             
             repl[ "F_EFLAGS" ] = eflagsArg;
             repl[ "F_OUT" ] = t;
@@ -597,7 +597,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
             string t = l_outputdir + scriptTarget;
             target_file_id = fileMan.addCommand( t, "A", this);
 
-            sm->setTemplateFileName( target_file_id, "ferret_a.sh.templ", "ferret_a__#__" + compileMode + ".sh");
+            sm->setTemplateFileName( target_file_id, "ferret_a.sh.templ", "ferret_a__#.sh");
             
             repl[ "F_AFLAGS" ] = aflagsArg;
             repl[ "F_OUT" ] = t;
@@ -672,7 +672,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
                 fid = fileMan.addCommand( o, "Cpp", this);
                 fileMan.addDependency( fid, tid);
                 
-                pegCppScript( fid, srcfn, o, compileMode);
+                pegCppScript( fid, srcfn, o);
                 objs.push_back( o );
             }
             else if( ext == ".c" )
@@ -697,7 +697,7 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
                 fid = fileMan.addCommand( o, "C", this);
                 fileMan.addDependency( fid, tid);
                 
-                pegCScript( fid, srcfn, o, compileMode);
+                pegCScript( fid, srcfn, o);
                 objs.push_back( o );
             }
         }
@@ -728,13 +728,13 @@ void ProjectXmlNode::createCommands( FileManager &fileMan )
 }
 
 
-void ProjectXmlNode::pegCppScript( file_id_t cpp_id, const string &in, const string &out, const string &compileMode)
+void ProjectXmlNode::pegCppScript( file_id_t cpp_id, const string &in, const string &out)
 {
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
     ScriptManager *sm = ScriptManager::getTheScriptManager();
     map<string,string> repl;
     
-    sm->setTemplateFileName( cpp_id, "ferret_cpp.sh.templ", "ferret_cpp__#__" + compileMode + ".sh");
+    sm->setTemplateFileName( cpp_id, "ferret_cpp.sh.templ", "ferret_cpp__#.sh");
 
     repl[ "F_COMPILER" ] = ps->getCppCompiler();
     stringstream con;
@@ -753,13 +753,13 @@ void ProjectXmlNode::pegCppScript( file_id_t cpp_id, const string &in, const str
 }
 
 
-void ProjectXmlNode::pegCScript( file_id_t c_id, const string &in, const string &out, const string &compileMode)
+void ProjectXmlNode::pegCScript( file_id_t c_id, const string &in, const string &out)
 {
     PlatformSpec *ps = PlatformSpec::getThePlatformSpec();
     ScriptManager *sm = ScriptManager::getTheScriptManager();
     map<string,string> repl;
     
-    sm->setTemplateFileName( c_id, "ferret_c.sh.templ", "ferret_c__#__" + compileMode + ".sh");
+    sm->setTemplateFileName( c_id, "ferret_c.sh.templ", "ferret_c__#.sh");
     
     repl[ "F_COMPILER" ] = ps->getCCompiler();
     stringstream con;

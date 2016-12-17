@@ -17,17 +17,10 @@ public:
         : file_id(fid), templ_name(templ_fn), stencil(st)
     {}
     
-    // void setTemplateFileName( const std::string &fn )
-    // { templ_name = fn; }
-
-    // void setStencil( const std::string &st )
-    // { stencil = st; }
-
     void addReplacements( const std::map<std::string,std::string> &repl );
-
     void addReplacement( const std::string &k, const std::string &v);
 
-    std::string write( const std::string &target_fn );  // returns file name of the written script
+    std::string write( const std::string &target_fn, const std::string &compile_mode);  // returns file name of the written script
     
 private:
     file_id_t file_id;
@@ -46,14 +39,15 @@ public:
     static ScriptManager *getTheScriptManager();
     
     ScriptManager()
+        : compile_mode( "UNSET" )
     {}
 
+    void setCompileMode( const std::string &cm )
+    { compile_mode = cm; }
+    
     void setTemplateFileName( file_id_t file_id, const std::string &fn, const std::string &st);
 
-    // void setStencil( file_id_t file_id, const std::string &st);
-    
-    void addReplacements( file_id_t file_id, const std::map<std::string,std::string> &repl);
-    
+    void addReplacements( file_id_t file_id, const std::map<std::string,std::string> &repl);    
     void addReplacement( file_id_t file_id, const std::string &k, const std::string &v);
     
     std::string write( file_id_t file_id, const std::string &target_fn);
@@ -62,6 +56,7 @@ private:
     static ScriptManager *theScriptManager;
 
     std::map<file_id_t,ScriptInstance> instances;
+    std::string compile_mode;
 };
 
 #endif

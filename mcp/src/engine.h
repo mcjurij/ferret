@@ -29,6 +29,7 @@ protected:
 };
 
 
+// calls ferret_dep.sh to produce *.d files
 class DepEngine : public EngineBase
 {
 public:
@@ -47,8 +48,31 @@ private:
 };
 
 
+// sync tag in platform XML, /platform/tool/sync
+class SyncEngine : public EngineBase
+{
+public:
+    SyncEngine()
+        : EngineBase()
+    {}
+    
+    void addSyncCommand( ExecutorCommand ec );
+    
+    virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>());
+    virtual ExecutorCommand nextCommand();
+
+    bool hasCommands() const
+    { return commands.size(); }
+    
+private:
+    std::vector<ExecutorCommand> commands;
+    size_t pos;
+};
+
+
 class ProjectXmlNode;
 
+// build engine
 class Engine : public EngineBase
 {
     typedef struct command
@@ -212,6 +236,7 @@ private:
 };
 
 
+// Makefile engine for --make
 class MakefileEngine : public EngineBase {
  
 public:

@@ -1,6 +1,5 @@
-// build:
-// gcc 5: g++ -std=c++11 ...
-// gcc 4: g++  -Wall -o ferret ferret.cpp project_xml_node.o executor.o SimpleXMLStream.o parse_dep.o file_manager.o hash_map.o hash_set.o find_files.o engine.o platform_spec.o glob_utility.o extension.o script_template.o output_collector.o ...
+// Ferret
+// https://github.com/mcjurij/ferret
 
 #include <iostream>
 
@@ -21,8 +20,10 @@
 #include "include_manager.h"
 #include "file_cleaner.h"
 #include "output_collector.h"
+#include "script_template.h"
 
 using namespace std;
+
 
 static const string ferretVersion = "1.0.0";
 
@@ -252,6 +253,7 @@ static bool checkBuildPropsTime( const string &propsfn, const string &projDir)
 }
 
 
+namespace {
 bool doScfs = false;
 bool hasUseCpu = false;   
 int use_cpus = 1; 
@@ -259,6 +261,7 @@ bool compileModeSet = false;
 string compileMode;
 bool stopOnErr = false;
 bool downwardDeep = false;
+}
 
 static void readBuildProperties( bool initMode, const string &build_properies, const string &projDir)
 {
@@ -724,6 +727,12 @@ int main( int argc, char **argv)
         emergency_exit( 2 );
     }
 
+    PlatformSpec::getThePlatformSpec()->setBuildDir( buildDir );
+    Executor syncExecutor( 1 );
+    PlatformSpec::getThePlatformSpec()->syncTools( syncExecutor, printTimes);
+    if( syncExecutor.isInterruptedBySignal() )
+        emergency_exit(3);
+    
     string host = getenv( "HOSTNAME" ) ? string( getenv( "HOSTNAME" ) ) : "unknown_host";
     
     scriptTemplDir = buildDir + "/script_templ";
@@ -872,6 +881,8 @@ int main( int argc, char **argv)
     
     if( printTimes )
         cout << "writing files db took " << get_diff() << "s\n";
+
+    ScriptManager::getTheScriptManager()->setCompileMode( compileMode );
     
     if( !initMode )
     {

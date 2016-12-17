@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <platform>
-    <define name="QT_BASEDIR" value="/home/jurij/Qt5.3.0/5.3/gcc_64" />
+    <define name="QT_BASEDIR" value="${HOME}/Qt5.3.0/5.3/gcc_64" />
     <define name="QT_DEFINES" value="-DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB" />
     <define name="QT_CPPFLAGS" value="-D_REENTRANT -fPIE ${QT_DEFINES}" />
     <define name="QT_MOC_DEFINES" value="${QT_DEFINES}" />

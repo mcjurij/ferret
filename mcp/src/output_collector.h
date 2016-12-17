@@ -83,7 +83,8 @@ public:
     void resetHtml( std::ofstream &os );
 
     void setError( int file_id, bool err);
-
+    void clear();
+    
     void setProjectNodesDir( const std::string &dir );
     void htmlProjectNodes( ProjectXmlNode *node, FileManager &fileMan, int level = 0);
 

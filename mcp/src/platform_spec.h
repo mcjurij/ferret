@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+
+class SimpleXMLStream;
+
 class ToolSpec
 {
 public:
@@ -19,7 +22,8 @@ public:
 
     std::string getName() const
     { return name; }
-    
+
+private:
     void addIncDir( const std::string &dir )
     { incdirs.push_back( dir ); }    
     void addCppFlag( const std::string &flag );
@@ -32,7 +36,8 @@ public:
     { libs.push_back( lib ); }
     void addLibDir( const std::string &dir )
     { libDirs.push_back( dir ); }
-    
+
+public:
     std::string getIncCommandArgs() const;
     std::string getCppFlagArgs() const;
     std::string getCFlagArgs() const;
@@ -41,16 +46,31 @@ public:
     std::string getLibArgs() const;
     std::string getLibDirArgs() const;
     
+    std::string getSyncUse() const
+    { return sync_use; }
+    
+    std::string getSyncSource() const
+    { return sync_source; }
+    
+    std::string getSyncTarget() const
+    { return sync_target; }
+    
+    bool parseToolSpec( SimpleXMLStream *xmls );
+    
 private:
     std::string name;
     
-    std::vector<std::string> incdirs;
+    std::vector<std::string> incdirs;          // include directories when using this tool
     std::vector<std::string> cppflags;         // c++ compiler flags when using this tool
     std::vector<std::string> cflags;           // c compiler flags when using this tool
     std::vector<std::string> lflags;           // link library flags when using this tool
     std::vector<std::string> eflags;           // link executable flags when using this tool
-    std::vector<std::string> libs;
-    std::vector<std::string> libDirs;
+    std::vector<std::string> libs;             // libraries when using this tool
+    std::vector<std::string> libDirs;          // library directories when using this tool
+
+    std::string sync_use;
+    std::string sync_source;
+    std::string sync_target;
 };
 
 
@@ -126,6 +146,8 @@ private:
 };
 
 
+class Executor;
+
 class PlatformSpec
 {
     
@@ -162,6 +184,11 @@ public:
     
     std::string getStaticlibFileName( const std::string &lib ) const
     { return "lib" + lib + staticext; }
+
+    void setBuildDir( const std::string &bd )
+    { buildDir = bd; }
+    
+    void syncTools( Executor &executor, bool printTimes);
     
 private:
     static PlatformSpec *thePlatformSpec;
@@ -179,10 +206,11 @@ private:
     std::vector<std::string> libs;
     std::vector<std::string> libDirs;
     
-    std::vector<CompileMode>  compileModes;     // DEBUG, RELEASE...
-    std::vector<CompileTrait> compileTraits;    // library
-    std::vector<ToolSpec>     tools;
-    
+    std::vector<CompileMode>  compileModes;     // compile_mode tag, DEBUG, RELEASE...
+    std::vector<CompileTrait> compileTraits;    // compile_trait tag, library
+    std::vector<ToolSpec>     tools;            // tool tag
+
+    std::string buildDir;
 };
 
 #endif

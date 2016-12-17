@@ -17,7 +17,7 @@ using namespace std;
 #define WEAK_HASH_SET_SIZE 3
 
 // a hash function for integers. easy.
-static unsigned int hash( hash_map_t *hm, int file_id)
+static unsigned int hash_id( hash_map_t *hm, int file_id)
 {
     return file_id % hm->size;
 }
@@ -76,7 +76,7 @@ static unsigned int hash_s( hash_map_t *hm, const string &s)
 static bucket_t *hash_map_find( hash_map_t *hm, int file_id)
 {
     assert( file_id != -1 );
-    bucket_t *h = hm->buckets[ hash( hm, file_id) ];
+    bucket_t *h = hm->buckets[ hash_id( hm, file_id) ];
     
     if( !h )
         return 0;
@@ -252,7 +252,7 @@ void FileMap::add( int file_id, const string &file_name, ProjectXmlNode *node, c
 {
     // node can be null
     
-    int b = hash( hashmap, file_id);
+    int b = hash_id( hashmap, file_id);
     bucket_t *h = hashmap->buckets[b];
       
     if( h && h->data->file_id == file_id )
@@ -361,7 +361,7 @@ void FileMap::removeAllDeps( data_t *n )
 void FileMap::remove( int file_id )
 {
     assert( hasId( file_id ) );
-    unsigned int b = hash( hashmap, file_id);
+    unsigned int b = hash_id( hashmap, file_id);
     bucket_t *h = hashmap->buckets[ b ];
     
     if( h == 0 )

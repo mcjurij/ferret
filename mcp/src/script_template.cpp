@@ -24,7 +24,7 @@ public:
 
     void replace( const map<string,string> &replMap);
 
-    string write( const string &scriptfn, int file_id);
+    string write( const string &scriptfn, int file_id, const string &compile_mode);
 
 private:
     bool hasNextChar() const
@@ -165,7 +165,7 @@ void ScriptTemplate::replace( const map<string,string> &replMap )
 }
 
 
-string ScriptTemplate::write( const string &scriptfn, int file_id)
+string ScriptTemplate::write( const string &scriptfn, int file_id, const string &compile_mode)
 {
     string fn;
     size_t i;
@@ -173,7 +173,8 @@ string ScriptTemplate::write( const string &scriptfn, int file_id)
 
     if( file_id > 0 )
         idss << file_id;
-
+    idss << "__" << compile_mode;
+    
     for( i = 0; i < scriptfn.length(); i++)
         if( scriptfn[ i ] == '#' )
             fn.append( idss.str() );
@@ -225,7 +226,7 @@ void ScriptInstance::addReplacement( const string &k, const string &v)
 }
 
 
-string ScriptInstance::write( const string &target_fn )
+string ScriptInstance::write( const string &target_fn, const string &compile_mode)
 {    
     ScriptTemplate st( templ_name );
     if( !st.readTemplate() )
@@ -236,7 +237,7 @@ string ScriptInstance::write( const string &target_fn )
     
     st.replace( replacements );
     
-    return st.write( stencil, file_id);  // returns file name of the written script
+    return st.write( stencil, file_id, compile_mode);  // returns file name of the written script
 }
 
 
@@ -295,7 +296,7 @@ string ScriptManager::write( file_id_t file_id, const string &target_fn)
     map<file_id_t,ScriptInstance>::iterator it = instances.find( file_id );
     
     if( it != instances.end() )
-        return it->second.write( target_fn );
+        return it->second.write( target_fn, compile_mode);
     else
     {
         cerr << "internal error: command for file " << target_fn << " (" << file_id << ") does not have a script template attached to it.\n";

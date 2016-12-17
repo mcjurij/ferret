@@ -7,6 +7,7 @@
 #include "glob_utility.h"
 #include "platform_defines.h"
 #include "extension.h"
+#include "output_collector.h"
 
 using namespace std;
 
@@ -64,6 +65,88 @@ string ToolSpec::getLibDirArgs() const
     return join( " -L", libDirs, true);
 }
 
+
+bool ToolSpec::parseToolSpec( SimpleXMLStream *xmls )
+{
+    while( !xmls->atEnd() )
+    {
+        xmls->readNext();
+        
+        if( xmls->hasError() )
+            break;
+        
+        if( xmls->isStartElement() )
+        {
+            if( xmls->path() == "/tool/incdir" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addIncDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/cppflags" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/cflags" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addCFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/lflags" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/eflags" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/lib" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addLib( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/libdir" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "value" ) )
+                    addLibDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+            }
+            else if( xmls->path() == "/tool/sync" )
+            {
+                SimpleXMLAttributes attr = xmls->attributes();
+                
+                if( attr.hasAttribute( "use" ) )
+                    sync_use = PlatformDefines::getThePlatformDefines()->replace( attr.value( "use" ) );
+                if( attr.hasAttribute( "source" ) )
+                    sync_source = PlatformDefines::getThePlatformDefines()->replace( attr.value( "source" ) );
+                if( attr.hasAttribute( "target" ) )
+                    sync_target = PlatformDefines::getThePlatformDefines()->replace( attr.value( "target" ) );
+            }
+        }
+        else if( xmls->isEndElement() )
+        {
+            if( xmls->path() == "" && xmls->name() == "tool" )   // closing tool
+                break;
+        }
+    }
+
+    return !xmls->hasError();
+}
 
 // -----------------------------------------------------------------------------
 void CompileMode::addCppFlag( const std::string &flag )
@@ -183,7 +266,6 @@ bool PlatformSpec::read( const string &fn )
     }
     
     SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
-    ToolSpec currTool;
     CompileMode currCm;
     CompileTrait currCt;
     
@@ -281,56 +363,15 @@ bool PlatformSpec::read( const string &fn )
                 SimpleXMLAttributes attr = xmls->attributes();
                     
                 if( attr.hasAttribute( "name" ) )
-                    currTool = ToolSpec( attr.value( "name" ) );
-            }
-            else if( xmls->path() == "/platform/tool/incdir" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addIncDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/cppflags" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addCppFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/cflags" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addCFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/lflags" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addLFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/eflags" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addLEFlag( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/lib" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addLib( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
-            }
-            else if( xmls->path() == "/platform/tool/libdir" )
-            {
-                SimpleXMLAttributes attr = xmls->attributes();
-                
-                if( attr.hasAttribute( "value" ) )
-                    currTool.addLibDir( PlatformDefines::getThePlatformDefines()->replace( attr.value( "value" ) ) );
+                {
+                    ToolSpec currTool( attr.value( "name" ) );
+                    
+                    xmls->setPathStart( 1 );
+                    currTool.parseToolSpec( xmls );
+                    xmls->setPathStart( 0 );
+
+                    addTool( currTool );
+                }
             }
             else if( xmls->path() == "/platform/compiler" )
             {
@@ -433,19 +474,10 @@ bool PlatformSpec::read( const string &fn )
                 ExtensionManager::getTheExtensionManager()->parseExtension( xmls );
                 xmls->setPathStart( 0 );
             }
-            
-            //cout << "\n";
         }
         else if( xmls->isEndElement() )
-        {  //cout << "  -- END   tag: " << xmls->name() << " ";
-           // cout << "Line: " << xmls->LineNumber() << ":";
-           // cout << "  Current path: >" << xmls->path()  << "< ";
-            
-            if( xmls->path() == "/platform" && xmls->name() == "tool" )
-            {
-                addTool( currTool );
-            }
-            else if( xmls->path() == "/platform" && xmls->name() == "compile_mode" )
+        {
+            if( xmls->path() == "/platform" && xmls->name() == "compile_mode" )
             {
                 addCompileMode( currCm );
             }
@@ -458,12 +490,12 @@ bool PlatformSpec::read( const string &fn )
         }
     }
 
-    bool err = !xmls->hasError();
+    bool ok = !xmls->hasError();
     
     delete xmls;
     fclose( fpXml );
 
-    return err;
+    return ok;
 }
 
 
@@ -600,4 +632,41 @@ string PlatformSpec::getLibArgs() const
 string PlatformSpec::getLibDirArgs() const
 {
     return join( " -L", libDirs, true);
+}
+
+
+void PlatformSpec::syncTools( Executor &executor, bool printTimes)
+{
+    if( tools.size() == 0 )
+        return;
+    
+    size_t i;
+    SyncEngine se;
+    
+    for( i = 0; i < tools.size(); i++)
+    {
+        const ToolSpec &ts = tools[i];
+
+        if( ts.getSyncUse().length() > 0 && ts.getSyncSource().length() > 0 && ts.getSyncTarget().length() > 0 )
+        {
+            string script_fn = buildDir + "/ferret_sync_" + ts.getSyncUse() + ".sh";
+            vector<string> args;
+            args.push_back( ts.getSyncSource() );
+            args.push_back( ts.getSyncTarget() );
+            
+            se.addSyncCommand( ExecutorCommand( script_fn, args) );
+        }
+    }
+
+    if( se.hasCommands() )
+    {
+        if( verbosity > 0 )
+            cout << "platform tools sync start\n";
+        
+        se.doWork( executor, printTimes);
+        OutputCollector::getTheOutputCollector()->clear();
+        
+        if( verbosity > 0 )
+            cout << "platform tools sync end\n";
+    }
 }
