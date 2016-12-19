@@ -1,4 +1,4 @@
-// parse a ferret_inc generated dependency file
+// parse a ferret_inc (or gcc) generated dependency file
 
 #ifndef FERRET_PARSE_DEP_H_
 #define FERRET_PARSE_DEP_H_
@@ -22,30 +22,30 @@ struct DepFileEntry
 
 class ParseDep
 {
-public:	
-	enum TokenType {
-		INVALID = 0,ERROR,
+public: 
+    enum TokenType {
+        INVALID = 0,ERROR,
         FILE_NAME, COLON,
-		COMMENT,
+        COMMENT,
         LINE_CONTINUATION,
         NEWLINE
-	};
-	
-	ParseDep( FILE *in );
-	~ParseDep();
+    };
+    
+    ParseDep( FILE *in );
+    ~ParseDep();
 
 private:
     void ParseFileName();
 
-	ParseDep::TokenType ReadNext();
+    ParseDep::TokenType ReadNext();
 
-	int LineNumber() const
-	{ return line_num; }
+    int LineNumber() const
+    { return line_num; }
 
-	bool HasError() const;
+    bool HasError() const;
 
-	bool AtEnd() const
-	{ return ateof; }
+    bool AtEnd() const
+    { return ateof; }
     
     void ParseDependency();
 
@@ -56,18 +56,18 @@ public:
     { return entries; }
     
 private:
-	void  Consume();
-	bool  HasNextChar();
-	void  SkipWhite();
-	void  ParseNext();
-	
-	FILE *in_fp;
-	bool ateof;
-	int line_num;
-	char input_buf[2];
-	int input_length;
-	int curr;
-	int errors;
+    void  Consume();
+    bool  HasNextChar();
+    void  SkipWhite();
+    void  ParseNext();
+    
+    FILE *in_fp;
+    bool ateof;
+    int line_num;
+    char input_buf[2];
+    int input_length;
+    int curr;
+    int errors;
     bool saw_bs;
 
     TokenType current_token;

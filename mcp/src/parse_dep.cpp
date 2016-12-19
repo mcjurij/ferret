@@ -1,10 +1,9 @@
-// parse a gcc generated dependency file
+// parse a ferret_inc (or gcc) generated dependency file
 //
-// g++ -ansi -Wall -c parse_dep.cpp
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+//#include <cstdlib>
+//#include <cstdio>
+//#include <cstring>
 #include <cassert>
 
 #include <string>
@@ -39,14 +38,14 @@ void DepFileEntry::print() const
 
 
 ParseDep::ParseDep( FILE *in )
-	: in_fp(in), ateof(false),line_num(0),
-	  curr(0),errors(0),
-	  current_token(INVALID)
+    : in_fp(in), ateof(false),line_num(0),
+      curr(0),errors(0),
+      current_token(INVALID)
 {
-	assert(in);
+    assert(in);
     
-	Consume();
-	line_num = 1;
+    Consume();
+    line_num = 1;
 
     saw_bs = false;
 }
@@ -54,24 +53,23 @@ ParseDep::ParseDep( FILE *in )
 
 ParseDep::~ParseDep()
 {
-
 }
 
 
 void ParseDep::Consume()
 {
     int c = fgetc( in_fp );
-	if( c>=0 )
-	{
+    if( c>=0 )
+    {
         input_buf[0] = (char)c;
         input_buf[1] = '\0';
         input_length = 1;
-	}
-	else
-	{
-		ateof=true;
-		curr=input_length = 0;
-	}
+    }
+    else
+    {
+        ateof=true;
+        curr=input_length = 0;
+    }
 }
 
 
@@ -79,22 +77,22 @@ void ParseDep::Consume()
 
 bool ParseDep::HasNextChar()
 {
-	if( curr == input_length )
-		Consume();
-	return curr < input_length;
+    if( curr == input_length )
+        Consume();
+    return curr < input_length;
 }
 
 
 void ParseDep::SkipWhite()
 {
-	while( HasNextChar() && is_white(get_char()) )
-		Consume();
+    while( HasNextChar() && is_white(get_char()) )
+        Consume();
 }
 
 
 void ParseDep::ParseFileName()
 {
-	char buf[1024];
+    char buf[1024];
     int i=0;
     assert( is_path_begin( get_char() ) );
     
@@ -161,9 +159,9 @@ void ParseDep::ParseNext()
 
 ParseDep::TokenType ParseDep::ReadNext()
 {
-	ParseNext();
+    ParseNext();
 
-	return current_token;
+    return current_token;
 }
 
 
@@ -221,6 +219,6 @@ bool ParseDep::parse()
     do {
         ParseDependency();
     } while( !AtEnd() && !HasError() );
-	
-	return HasError();
+    
+    return HasError();
 }
