@@ -72,6 +72,6 @@ sub add_subentry
     my $filename = shift;
     
     my $data = read_file $filename, {binmode => ':utf8'};
-    $data =~ s/<\/project>/  \<sub name="$sub_proj" \/>\n<project>/;
+    $data =~ s/<\/project>/  \<sub name="$sub_proj" \/>\n<\/project>\n/;
     write_file $filename, {binmode => ':utf8'}, $data;
 }
