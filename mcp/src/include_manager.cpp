@@ -161,7 +161,7 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writ
     }
     
     size_t i;
-    bool check_all = initMode || fileRemoved;
+    bool check_all = fileRemoved;
     
     for( i = 0; i < filesWithUpdate.size() && !check_all; i++)
     {
@@ -179,7 +179,7 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writ
                 if( readDepFile( fn, depfn, xmlNode) > 0 )
                     check_all = resolveFile( fileDb, from_id, seekerMap.at( fn ), false);
             }
-            else 
+            else
                 check_all = true;   // new file
         }
     }

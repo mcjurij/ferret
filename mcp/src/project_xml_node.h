@@ -12,7 +12,7 @@
 #include "file_manager.h"
 #include "include_manager.h"
 #include "build_props.h"
-
+#include "project_xml_timestamps.h"
 
 // -----------------------------------------------------------------------------
 // XML traversal
@@ -52,7 +52,7 @@ public:
                     const std::vector<std::string> &cppflags, const std::vector<std::string> &cflags,
                     const std::vector<std::string> &usetools, const std::vector<std::string> &localLibs);
     
-    static ProjectXmlNode *traverseXml( const std::string &start, int level=0);
+    static ProjectXmlNode *traverseXml( const std::string &start, ProjectXmlTimestamps &projXmlTs, int level=0);
     static bool hasXmlErrors();
     std::vector<std::string> traverseXmlStructureForChildren( int level=0 );
     

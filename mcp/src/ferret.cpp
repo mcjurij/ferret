@@ -21,11 +21,12 @@
 #include "file_cleaner.h"
 #include "output_collector.h"
 #include "script_template.h"
+#include "project_xml_timestamps.h"
 
 using namespace std;
 
 
-static const string ferretVersion = "1.0.0";
+static const string ferretVersion = "1.1.0";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -708,9 +709,27 @@ int main( int argc, char **argv)
         exit(0);
     }
     
+    string dbProjDir = stackPath( ferretDbDir, startProjDir);
+    
+    ProjectXmlTimestamps projXmlTs( dbProjDir );
+
+    if( !initMode )
+    {
+        if( !projXmlTs.readTimes() )
+        {
+            cerr << "error: ferret_xmlts file not found. rerun using --init.\n";
+            emergency_exit( 5 );
+        }
+        else if( projXmlTs.compare() )
+        {
+            initMode = initAndBuild = true;
+            if( verbosity > 0 )
+                cout << "Switching to init mode since one or more project xml files have changed.\n";
+        }
+    }
+    
     string platform_spec = selectPlatformSpec( buildDir );
     string build_properies;
-
     if( initMode )
     {
         if( propertiesFileArg.length() > 0 )
@@ -745,20 +764,25 @@ int main( int argc, char **argv)
     mkdir_p( tempDepDir );
     
     setupExtensions();
-    
-    string dbProjDir = stackPath( ferretDbDir, startProjDir);
+  
     mkdir_p( dbProjDir );
     set_up_mbd_set( dbProjDir );
     
-    // start with reading all project xml files
-    ProjectXmlNode *xmlRootNode = ProjectXmlNode::traverseXml( startProjDir );
+    // always start with reading all project xml files
+    ProjectXmlNode *xmlRootNode = ProjectXmlNode::traverseXml( startProjDir, projXmlTs);
     if( ProjectXmlNode::hasXmlErrors() )
         emergency_exit( 7 );
-    
+
     if( xmlRootNode == 0 )
     {
         cerr << "error: no root node at '" << startProjDir << "'. check your setup.\n";
         emergency_exit( 5 );
+    }
+    
+    if( initMode )
+    {
+        projXmlTs.addFile( platform_spec );    // changing platform XML may effect the entire build
+        projXmlTs.writeTimes();
     }
     
     if( printTimes )

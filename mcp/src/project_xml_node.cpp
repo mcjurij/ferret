@@ -37,7 +37,7 @@ ProjectXmlNode::ProjectXmlNode( const string &d, const string &module, const str
 static map<string,ProjectXmlNode *> dirToNodeMap;
 static string nodeStack[50];
 
-ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
+ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, ProjectXmlTimestamps &projXmlTs, int level)
 {
     if( xmlHasErrors )
         return 0;
@@ -74,6 +74,8 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
         cerr << "error: xml structure file " << prjxml << " not found\n";
         return 0;
     }
+
+    projXmlTs.addFile( prjxml );
     
     SimpleXMLStream *xmls = new SimpleXMLStream( fpXml );
     if( verbosity > 0 )
@@ -231,7 +233,7 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, int level)
         {
             string sub_start = join( "/", split( '/', node->subDirs[ i ]), false);
             
-            ProjectXmlNode *d = traverseXml( sub_start, level + 1);
+            ProjectXmlNode *d = traverseXml( sub_start, projXmlTs, level + 1);
             if( d )
             {
                 node->workingSubDirs.push_back( node->subDirs[ i ] );
