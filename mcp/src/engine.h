@@ -113,47 +113,8 @@ class Engine : public EngineBase
         
     } command_t;
     
-public:
-    class Dominator
-    {
-        Dominator()
-        {}
-
-    public:
-        Dominator( int file_id, long long time, hash_set_t *dom_set)
-            : file_id(file_id), idx(-1), time(time), dom_set(dom_set)
-        {}
-        
-        int getFileId() const
-        { return file_id; }
-        
-        void setIndex( size_t i )
-        { idx = i; }
-
-        size_t getIndex() const
-        { return idx; }
-
-        long long getTimeMs() const
-        { return time; }
-        
-        hash_set_t *getDominatedSet() const
-        { return dom_set; }
-
-    private:
-        int file_id;
-        size_t    idx;
-        long long time;                // the time of the node that dominates all nodes in dom_set
-        hash_set_t *dom_set;
-    };
 
 private:
-    struct DomSearchNode
-    {
-        long long time;               // search value > time => go right, go left otherwise
-        DomSearchNode *left, *right;
-        size_t smallest_idx;
-    };
-    
     Engine()
     {}
     
@@ -179,17 +140,12 @@ private:
     
     hash_set_t *traverse_union_tree( command_t *e, int level);
     void traverse_for_dominator_sets();
-    DomSearchNode *buildDominatorSearchTree( const std::vector<Dominator> &dom );
-    void delDominatorSearchTree( DomSearchNode *n );
-    size_t searchDominators( long long t );
-    void printDominatorSearchTree( DomSearchNode *n, int level=0);
     
     bool prereqs_done( command_t *c );
     std::string generateScript( command_t *c );
     
     bool make_target_by_wait( command_t *c );
     void make_targets_by_dom_set( command_t *c );
-    void fill_target_set2();
     void fill_target_set();
 
     void move_wavefront();
@@ -219,9 +175,6 @@ private:
 #define FILE_TABLE_SIZE 977
     fe_bucket_t files[ FILE_TABLE_SIZE ];
 
-    std::vector<Dominator>  all_dominators;
-    DomSearchNode *rootDomSearchNode;
-    
     std::vector<int> final_targets;
     hash_set_t *all_targets, *targets_left;
     hash_set_t *to_do_set, *in_work_set, *done_set, *failed_set;

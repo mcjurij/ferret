@@ -300,23 +300,26 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     
     vector<File> sources = getNode()->getFiles();
     int cnt_match = 0;
-    string compare_to;
+    string compare_to_1, compare_to_2;
     
     if( entry->selector_trydir.length() == 0 )
-        compare_to = getNode()->getSrcDir() + "/" + selectorfn;
+    {
+        compare_to_1 = getNode()->getDir() + "/" + selectorfn;
+        compare_to_2 = getNode()->getSrcDir() + "/" + selectorfn;
+    }
     else
     {
         vector<string> selector_parts = split( '/', selectorfn);
         
         if( selector_parts.size() == 1 )
-            compare_to = getNode()->getDir() + "/" + entry->selector_trydir + "/" + selector_parts[0];
+            compare_to_1 = getNode()->getDir() + "/" + entry->selector_trydir + "/" + selector_parts[0];
         else // more than 1 part => ignore trydir
-            compare_to = getNode()->getDir() + "/" + join( "/", selector_parts, false);
+            compare_to_1 = getNode()->getDir() + "/" + join( "/", selector_parts, false);
     }
     
     for( i = 0; i < sources.size(); i++)
     {
-        if( sources[i].extension() == entry->selector_fileext && sources[i].getPath() == compare_to )
+        if( sources[i].extension() == entry->selector_fileext && (sources[i].getPath() == compare_to_1 || sources[i].getPath() == compare_to_2) )
         {
             map<string,file_id_t>  nameToFileId;
             cnt_match++;
@@ -452,7 +455,11 @@ void XmlExtension::createCommands( FileManager &fileMan, const map<string,string
     }
 
     if( cnt_match == 0 )
-        cerr << entry->getType() << " extension (XML): warning: none of the files matched selector '" << compare_to << "' at " << getNode()->getDir() << ".\n";
+    {
+        cerr << entry->getType() << " extension (XML): warning: none of the files matched selector '" << compare_to_1 << "' at " << getNode()->getDir() << ".\n";
+        if( compare_to_2.length() > 0 )
+            cerr << entry->getType() << " extension (XML): warning: ... and none of the files matched selector '" << compare_to_2 << "' at " << getNode()->getDir() << ".\n";
+    }
 }
 
 

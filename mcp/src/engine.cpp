@@ -103,7 +103,11 @@ ExecutorCommand SyncEngine::nextCommand()
 // -----------------------------------------------------------------------------
 
 Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
-    : EngineBase(), dbProjDir(dbProjDir), rootDomSearchNode(0), round(0), scfs(doScfs), stopOnError(false)
+    : EngineBase(), dbProjDir(dbProjDir),
+#ifdef USE_OLD_TARGET_PLANNER
+      rootDomSearchNode(0),
+#endif
+      round(0), scfs(doScfs), stopOnError(false)
 {
     int i;
     for( i=0; i<FILE_TABLE_SIZE; i++)
@@ -130,8 +134,10 @@ Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
 
 Engine::~Engine()
 {
+#ifdef USE_OLD_TARGET_PLANNER 
     delDominatorSearchTree( rootDomSearchNode );
-
+#endif
+    
     delete_hash_set( all_targets );
     delete_hash_set( targets_left );
     
@@ -441,17 +447,21 @@ hash_set_t *Engine::traverse_union_tree( command_t *e, int level)
     return hs;
 }
 
-
+#ifdef USE_OLD_TARGET_PLANNER
 static bool sortfunc( const Engine::Dominator &a, const Engine::Dominator &b)  // for std::sort()
 {
     return a.getTimeMs() < b.getTimeMs();
 }
+#endif
 
 void Engine::traverse_for_dominator_sets()
 {
     size_t i;
+
+#ifdef USE_OLD_TARGET_PLANNER
     all_dominators.clear();
     all_dominators.reserve( file_ids.size() );
+#endif
     
     for( i = 0;  i < file_ids.size(); i++)         // find dominator sets for all files
     {
@@ -463,6 +473,7 @@ void Engine::traverse_for_dominator_sets()
         //printf( "\n" );
     }
     
+#ifdef USE_OLD_TARGET_PLANNER   
     for( i = 0;  i < file_ids.size(); i++)     // connect all dominator sets with the file name and timestamp of the file
     {
         command_t *c = find_command( file_ids[i] );
@@ -505,9 +516,10 @@ void Engine::traverse_for_dominator_sets()
 
     if( verbosity > 2 )
         printDominatorSearchTree( rootDomSearchNode );
+#endif
 }
 
-
+#ifdef USE_OLD_TARGET_PLANNER
 Engine::DomSearchNode *Engine::buildDominatorSearchTree( const vector<Dominator> &dom )
 {
     if( dom.size() == 0 )
@@ -616,7 +628,7 @@ void Engine::printDominatorSearchTree( DomSearchNode *n, int level)
             printDominatorSearchTree( n->right, level+1);
     }
 }
-
+#endif
 
 bool Engine::prereqs_done( command_t *c )
 {
@@ -701,8 +713,8 @@ void Engine::make_targets_by_dom_set( command_t *c )    // make all nodes domina
     free( a );
 }
 
-
-void Engine::fill_target_set2()
+#ifndef USE_OLD_TARGET_PLANNER
+void Engine::fill_target_set()
 {
     int activity;
     hash_set_t *front_ids;
@@ -713,11 +725,12 @@ void Engine::fill_target_set2()
     {
         command_t *c = find_command( file_ids[n] );
 
-        if( c->deps_size == 0 )
+        if( c->deps_size == 0 )  // root node?
         {
             if( strcmp( c->dep_type, "D") == 0 || FindFiles::exists( c->file_name ) )
             {
-                hash_set_add( front_ids, c->file_id);
+                if( !(c->marked_by_deletion || c->marked_by_deps_changed) )
+                    hash_set_add( front_ids, c->file_id);
                 
                 if( scfs && c->scfs_time > 0 )
                     c->dominating_time = c->scfs_time;
@@ -727,6 +740,30 @@ void Engine::fill_target_set2()
                     c->dominating_time = f.getTimeMs();
                 }
             }
+        }
+        
+        if( c->marked_by_deletion || c->marked_by_deps_changed )
+        {
+            if( !c->is_target )
+            {
+                if( strcmp( c->dep_type, "D") != 0 && strcmp( c->dep_type, "W") != 0 )
+                {
+                    c->is_target = true;
+                    hash_set_add( all_targets, c->file_id);
+                }
+                if( verbosity > 1 )
+                    cout << "target planner   making targets from " << c->file_name << " (" << c->file_id << ") on, since marked\n";
+                make_targets_by_dom_set( c );
+            }
+        }
+        else if( c->user_selected &&  c->weak_size > 0 && make_target_by_wait( c ) ) // weak_size > 0 only true for extension nodes
+        {
+            c->is_target = true;
+            hash_set_add( all_targets, c->file_id);
+            
+            if( verbosity > 0 )
+                cout << "target planner   adding "  << c->file_name << " (" << c->file_id << ") to target set (trough wait node)\n";
+            make_targets_by_dom_set( c );
         }
     }
     
@@ -741,27 +778,26 @@ void Engine::fill_target_set2()
         for( i = 0; i < s; i++)
         {
             command_t *c = find_command( a[i] );
-            if( c->is_target || c->is_done )
-                continue;
             
             int k;
             for( k = 0; k < c->downward_size; k++)
             {
                 command_t *d = c->downwards[ k ];
-                //if( !d->user_selected )
-                //    continue;
                 
                 char *down_fn = d->file_name;
                 bool dominates = false;
-                    
-                if( strcmp( d->dep_type, "D") == 0 || FindFiles::exists( down_fn ) )
+                
+                if( d->marked_by_deletion || d->marked_by_deps_changed )
+                {
+                    d->dominating_time = (long long)365*24*60*60*1000 * 100;    // many years into the future to force domination of all that come after
+                    dominates = true;
+                }
+                else if( strcmp( d->dep_type, "D") == 0 || FindFiles::exists( down_fn ) )
                 {
                     if( d->dominating_time == 0 )
                     {
                         if( scfs && d->scfs_time > 0 )
-                        {
                             d->dominating_time = d->scfs_time;
-                        }
                         else
                         {
                             const File down_f = FindFiles::getCachedFile( down_fn );
@@ -769,7 +805,7 @@ void Engine::fill_target_set2()
                         }
                     }
                     
-                    if( c->dominating_time > d->dominating_time )
+                    if( c->dominating_time > d->dominating_time )  // propagate dominating time
                     {
                         d->dominating_time = c->dominating_time;
                         dominates = true;
@@ -777,53 +813,48 @@ void Engine::fill_target_set2()
                 }
                 else
                 {
-                    d->dominating_time = (long long)365*24*60*60*1000 * 100;    // 100 years into future to force domination of all that come after
+                    d->dominating_time = (long long)365*24*60*60*1000 * 100;    // many years into the future to force domination of all that come after
                     dominates = true;
                 }
-
+                
                 if( strcmp( d->dep_type, "D") == 0 )
                 {
                     hash_set_add( front_ids, d->file_id);
                     if( verbosity > 2 )
                         cout << "target planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
-                             << d->file_name << " (" << d->file_id << ") (D) propagating dominating time\n";
-                }
-                else if( strcmp( d->dep_type, "W") == 0 )
-                {
-                    if( verbosity > 1 )
-                        cout << "target planner   stop at weak "  << d->file_name << " (" << d->file_id << ")\n";
+                             << d->file_name << " (" << d->file_id << ") (D) propagating time\n";
+                    
+                    activity++;
                 }
                 else
                 {
-                    if( dominates )
+                    if( !d->is_target )
                     {
-                        d->is_target = true;
-                        hash_set_add( all_targets, d->file_id);
                         activity++;
-                        if( verbosity > 0 )
-                            cout << "target planner   adding "  << d->file_name << " (" << d->file_id << ") to target set\n";
+                        
+                        if( dominates && d->user_selected )
+                        {
+                            d->is_target = true;
+                            hash_set_add( all_targets, d->file_id);
                             
-                        if( d->downward_size == 0 )
-                            final_targets.push_back( d->file_id );
-                        else
+                            if( verbosity > 0 )
+                                cout << "target planner   adding "  << d->file_name << " (" << d->file_id << ") to target set\n";
+                            
                             make_targets_by_dom_set( d );              // propagate target state to all dependend nodes
-                    }
-                    else
-                    {
-                        hash_set_add( front_ids, d->file_id);
-                        if( verbosity > 2 )
-                            cout << "target planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
-                                 << d->file_name << " (" << d->file_id << ") (non D) propagating dominating time\n";
+                            
+                            if( d->downward_size == 0 )
+                                final_targets.push_back( d->file_id );
+                        }
+                        else  // nothing to do here, so we move on
+                        {
+                            hash_set_add( front_ids, d->file_id);
+                            if( verbosity > 2 )
+                                cout << "target planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
+                                     << d->file_name << " (" << d->file_id << ") (non D) propagating time\n";
+                        }
                     }
                 }
             }  // for( k = 0; k < c->downward_size; k++)
-            
-            if( strcmp( c->dep_type, "W") != 0 )
-            {
-                c->is_done = true;
-                hash_set_add( done_set, c->file_id);
-                activity++;
-            }
             
             hash_set_remove( front_ids, c->file_id);
         }
@@ -835,10 +866,14 @@ void Engine::fill_target_set2()
     while( activity > 0 );
     
     delete_hash_set( front_ids );
+
+    validCmdsLastRound = 0;
+    errors = 0;
 }
 
+#else
 
-void Engine::fill_target_set()
+void Engine::fill_target_set()           // OLD
 {
     size_t i;
     
@@ -934,6 +969,7 @@ void Engine::fill_target_set()
     validCmdsLastRound = 0;
     errors = 0;
 }
+#endif
 
 
 void Engine::move_wavefront()
@@ -965,7 +1001,7 @@ void Engine::move_wavefront()
                             {
                                 c->in_to_do = true;
                                 if( verbosity > 0 )
-                                    cout << "work planner   adding "  << c->file_name << " (" << c->file_id << ") to target set\n";
+                                    cout << "work planner   adding "  << c->file_name << " (" << c->file_id << ") to to-do set\n";
                                 hash_set_add( target_root_ids, c->file_id);
                                 activity++;
                             }
@@ -1395,14 +1431,12 @@ int Engine::doWork( ExecutorBase &executor, bool printTimes, const set<string> &
     
     checkUserTargets( userTargets );
     
-    round = 1;
+    fill_target_set();
     
-    fill_target_set();  // OLD
-    // fill_target_set2(); NEW
     FindFiles::clearCache();
     if( printTimes )
         cout << "checking file state and timestamps took " << get_diff() << "s\n";
-
+    round = 1;
     hash_set_union( targets_left, all_targets);
     
     if( hash_set_get_size( all_targets ) > 0 )
