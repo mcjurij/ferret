@@ -105,6 +105,7 @@ class Engine : public EngineBase
         bool find_target_root_visited;
         bool in_to_do;
         bool is_target;
+        long long dominating_time;
         bool is_done;
         bool has_failed;
         bool user_selected;         // true for all targets if no user targets given
@@ -188,6 +189,7 @@ private:
     
     bool make_target_by_wait( command_t *c );
     void make_targets_by_dom_set( command_t *c );
+    void fill_target_set2();
     void fill_target_set();
 
     void move_wavefront();

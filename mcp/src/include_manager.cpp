@@ -161,7 +161,7 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writ
     }
     
     size_t i;
-    bool check_all = fileRemoved;
+    bool check_all = initMode || fileRemoved;
     
     for( i = 0; i < filesWithUpdate.size() && !check_all; i++)
     {
