@@ -104,9 +104,6 @@ ExecutorCommand SyncEngine::nextCommand()
 
 Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
     : EngineBase(), dbProjDir(dbProjDir),
-#ifdef USE_OLD_TARGET_PLANNER
-      rootDomSearchNode(0),
-#endif
       round(0), scfs(doScfs), stopOnError(false)
 {
     int i;
@@ -134,10 +131,6 @@ Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
 
 Engine::~Engine()
 {
-#ifdef USE_OLD_TARGET_PLANNER 
-    delDominatorSearchTree( rootDomSearchNode );
-#endif
-    
     delete_hash_set( all_targets );
     delete_hash_set( targets_left );
     
@@ -447,21 +440,10 @@ hash_set_t *Engine::traverse_union_tree( command_t *e, int level)
     return hs;
 }
 
-#ifdef USE_OLD_TARGET_PLANNER
-static bool sortfunc( const Engine::Dominator &a, const Engine::Dominator &b)  // for std::sort()
-{
-    return a.getTimeMs() < b.getTimeMs();
-}
-#endif
 
 void Engine::traverse_for_dominator_sets()
 {
     size_t i;
-
-#ifdef USE_OLD_TARGET_PLANNER
-    all_dominators.clear();
-    all_dominators.reserve( file_ids.size() );
-#endif
     
     for( i = 0;  i < file_ids.size(); i++)         // find dominator sets for all files
     {
@@ -472,163 +454,8 @@ void Engine::traverse_for_dominator_sets()
         //hash_set_print( hs );
         //printf( "\n" );
     }
-    
-#ifdef USE_OLD_TARGET_PLANNER   
-    for( i = 0;  i < file_ids.size(); i++)     // connect all dominator sets with the file name and timestamp of the file
-    {
-        command_t *c = find_command( file_ids[i] );
-
-        if( c->marked_by_deletion )
-        {
-            all_dominators.push_back( Dominator( c->file_id,
-                                                 (long long)365*24*60*60*1000 * 100,    // 100 years. Forces all that depend on
-                                                 c->dominator_set) );                   // this one to be rebuild, since this one is marked by deletion
-        }
-        else if( strcmp( c->dep_type, "D") == 0 || FindFiles::exists( c->file_name ) )
-        {
-            File f = FindFiles::getCachedFile( c->file_name );
-            assert( f.getPath().length() > 0 );
-
-            if( !scfs )
-                all_dominators.push_back( Dominator( c->file_id, f.getTimeMs(), c->dominator_set) );  // file exists or is D type, no scfs
-            else if( c->scfs_time > 0 )
-            {
-                if( verbosity )
-                    cout << "Scfs for " << c->file_name << " difference to fs time stamp is "<< c->scfs_time - f.getTimeMs() << "ms\n";
-                all_dominators.push_back( Dominator( c->file_id, c->scfs_time, c->dominator_set) );   // file exists, but support crappy file system time stamp
-            }
-            else
-                all_dominators.push_back( Dominator( c->file_id, f.getTimeMs(), c->dominator_set) );
-        }
-        else
-            all_dominators.push_back( Dominator( c->file_id,
-                                                 (long long)365*24*60*60*1000 * 100,    // 100 years. Forces all that depend on
-                                                 c->dominator_set) );                   // this one to be rebuild, since this one does not exist
-    }
-    
-    sort( all_dominators.begin(),  all_dominators.end(), sortfunc);   // sort by time
-
-    for( i = 0; i < all_dominators.size(); i++)
-        all_dominators[i].setIndex( i );
-    
-    delDominatorSearchTree( rootDomSearchNode );
-    rootDomSearchNode = buildDominatorSearchTree( all_dominators );   // build a search tree with time as search criteria
-
-    if( verbosity > 2 )
-        printDominatorSearchTree( rootDomSearchNode );
-#endif
 }
 
-#ifdef USE_OLD_TARGET_PLANNER
-Engine::DomSearchNode *Engine::buildDominatorSearchTree( const vector<Dominator> &dom )
-{
-    if( dom.size() == 0 )
-        return 0;
-    else if( dom.size() == 1 )
-    {
-        DomSearchNode *n = new DomSearchNode;
-        n->left = 0;
-        n->right = 0;
-        n->time = dom[0].getTimeMs();
-        n->smallest_idx = dom[0].getIndex();
-        
-        return n;
-    }
-    else
-    {
-        vector<Dominator>::const_iterator middleIter = dom.begin();
-        long long nsplit = (dom.front().getTimeMs() + dom.back().getTimeMs()) / 2;
-
-        bool found = false;
-        for( ; middleIter != dom.end(); middleIter++)
-        {
-            if( middleIter->getTimeMs() > nsplit )
-            {
-                found = true;
-                break;
-            }
-        }
-        
-        DomSearchNode *n = new DomSearchNode;
-        n->time = nsplit;
-        n->left = n->right = 0;
-        n->smallest_idx = -1;
-        
-        if( !found )
-        {
-            n->smallest_idx = dom[0].getIndex();
-        }
-        else
-        {
-            vector<Dominator> leftHalf( dom.begin(), middleIter);
-            n->left = buildDominatorSearchTree( leftHalf );
-            
-            vector<Dominator> rightHalf( middleIter, dom.end());
-            if( rightHalf.size() > 0 )
-                n->right = buildDominatorSearchTree( rightHalf );
-        }
-        
-        return n;
-    }
-}
-
-
-void Engine::delDominatorSearchTree( DomSearchNode *n )
-{
-    if( n )
-    {
-        if( n->left )
-        {
-            delDominatorSearchTree( n->left );
-            delete n->left;
-        }
-        
-        if( n->right )
-        {
-            delDominatorSearchTree( n->right );
-            delete n->right;
-        }
-    }
-}
-
-
-size_t Engine::searchDominators( long long t )
-{
-    DomSearchNode *n = rootDomSearchNode;
-
-    while( n->left && n->right )
-    {
-        if( t > n->time )
-            n = n->right;
-        else
-            n = n->left;
-    }
-
-    return n->smallest_idx;
-}
-
-
-void Engine::printDominatorSearchTree( DomSearchNode *n, int level)
-{
-    if( n )
-    {
-        if( n->left )
-            printDominatorSearchTree( n->left, level+1);
-
-        cout << "SEARCH TREE: " << string( level*2, ' ') << n->time << "ms ";
-        
-        if( n->smallest_idx != (size_t)-1 )
-        {
-            cout << " sm.idx: "<< n->smallest_idx << "\n";
-        }
-        else
-            cout << "\n";
-        
-        if( n->right )
-            printDominatorSearchTree( n->right, level+1);
-    }
-}
-#endif
 
 bool Engine::prereqs_done( command_t *c )
 {
@@ -713,7 +540,7 @@ void Engine::make_targets_by_dom_set( command_t *c )    // make all nodes domina
     free( a );
 }
 
-#ifndef USE_OLD_TARGET_PLANNER
+
 void Engine::fill_target_set()
 {
     int activity;
@@ -756,7 +583,7 @@ void Engine::fill_target_set()
                 make_targets_by_dom_set( c );
             }
         }
-        else if( c->user_selected &&  c->weak_size > 0 && make_target_by_wait( c ) ) // weak_size > 0 only true for extension nodes
+        else if( c->user_selected && c->weak_size > 0 && make_target_by_wait( c ) ) // weak_size > 0 only true for extension nodes
         {
             c->is_target = true;
             hash_set_add( all_targets, c->file_id);
@@ -823,7 +650,6 @@ void Engine::fill_target_set()
                     if( verbosity > 2 )
                         cout << "target planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
                              << d->file_name << " (" << d->file_id << ") (D) propagating time\n";
-                    
                     activity++;
                 }
                 else
@@ -870,106 +696,6 @@ void Engine::fill_target_set()
     validCmdsLastRound = 0;
     errors = 0;
 }
-
-#else
-
-void Engine::fill_target_set()           // OLD
-{
-    size_t i;
-    
-    for( i = 0; i < all_dominators.size(); i++)
-    {
-        command_t *c = find_command( all_dominators[i].getFileId() );
-
-        if( c->is_target )
-            continue;     // ok, since all sub nodes are already made targets
-        
-        if( strcmp( c->dep_type, "D") == 0 )
-        {
-            if( c->deps_size == 0 )
-            {
-                c->is_done = true;         // a non target root node is considered done
-                
-                hash_set_add( done_set, c->file_id);
-            }
-
-            if( c->marked_by_deletion || c->marked_by_deps_changed )
-                make_targets_by_dom_set( c );
-        }
-        else if( strcmp( c->dep_type, "W") == 0 )
-        {
-            c->is_done = false;
-            
-            if( c->marked_by_deletion || c->marked_by_deps_changed )
-                make_targets_by_dom_set( c );
-        }
-        else
-        {
-            if( c->marked_by_deletion || c->marked_by_deps_changed )
-                c->is_target = true;
-            else if( c->user_selected && c->weak_size > 0 && make_target_by_wait( c ) )
-                c->is_target = true;
-            else 
-            {
-                long long target_time = 0;              // if target does not exist, it's time is 0
-                
-                if( FindFiles::exists( c->file_name ) )
-                {
-                    File target = FindFiles::getCachedFile( c->file_name );
-                    if( target.getPath() != "" )
-                    {
-                        if( !scfs )
-                            target_time = target.getTimeMs();
-                        else if( c->scfs_time > 0 )
-                            target_time = c->scfs_time;
-                        else
-                            target_time = c->scfs_time = target.getTimeMs();  // imprecise is better than nothing
-                    }
-                }
-                else if( scfs )
-                    c->scfs_time = 0;
-                
-                size_t k;
-                size_t smallest_idx = target_time > 0 ? searchDominators( target_time ) : 0;  // we do not need to search if time is 0
-                
-                for( k = smallest_idx; k < all_dominators.size(); k++)                        // this loop is the core of the engine
-                {
-                    if( target_time <= all_dominators[k].getTimeMs() &&                       // is file older than the other ...
-                        all_dominators[k].getFileId() != c->file_id && c->user_selected &&
-                        hash_set_has_id( all_dominators[k].getDominatedSet(), c->file_id) )   // ... *and* in the dominated set of the other?
-                    {
-                        c->is_target = true;                                                  // then and only then, it is a target
-
-                        if( verbosity > 1 )
-                            cout << "file " << c->file_name << " (" << c->file_id << ") becomes target, dominated by "
-                                 << find_command( all_dominators[k].getFileId() )->file_name << " (" << all_dominators[k].getFileId() << ")\n";
-                        break;
-                    }
-                }
-            }
-            
-            if( c->is_target )
-            {
-                hash_set_add( all_targets, c->file_id);
-                
-                if( c->downward_size == 0 )
-                    final_targets.push_back( c->file_id );
-                else
-                    make_targets_by_dom_set( c );              // propagate target state to all dependend nodes
-            }
-            else
-            {
-                c->is_done = true;                             // file exists and is new enough
-                hash_set_add( done_set, c->file_id);
-            }
-        }
-    }
-        
-    round = 1;
-    validCmdsLastRound = 0;
-    errors = 0;
-}
-#endif
 
 
 void Engine::move_wavefront()
