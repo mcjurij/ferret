@@ -80,8 +80,6 @@ class Engine : public EngineBase
         int file_id;
         char dep_type[15];
         char *file_name;
-        data_t::file_state_t state;
-        data_t::structural_state_t structural_state;
         
         ProjectXmlNode *xmlNode;
         

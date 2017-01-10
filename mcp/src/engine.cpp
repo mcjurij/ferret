@@ -153,8 +153,6 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
     e->file_name = strdup( cmd->file_name.c_str() );
     strncpy( e->dep_type, cmd->cmd.c_str(), 15);
     e->dep_type[14] = 0;
-    e->state = cmd->state;
-    e->structural_state = cmd->structural_state;
     e->xmlNode = cmd->xmlNode;
     
     unsigned int deps_s;
