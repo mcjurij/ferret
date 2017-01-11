@@ -430,7 +430,7 @@ int ProjectXmlNode::manageDeletedFiles( FileManager &fileMan )
             {
                 cout << "Removing file " << fn << " from db if D type.\n";
                 
-                IncludeManager::getTheIncludeManager()->removeFile( fileMan, fn, this, prereqs);
+                IncludeManager::getTheIncludeManager()->removeFile( fileMan, id, fn, this, prereqs);
                 cnt++;
             }
         }

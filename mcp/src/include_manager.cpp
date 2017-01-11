@@ -31,7 +31,7 @@ IncludeManager *IncludeManager::getTheIncludeManager()
 
  
 IncludeManager::IncludeManager()
-    : fileRemoved(false), ignHdrFp(0)
+    : fileRemoved(false)
 {
     unsat_set = new_hash_set( 101 );
 }
@@ -49,7 +49,7 @@ void IncludeManager::readUnsatSet( bool initMode )
             hash_set_read( fp, unsat_set);
             fclose( fp );
         }
-    }    
+    }
 }
 
 
@@ -112,6 +112,8 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                     
                         filesWithUpdate.push_back( it.getFile() );
                         depFilesWithUpdate.push_back( depfn );
+                        
+                        hash_set_add( unsat_set, it.getId());
                     }
                 }
             }
@@ -129,7 +131,26 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
 
 void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnHdr)
 {
-    resolve_normal( fileDb, initMode, writeIgnHdr);
+    if( !writeIgnHdr )
+    {
+        FILE *fp = fopen( "ferret_ignhdr", "r");
+        if( fp )
+        {
+            while( !feof( fp ) )
+            {
+                char buf[512];
+                if( fscanf( fp, "%511s\n", buf) != EOF )
+                    ignoreHeaders.insert( string(buf) );
+                else
+                    break;
+            }
+
+            fclose( fp );
+        }
+    }
+    
+    if( initMode )
+        readDepFiles( fileDb, writeIgnHdr);
     
     if( hash_set_get_size( unsat_set ) > 0 )
     {
@@ -141,34 +162,51 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
             
             if( fileDb.hasId( from_id ) && blockedIds.find( from_id ) == blockedIds.end() )
             {
-                string fn = fileDb.getFileForId( from_id );
+                string from_fn = fileDb.getFileForId( from_id );
                 ProjectXmlNode *xmlNode = fileDb.getXmlNodeFor( from_id );
                 if( xmlNode )
                 {
                     string dummy, bn, ext;
-                    breakPath( fn, dummy, bn, ext);
+                    breakPath( from_fn, dummy, bn, ext);
                     string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
                     
-                    const map<string,Seeker>::const_iterator &mit = seekerMap.find( fn );
-                
-                    if( mit != seekerMap.end()  )
+                    const map<string,Seeker>::const_iterator &mit = seekerMap.find( from_fn );
+
+                    int notFound = 0;
+                    if( mit != seekerMap.end() )
                     {
                         if( mit->second.lookingFor.size() > 0 )
                         {
-                            if( resolveFile( fileDb, from_id, seekerMap.at( fn ), false) )
-                                hash_set_remove( unsat_set, from_id);
+                            resolveFile( fileDb, from_id, mit->second, writeIgnHdr, notFound);
                         }
                         else
                             hash_set_remove( unsat_set, from_id);
                     }
                     else
-                        if( readDepFile( fn, depfn, xmlNode) > 0 )
-                            if( resolveFile( fileDb, from_id, seekerMap.at( fn ), false) )
-                                hash_set_remove( unsat_set, from_id);
+                        if( readDepFile( from_fn, depfn, xmlNode) > 0 )
+                            resolveFile( fileDb, from_id, seekerMap.at( from_fn ), writeIgnHdr, notFound);
+                    
+                    if( notFound == 0 )
+                        hash_set_remove( unsat_set, from_id);
                 }
             }
+            else
+                hash_set_remove( unsat_set, from_id);
         }
         free( a );
+    }
+    
+    if( writeIgnHdr )
+    {
+        FILE *fp = fopen( "ferret_ignhdr", "w");
+        
+        if( fp )
+        {
+            set<string>::const_iterator ihit = ignoreHeaders.begin();
+            for( ; ihit != ignoreHeaders.end(); ihit++)
+                fprintf( fp, "%s\n", ihit->c_str());
+            fclose( fp );
+        }
     }
     
     FILE *fp = fopen( unsat_set_fn.c_str(), "w");
@@ -177,10 +215,36 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
         hash_set_write( fp, unsat_set);
         fclose( fp );
     }
+
+    const unsigned int treshold = 10;
+    
+    if( hash_set_get_size( unsat_set ) > 0 )
+    {
+        unsigned int i, s;
+        int *a = hash_set_get_as_array( unsat_set, &s);
+        
+        cout << "File(s) with unmet dependencies (at most " << treshold << "):\n";
+        for( i = 0; i < s && i < treshold; i++)
+        {
+            file_id_t id = a[i];
+            
+            if( fileDb.hasId( id ) )
+                cout << "  " << fileDb.getFileForId( id ) << "\n";
+            else
+                cout << "???" << "\n";
+        }
+
+        free( a );
+    }
+    
+    if( hash_set_get_size( unsat_set ) > (int)treshold )
+    {
+        cout << "\nYou have more than " << treshold << " source files with unsatisfied dependencies. So, either\n"
+             << "these are real and have to be fixed, or use --ignhdr.\n\n";
+    }
 }
 
 
-static set<string> blockDoubleIncMiss;
 int IncludeManager::readDepFile( const string &fn, const string &depfn, const ProjectXmlNode *xmlNode)
 {
     int entries = 0;
@@ -217,57 +281,8 @@ int IncludeManager::readDepFile( const string &fn, const string &depfn, const Pr
 }
 
 
-bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writeIgnHdr)
+bool IncludeManager::readDepFiles( FileManager &fileDb, bool writeIgnHdr)
 {
-    if( !writeIgnHdr )
-    {
-        FILE *fp = fopen( "ferret_ignhdr", "r");
-        if( fp )
-        {
-            while( !feof( fp ) )
-            {
-                char buf[512];
-                if( fscanf( fp, "%511s\n", buf) != EOF )
-                    blockDoubleIncMiss.insert( string(buf) );
-                else
-                    break;
-            }
-
-            fclose( fp );
-        }
-    }
-    
-    size_t i;
-    bool check_all = initMode || fileRemoved;
-    
-    for( i = 0; i < filesWithUpdate.size() && !check_all; i++)
-    {
-        const string &fn = filesWithUpdate[i];
-        file_id_t from_id  = fileDb.getIdForFile( fn );
-        
-        if( blockedIds.find( from_id ) == blockedIds.end() )
-        {
-            if( from_id != -1 )
-            {
-                const string &depfn = depFilesWithUpdate[i];
-                ProjectXmlNode *xmlNode = fileDb.getXmlNodeFor( from_id );
-                assert( xmlNode );
-                
-                if( readDepFile( fn, depfn, xmlNode) > 0 )
-                    check_all = resolveFile( fileDb, from_id, seekerMap.at( fn ), false);
-            }
-            else
-                check_all = true;   // new file
-        }
-    }
-
-    if( !check_all )
-    {
-        if( verbosity > 0 )
-            cout << "No include dependencies have changed.\n";
-        return false;
-    }    
-    
     FileMap::Iterator it;
     
     while( fileDb.hasNext( it ) )
@@ -293,6 +308,7 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool initMode, bool writ
                     if( FindFiles::existsUncached( depfn ) )
                     {
                         readDepFile( it.getFile(), depfn, xmlNode);
+                        hash_set_add( unsat_set, it.getId());
                     }
                     else
                         cerr << "warning: file " << depfn << " must exist at this point.\n";
@@ -364,7 +380,7 @@ void IncludeManager::addBlockedIds( const set<file_id_t> &blids )
 }
 
 
-void IncludeManager::removeFile( FileManager &fileDb, const string &fn, const ProjectXmlNode *xmlNode, const set<file_id_t> &prereqs)
+void IncludeManager::removeFile( FileManager &fileDb, file_id_t id, const string &fn, const ProjectXmlNode *xmlNode, const set<file_id_t> &prereqs)
 {
     string dummy, bn, ext;
     breakPath( fn, dummy, bn, ext);
@@ -374,24 +390,29 @@ void IncludeManager::removeFile( FileManager &fileDb, const string &fn, const Pr
     if( verbosity > 0 )
         cout << "Removing dep file " << depfn << "\n";
     ::remove( depfn.c_str() );
+    hash_set_remove( unsat_set, id);
     
     set<file_id_t>::const_iterator sit = prereqs.begin();
     for( ; sit != prereqs.end(); sit++)
     {
-        file_id_t id = *sit;
-        if( fileDb.getCmdForId( id ) == "D" )
+        file_id_t pre_id = *sit;
+        if( fileDb.getCmdForId( pre_id ) == "D" )
         {
-            hash_set_add( unsat_set, id);
-
+            hash_set_add( unsat_set, pre_id);
         }
     }
 }
 
 
-bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const Seeker &s, bool writeIgnHdr)
+set<string> blockDoubleWarn;
+
+bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const Seeker &s, bool writeIgnHdr, int &notFound)
 {
     hash_set_t *new_deps_set = new_hash_set( 37 );
     size_t i,j;
+
+    notFound = 0;
+    
     for( i = 0; i < s.lookingFor.size(); i++)
     {
         if( s.lookingFor[i] != "" && s.lookingFor[i][0] != '/' )
@@ -423,13 +444,19 @@ bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const 
             
             if( found == 0 )
             {
-                if( blockDoubleIncMiss.find( s.lookingFor[i] ) == blockDoubleIncMiss.end() )
+                if( ignoreHeaders.find( s.lookingFor[i] ) == ignoreHeaders.end() )
                 {
-                    cerr << "warning: " << s.from << " includes " << s.lookingFor[i]
-                         << ", but ferret wasn't able to find it.\n";
-                    blockDoubleIncMiss.insert( s.lookingFor[i] );
-                    if( writeIgnHdr && ignHdrFp )
-                        fprintf( ignHdrFp, "%s\n", s.lookingFor[i].c_str());
+                    notFound++;
+
+                    if( blockDoubleWarn.find( s.lookingFor[i] ) == blockDoubleWarn.end() )
+                    {
+                        cerr << "warning: " << s.from << " includes " << s.lookingFor[i]
+                             << ", but ferret wasn't able to find it.\n";
+                        blockDoubleWarn.insert( s.lookingFor[i] );
+                    }
+
+                    if( writeIgnHdr )
+                        ignoreHeaders.insert( s.lookingFor[i] );
                 }
             }
         }
@@ -441,48 +468,4 @@ bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const 
     delete_hash_set( new_deps_set );
 
     return repl;
-}
-
-
-void IncludeManager::resolve_normal( FileManager &fileDb, bool initMode, bool writeIgnHdr)
-{
-    if( !readDepFiles( fileDb, initMode, writeIgnHdr) )
-        return;
-
-    if( writeIgnHdr )
-        ignHdrFp = fopen( "ferret_ignhdr", "w");
-    
-    
-    FileMap::Iterator it;
-    
-    while( fileDb.hasNext( it ) )
-    {
-        string file_name = it.getFile();
-        string cmd = it.getCmd();
-
-        if( cmd != "Cpp" && cmd != "L" && cmd != "X" && cmd != "C" )
-        {
-            //string dummy, bn, ext;
-            //breakPath( file_name, dummy, bn, ext);
-            
-            if( blockedIds.find( it.getId() ) == blockedIds.end() )
-            {
-                const map<string,Seeker>::const_iterator &mit = seekerMap.find( file_name );
-                
-                if( mit != seekerMap.end() && mit->second.lookingFor.size() > 0 )
-                {
-                    if( verbosity > 1 )
-                        cout << "inc mananger  checking " << file_name << " ...\n";
-                    resolveFile( fileDb, it.getId(), mit->second, writeIgnHdr);
-                }
-                else if( verbosity > 1 )
-                    cout << "inc mananger  checking " << file_name << " => not seeking\n";
-            }
-            else if( verbosity > 1 )
-                cout << "inc mananger  checking " << file_name << " => BLOCKED\n";
-        }
-    }
-
-    if( ignHdrFp )
-        fclose( ignHdrFp );
 }

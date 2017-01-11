@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 
 #include "engine.h"
 #include "executor.h"

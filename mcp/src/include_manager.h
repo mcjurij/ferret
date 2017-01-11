@@ -38,17 +38,16 @@ public:
     void addBlockedId( file_id_t id );
     void addBlockedIds( const std::set<file_id_t> &blids );
 
-    void removeFile( FileManager &fileDb, const std::string &fn, const ProjectXmlNode *xmlNode, const std::set<file_id_t> &prereqs);
+    void removeFile( FileManager &fileDb, file_id_t id, const std::string &fn, const ProjectXmlNode *xmlNode, const std::set<file_id_t> &prereqs);
     
 private:
    
     int readDepFile( const std::string &fn, const std::string &depfn, const ProjectXmlNode *xmlNode);
-    bool readDepFiles( FileManager &fileDb, bool initMode, bool writeIgnHdr);
+    bool readDepFiles( FileManager &fileDb, bool writeIgnHdr);
     void addSeeker( const std::string &from, const std::string &localDir, const std::vector<std::string> &searchIncDirs,
                     const std::vector<std::string> &lookingFor);
     
-    bool resolveFile( FileManager &fileDb, file_id_t from_id, const Seeker &s, bool writeIgnHdr);
-    void resolve_normal( FileManager &fileDb, bool initMode, bool writeIgnHdr);
+    bool resolveFile( FileManager &fileDb, file_id_t from_id, const Seeker &s, bool writeIgnHdr, int &notFound);
     
 private:
     static IncludeManager *theIncludeManager;
@@ -61,8 +60,8 @@ private:
     std::map<std::string,Seeker> seekerMap;
     
     std::set<file_id_t> blockedIds;
-
-    FILE *ignHdrFp;
+    
+    std::set<std::string> ignoreHeaders;
 
     hash_set_t *unsat_set;
     std::string unsat_set_fn;
