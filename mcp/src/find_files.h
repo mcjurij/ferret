@@ -15,24 +15,25 @@
 class File {
 public:
     File()
+        : removed(false)
     {last_modification.tv_sec = 0; last_modification.tv_nsec = 0;}
     
     File( const char *path, const char *d, const char *bn, const struct stat *fst)
-        : path(path), dir(d), basename(bn)
+        : path(path), dir(d), basename(bn), removed(false)
     {
         last_modification.tv_sec = fst->st_mtim.tv_sec;
         last_modification.tv_nsec = fst->st_mtim.tv_nsec;  // see http://man7.org/linux/man-pages/man2/stat.2.html
     }
     
     explicit File( const std::string &path, const std::string &dir, const std::string &bn, struct stat *fst)
-        : path(path), dir(dir), basename(bn)
+        : path(path), dir(dir), basename(bn), removed(false)
     {
         last_modification.tv_sec = fst->st_mtim.tv_sec;
         last_modification.tv_nsec = fst->st_mtim.tv_nsec;
     }
     
     explicit File( const std::string &path, struct stat *fst)
-        : path(path), dir(path)
+        : path(path), dir(path), removed(false)
     {
         last_modification.tv_sec = fst->st_mtim.tv_sec;
         last_modification.tv_nsec = fst->st_mtim.tv_nsec;
@@ -56,12 +57,19 @@ public:
     std::string woExtension() const;
 
     long long getTimeMs() const;
+
+    void setRemoved()
+    { removed = true; }
+
+    bool isRemoved() const
+    { return removed; }
     
 private:
     std::string path;
     std::string dir;
     std::string basename;
     struct timespec last_modification;
+    bool removed;
 };
 
 
@@ -90,6 +98,8 @@ public:
     static File getCachedFile( const std::string &path );
     static File getUncachedFile( const std::string &path );
     static bool existsUncached( const std::string &path );
+
+    static void remove( const std::string &path );
     
     static void clearCache();
 

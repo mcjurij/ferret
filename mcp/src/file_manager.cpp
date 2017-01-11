@@ -212,6 +212,12 @@ bool FileManager::hasFileName( const string &fn )
 }
 
 
+bool FileManager::hasId( file_id_t fid )
+{
+    return allDeps.hasId( fid ) != 0;
+}
+
+
 bool FileManager::isTargetCommand( file_id_t id )
 {
     string cmd = allDeps.getCmdForId( id );

@@ -424,12 +424,13 @@ int ProjectXmlNode::manageDeletedFiles( FileManager &fileMan )
         {
             file_id_t id = fileMan.getIdForFile( fn );
             assert( id != -1 );
+            set<file_id_t> prereqs = fileMan.prerequisiteFor( id );
             
             if( fileMan.removeFile( fn ) )  // will only remove "D" type files from database
             {
                 cout << "Removing file " << fn << " from db if D type.\n";
                 
-                IncludeManager::getTheIncludeManager()->removeFile( fn, this);
+                IncludeManager::getTheIncludeManager()->removeFile( fileMan, fn, this, prereqs);
                 cnt++;
             }
         }

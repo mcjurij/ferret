@@ -26,7 +26,7 @@
 using namespace std;
 
 
-static const string ferretVersion = "1.1.0";
+static const string ferretVersion = "1.1.5";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -787,6 +787,9 @@ int main( int argc, char **argv)
     
     if( printTimes )
         cout << "reading XML took " << get_diff() << "s\n";
+    
+    IncludeManager::getTheIncludeManager()->setDbProjDir( dbProjDir );
+    IncludeManager::getTheIncludeManager()->readUnsatSet( initMode );
     
     // printXmlStructure( xmlRootNode );
     TraverseStructure traverse( filesDb, xmlRootNode);

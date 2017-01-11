@@ -161,16 +161,21 @@ vector<File> FindFiles::getSourceFiles() const
     
     for( ; it != files.end(); it++)
     {
-        const string &f = it->getBasename();
-        size_t pos = f.rfind( "." );
+        map<string,File>::const_iterator all_it = allFiles.find( it->getPath() );
         
-        if( pos != string::npos )
+        if( all_it != allFiles.end() && !all_it->second.isRemoved() )
         {
-            string ext = f.substr( pos );
+            const string &f = it->getBasename();
+            size_t pos = f.rfind( "." );
             
-            if( ext == ".cpp" || ext == ".c" ||
-                ext == ".h" || ext == ".hpp" || ext == ".C" )
-                sources.push_back( *it );
+            if( pos != string::npos )
+            {
+                string ext = f.substr( pos );
+                
+                if( ext == ".cpp" || ext == ".c" ||
+                    ext == ".h" || ext == ".hpp" || ext == ".C" )
+                    sources.push_back( *it );
+            }
         }
     }
     
@@ -185,15 +190,20 @@ vector<File> FindFiles::getHeaderFiles() const
     
     for( ; it != files.end(); it++)
     {
-        const string &f = it->getBasename();
-        size_t pos = f.rfind( "." );
+        map<string,File>::const_iterator all_it = allFiles.find( it->getPath() );
         
-        if( pos != string::npos )
+        if( all_it != allFiles.end() && !all_it->second.isRemoved() )
         {
-            string ext = f.substr( pos );
+            const string &f = it->getBasename();
+            size_t pos = f.rfind( "." );
             
-            if( ext == ".h" || ext == ".hpp" )
-                sources.push_back( *it );
+            if( pos != string::npos )
+            {
+                string ext = f.substr( pos );
+                
+                if( ext == ".h" || ext == ".hpp" )
+                    sources.push_back( *it );
+            }
         }
     }
     
@@ -204,8 +214,9 @@ vector<File> FindFiles::getHeaderFiles() const
 bool FindFiles::exists( const string &path )
 {
     struct stat fst;
-
-    if( allFiles.find( path ) != allFiles.end() )
+    map<string,File>::iterator it = allFiles.find( path );
+    
+    if( it != allFiles.end() && !it->second.isRemoved() )
         return true;
     else
     {
@@ -240,7 +251,7 @@ File FindFiles::getCachedFile( const string &path )
 {
     map<string,File>::iterator it = allFiles.find( path );
     
-    if( it != allFiles.end() )
+    if( it != allFiles.end() && !it->second.isRemoved() )
         return it->second;
     else
     {
@@ -283,6 +294,17 @@ bool FindFiles::existsUncached( const string &path )
     }
 
     return false;
+}
+
+
+void FindFiles::remove( const string &path )
+{
+    ::remove( path.c_str() );
+    
+    map<string,File>::iterator it = allFiles.find( path );
+    
+    if( it != allFiles.end() )
+        it->second.setRemoved();
 }
 
 

@@ -40,7 +40,8 @@ public:
     std::string getCmdForId( file_id_t fid );
     
     bool hasFileName( const std::string &fn );
-
+    bool hasId( file_id_t fid );
+    
     bool isTargetCommand( file_id_t );
     std::set<file_id_t> getDependencies( file_id_t id );
     std::set<file_id_t> prerequisiteFor( file_id_t id );

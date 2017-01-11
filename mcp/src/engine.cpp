@@ -554,20 +554,24 @@ void Engine::fill_target_set()
         {
             if( strcmp( c->dep_type, "D") == 0 || FindFiles::exists( c->file_name ) )
             {
-                if( !(c->marked_by_deletion || c->marked_by_deps_changed) )
+                if( !c->marked_by_deletion )
+                {
                     hash_set_add( front_ids, c->file_id);
                 
-                if( scfs && c->scfs_time > 0 )
-                    c->dominating_time = c->scfs_time;
-                else
-                {
-                    const File f = FindFiles::getCachedFile( c->file_name );
-                    c->dominating_time = f.getTimeMs();
+                    if( scfs && c->scfs_time > 0 )
+                        c->dominating_time = c->scfs_time;
+                    else
+                    {
+                        const File f = FindFiles::getCachedFile( c->file_name );
+                        c->dominating_time = f.getTimeMs();
+                    }
                 }
+                else
+                    c->dominating_time = (long long)365*24*60*60*1000 * 100;
             }
         }
         
-        if( c->marked_by_deletion || c->marked_by_deps_changed )
+        if( c->marked_by_deletion )
         {
             if( !c->is_target )
             {
@@ -612,7 +616,7 @@ void Engine::fill_target_set()
                 char *down_fn = d->file_name;
                 bool dominates = false;
                 
-                if( d->marked_by_deletion || d->marked_by_deps_changed )
+                if( d->marked_by_deletion )
                 {
                     d->dominating_time = (long long)365*24*60*60*1000 * 100;    // many years into the future to force domination of all that come after
                     dominates = true;

@@ -862,7 +862,7 @@ int FileMap::cleanupDeletions()
 
                     if( verbosity > 0 )
                         cout << "Removing stale file '" << getFileNameForId( th->data->file_id ) << "'\n";
-                    ::remove( getFileNameForId( th->data->file_id ).c_str() );
+                    FindFiles::remove( getFileNameForId( th->data->file_id ).c_str() );
                     
                     d.insert( th->data->file_id );
                 }
