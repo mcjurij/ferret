@@ -29,7 +29,7 @@ IncludeManager *IncludeManager::getTheIncludeManager()
     return theIncludeManager;
 }
 
- 
+
 IncludeManager::IncludeManager()
     : fileRemoved(false)
 {
@@ -223,7 +223,7 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
         unsigned int i, s;
         int *a = hash_set_get_as_array( unsat_set, &s);
         
-        cout << "File(s) with unmet dependencies (at most " << treshold << "):\n";
+        cout << "File(s) with unmet dependencies (listing at most " << treshold << "):\n";
         for( i = 0; i < s && i < treshold; i++)
         {
             file_id_t id = a[i];
@@ -240,7 +240,8 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
     if( hash_set_get_size( unsat_set ) > (int)treshold )
     {
         cout << "\nYou have more than " << treshold << " source files with unsatisfied dependencies. So, either\n"
-             << "these are real and have to be fixed, or use --ignhdr.\n\n";
+             << "these are real and have to be fixed, or use --ignhdr once.\n"
+             << "Using --ignhdr every time you call ferret will break the dependency analysis.\n\n";
     }
 }
 
