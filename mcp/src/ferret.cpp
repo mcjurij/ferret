@@ -26,7 +26,7 @@
 using namespace std;
 
 
-static const string ferretVersion = "1.1.5";
+static const string ferretVersion = "1.1.6";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
