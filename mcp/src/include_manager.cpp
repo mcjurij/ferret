@@ -64,7 +64,7 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
         {
             string dummy, bn, ext;
             breakPath( it.getFile(), dummy, bn, ext);
-        
+            
             if( isCppFile( ext ) )
             {
                 if( blockedIds.find( it.getId() ) != blockedIds.end() )
@@ -75,7 +75,12 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                 else
                 {
                     string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
-            
+
+                    if( uniqueBasenames.find( bn ) == uniqueBasenames.end() )
+                        uniqueBasenames[ bn ] = it.getFile();
+                    else
+                        uniqueBasenames[ bn ] = "";  // found it twice
+                    
                     bool do_dep = false;
                     if( FindFiles::exists( depfn ) )
                     {
@@ -416,12 +421,13 @@ bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const 
     
     for( i = 0; i < s.lookingFor.size(); i++)
     {
-        if( s.lookingFor[i] != "" && s.lookingFor[i][0] != '/' )
+        string lookingFor = s.lookingFor[i];
+        if( lookingFor != "" && lookingFor[0] != '/' )
         {
             int found = 0;
             for( j = 0; j < s.searchIncDirs.size(); j++)     // order matters
             {
-                string tryfn = stackPath( s.searchIncDirs[j], s.lookingFor[i]);
+                string tryfn = stackPath( s.searchIncDirs[j], lookingFor);
 
                 file_id_t to_id = fileDb.getIdForFile( tryfn );
                 
@@ -441,23 +447,44 @@ bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const 
             }
             
             if( show_info && found > 1 )
-                cout << "info: include '" << s.lookingFor[i] << "' found more than once, for " << fileDb.getFileForId( from_id ) << "\n";
+                cout << "info: include '" << lookingFor << "' found more than once, for " << fileDb.getFileForId( from_id ) << "\n";
+
+            if( found == 0 )
+            {
+                // try "guessing" the header in case the looked for file name is unique
+                map<string,string>::const_iterator lgit = uniqueBasenames.find( lookingFor );
+                if( lgit != uniqueBasenames.end() && lgit->second.length() > 0 )
+                {
+                    file_id_t to_id = fileDb.getIdForFile( lgit->second );
+                    
+                    if( to_id != -1  )
+                    {
+                        if( !fileDb.hasBlockedDependency( from_id, to_id) )
+                            hash_set_add( new_deps_set, to_id);
+                        
+                        found++;
+                        if( verbosity > 1 )
+                            cout << "inc mananger  resolved dep " << fileDb.getFileForId( from_id ) << " (" << from_id << ") -> "
+                                 << lgit->second << " (" << to_id << ") but only by using the unique basename technique\n";
+                    }
+                }
+            }
             
             if( found == 0 )
             {
-                if( ignoreHeaders.find( s.lookingFor[i] ) == ignoreHeaders.end() )
+                if( ignoreHeaders.find( lookingFor ) == ignoreHeaders.end() )
                 {
                     notFound++;
 
-                    if( blockDoubleWarn.find( s.lookingFor[i] ) == blockDoubleWarn.end() )
+                    if( blockDoubleWarn.find( lookingFor ) == blockDoubleWarn.end() )
                     {
-                        cerr << "warning: " << s.from << " includes " << s.lookingFor[i]
+                        cerr << "warning: " << s.from << " includes " << lookingFor
                              << ", but ferret wasn't able to find it.\n";
-                        blockDoubleWarn.insert( s.lookingFor[i] );
+                        blockDoubleWarn.insert( lookingFor );
                     }
 
                     if( writeIgnHdr )
-                        ignoreHeaders.insert( s.lookingFor[i] );
+                        ignoreHeaders.insert( lookingFor );
                 }
             }
         }
