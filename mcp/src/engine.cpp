@@ -525,10 +525,10 @@ void Engine::make_targets_by_dom_set( command_t *c )    // make all nodes domina
             subt->is_target = true;
             hash_set_add( all_targets, subt->file_id);
             
-            if( subt->downward_size == 0 )
+            if( subt->downward_size == 0 || !subt->downward_deep )
                 final_targets.push_back( subt->file_id );
             
-            if( verbosity > 1 )
+            if( verbosity > 0 )
                 cout << "file " << subt->file_name << " (" << subt->file_id << ") also becomes target, dominated by "
                      << c->file_name << " (" << c->file_id << ")\n";
         }
@@ -540,7 +540,6 @@ void Engine::make_targets_by_dom_set( command_t *c )    // make all nodes domina
 
 void Engine::fill_target_set()
 {
-    int activity;
     hash_set_t *front_ids;
     size_t n;
     front_ids = new_hash_set( 499 );
@@ -581,7 +580,9 @@ void Engine::fill_target_set()
                 }
                 if( verbosity > 1 )
                     cout << "target planner   making targets from " << c->file_name << " (" << c->file_id << ") on, since marked\n";
-                make_targets_by_dom_set( c );
+
+                if( c->downward_deep )
+                    make_targets_by_dom_set( c );
             }
         }
         else if( c->user_selected && c->weak_size > 0 && make_target_by_wait( c ) ) // weak_size > 0 only true for extension nodes
@@ -591,10 +592,13 @@ void Engine::fill_target_set()
             
             if( verbosity > 0 )
                 cout << "target planner   adding "  << c->file_name << " (" << c->file_id << ") to target set (trough wait node)\n";
-            make_targets_by_dom_set( c );
+
+            if( c->downward_deep )
+                make_targets_by_dom_set( c );
         }
     }
     
+    int activity;
     do{
         activity = 0;
         if( verbosity > 1 )
@@ -633,7 +637,7 @@ void Engine::fill_target_set()
                         }
                     }
                     
-                    if( c->dominating_time > d->dominating_time )  // propagate dominating time
+                    if( c->downward_deep && (c->dominating_time > d->dominating_time) )  // propagate dominating time
                     {
                         d->dominating_time = c->dominating_time;
                         dominates = true;
@@ -666,14 +670,16 @@ void Engine::fill_target_set()
                             
                             if( verbosity > 0 )
                                 cout << "target planner   adding "  << d->file_name << " (" << d->file_id << ") to target set\n";
+
+                            if( d->downward_deep )
+                                make_targets_by_dom_set( d );              // propagate target state to all dependend nodes
                             
-                            make_targets_by_dom_set( d );              // propagate target state to all dependend nodes
-                            
-                            if( d->downward_size == 0 )
+                            if( d->downward_size == 0 || !d->downward_deep )
                                 final_targets.push_back( d->file_id );
                         }
-                        else  // nothing to do here, so we move on
+                        else
                         {
+                            // nothing to do here, so we move on
                             hash_set_add( front_ids, d->file_id);
                             if( verbosity > 2 )
                                 cout << "target planner   moving on from " << c->file_name << " (" << c->file_id << ") to "
