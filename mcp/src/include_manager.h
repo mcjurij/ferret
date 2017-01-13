@@ -33,12 +33,14 @@ public:
     
     void createMissingDepFiles( FileManager &fileDb, Executor &executor, bool printTimes);
     
-    void resolve( FileManager &fileDb, bool initMode, bool writeIgnHdr);
-    
     void addBlockedId( file_id_t id );
     void addBlockedIds( const std::set<file_id_t> &blids );
-
+    
     void removeFile( FileManager &fileDb, file_id_t id, const std::string &fn, const ProjectXmlNode *xmlNode, const std::set<file_id_t> &prereqs);
+    
+    void resolve( FileManager &fileDb, bool initMode, bool writeIgnHdr);
+    
+    void printFinalWords() const;
     
 private:
    
@@ -65,7 +67,7 @@ private:
 
     hash_set_t *unsat_set;
     std::string unsat_set_fn;
-
+    std::string finalWords;
     std::map<std::string,file_id_t> uniqueBasenames;
 };
 

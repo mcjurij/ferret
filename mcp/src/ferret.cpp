@@ -944,6 +944,8 @@ int main( int argc, char **argv)
     else if( initMode && initAndBuild )
         doBuild( filesDb, userTargets, dbProjDir, printTimes);
     
+    IncludeManager::getTheIncludeManager()->printFinalWords();
+    
     return 0;
 }
 

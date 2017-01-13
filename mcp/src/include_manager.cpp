@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <sstream>
 
 #include "include_manager.h"
 #include "glob_utility.h"
@@ -222,21 +223,21 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
     }
 
     const unsigned int treshold = 10;
-    
+    stringstream fw;
     if( hash_set_get_size( unsat_set ) > 0 )
     {
         unsigned int i, s;
         int *a = hash_set_get_as_array( unsat_set, &s);
         
-        cout << "File(s) with unmet dependencies (listing at most " << treshold << "):\n";
+        fw << "File(s) with unmet dependencies (listing at most " << treshold << "):\n";
         for( i = 0; i < s && i < treshold; i++)
         {
             file_id_t id = a[i];
             
             if( fileDb.hasId( id ) )
-                cout << "  " << fileDb.getFileForId( id ) << "\n";
+                fw << "  " << fileDb.getFileForId( id ) << "\n";
             else
-                cout << "???" << "\n";
+                fw << "  ???" << "\n";
         }
 
         free( a );
@@ -244,10 +245,18 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
     
     if( hash_set_get_size( unsat_set ) > (int)treshold )
     {
-        cout << "\nYou have more than " << treshold << " source files with unsatisfied dependencies. So, either\n"
-             << "these are real and have to be fixed, or use --ignhdr once.\n"
-             << "Using --ignhdr every time you call ferret will break the dependency analysis.\n\n";
+        fw << "\nYou have more than " << treshold << " source files with unsatisfied dependencies. So, either\n"
+           << "these are real and have to be fixed, or use --ignhdr once.\n"
+           << "Using --ignhdr every time you call ferret will break the dependency analysis.\n\n";
     }
+
+    finalWords = fw.str();
+}
+
+
+void IncludeManager::printFinalWords() const
+{
+    cout << finalWords;
 }
 
 
