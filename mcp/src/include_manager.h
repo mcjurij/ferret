@@ -66,7 +66,7 @@ private:
     hash_set_t *unsat_set;
     std::string unsat_set_fn;
 
-    std::map<std::string,std::string> uniqueBasenames;
+    std::map<std::string,file_id_t> uniqueBasenames;
 };
 
 #endif

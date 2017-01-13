@@ -77,9 +77,9 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                     string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
 
                     if( uniqueBasenames.find( bn ) == uniqueBasenames.end() )
-                        uniqueBasenames[ bn ] = it.getFile();
+                        uniqueBasenames[ bn ] = it.getId();
                     else
-                        uniqueBasenames[ bn ] = "";  // found it twice
+                        uniqueBasenames[ bn ] = -1;  // found it twice
                     
                     bool do_dep = false;
                     if( FindFiles::exists( depfn ) )
@@ -452,21 +452,18 @@ bool IncludeManager::resolveFile( FileManager &fileDb, file_id_t from_id, const 
             if( found == 0 )
             {
                 // try "guessing" the header in case the looked for file name is unique
-                map<string,string>::const_iterator lgit = uniqueBasenames.find( lookingFor );
-                if( lgit != uniqueBasenames.end() && lgit->second.length() > 0 )
+                map<string,file_id_t>::const_iterator lgit = uniqueBasenames.find( lookingFor );
+                if( lgit != uniqueBasenames.end() && lgit->second != -1 )
                 {
-                    file_id_t to_id = fileDb.getIdForFile( lgit->second );
+                    file_id_t to_id = lgit->second;
                     
-                    if( to_id != -1  )
-                    {
-                        if( !fileDb.hasBlockedDependency( from_id, to_id) )
-                            hash_set_add( new_deps_set, to_id);
-                        
-                        found++;
-                        if( verbosity > 1 )
-                            cout << "inc mananger  resolved dep " << fileDb.getFileForId( from_id ) << " (" << from_id << ") -> "
-                                 << lgit->second << " (" << to_id << ") but only by using the unique basename technique\n";
-                    }
+                    if( !fileDb.hasBlockedDependency( from_id, to_id) )
+                        hash_set_add( new_deps_set, to_id);
+                    
+                    found++;
+                    if( verbosity > 1 )
+                        cout << "inc mananger  resolved dep " << fileDb.getFileForId( from_id ) << " (" << from_id << ") -> "
+                             << fileDb.getFileForId( to_id ) << " (" << to_id << ") but only by using the unique basename technique\n";
                 }
             }
             
