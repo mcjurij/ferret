@@ -117,7 +117,7 @@ private:
     {}
     
 public:
-    Engine( int table_size /* unused */, const std::string &dbProjDir, bool scfs);
+    Engine( int table_size /* unused */, const std::string &dbProjDir, const std::string &compileMode, bool scfs);
     ~Engine();
     
     void addCommand( data_t *cmd );
@@ -164,6 +164,7 @@ private:
 private:
     std::vector<int>  file_ids;   // to preserve order
     std::string dbProjDir;
+    std::string compileMode;
     
     typedef struct fe_bucket {
         command_t *entry;

@@ -394,7 +394,7 @@ static void doBuild( FileManager &filesDb, set<string> &userTargets, const strin
 {
     Executor executor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ) );
     bool doScfs = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_SCFS" );
-    Engine engine( 911, dbProjDir, doScfs);
+    Engine engine( 911, dbProjDir, filesDb.getCompileMode(), doScfs);
     
     bool stopOnErr = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_STOP" );
     engine.setStopOnError( stopOnErr );

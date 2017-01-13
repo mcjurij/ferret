@@ -101,8 +101,8 @@ ExecutorCommand SyncEngine::nextCommand()
 
 // -----------------------------------------------------------------------------
 
-Engine::Engine( int table_size, const std::string &dbProjDir, bool doScfs)
-    : EngineBase(), dbProjDir(dbProjDir),
+Engine::Engine( int table_size, const string &dbProjDir, const string &compileMode, bool doScfs)
+    : EngineBase(), dbProjDir(dbProjDir), compileMode(compileMode),
       round(0), scfs(doScfs), stopOnError(false)
 {
     int i;
@@ -829,12 +829,7 @@ ExecutorCommand Engine::nextCommand()
     }
     
     if( hash_set_get_size( to_do_set ) < 30 )
-    {
-        if( verbosity > 0 )
-            cout << "TARGETS LEFT: " << hash_set_get_size( targets_left )<<"\n";
-
         move_wavefront();
-    }
     
     if( hash_set_get_size( target_root_ids ) > 0 )
     {
@@ -860,7 +855,7 @@ ExecutorCommand Engine::nextCommand()
     }
     else if( hash_set_get_size( targets_left ) == 0 )
     {
-        cout << "\nNo targets left.\n";
+        cout << "\nNo targets left for compile mode '" << compileMode << "'.\n";
         return ExecutorCommand( "FINALIZE" );
     }
     
@@ -916,8 +911,8 @@ ExecutorCommand Engine::nextCommand()
         }
     }
     
-    cout << "To do: " << hash_set_get_size( to_do_set )
-         << " / in work: " << hash_set_get_size( in_work_set )
+    cout << "To do: " << hash_set_get_size( targets_left ) << " (this round " << hash_set_get_size( to_do_set )
+         << ") / in work: " << hash_set_get_size( in_work_set )
          << " / failed: " << hash_set_get_size( failed_set ) << "\n";
     
     validCmdsLastRound += validCmds;
@@ -1194,7 +1189,7 @@ int Engine::doWork( ExecutorBase &executor, bool printTimes, const set<string> &
         writeScfsTimes();
     }
     else
-        cout << "Target set empty. Nothing to do for our beloved ferret.\n";
+        cout << "Target set empty for compile mode '" << compileMode << "'. Nothing to do for our beloved ferret.\n";
     
     if( printTimes )
         cout << "build took " << get_diff() << "s\n";
