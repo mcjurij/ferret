@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <curses.h>
-#include <string.h>
+
 
 #define WIDTH 30
 #define HEIGHT 10 
@@ -18,6 +18,7 @@ const char *choices[] = {
 };
 
 int n_choices = sizeof(choices) / sizeof(char *);
+
 void print_menu(WINDOW *menu_win, int highlight);
 
 int main()
@@ -42,7 +43,7 @@ int main()
     menu_win = newwin(HEIGHT, WIDTH, starty, startx);
     keypad(menu_win, TRUE);
     
-    mvprintw(0, 0, "Use arrow keys to go up and down, Press enter to select a choice");
+    mvprintw(0, 0, "Use arrow keys to go up and down, press enter to select a choice");
     mvhline( 1, 0, ACS_HLINE , mx);
     refresh();
     
@@ -77,7 +78,7 @@ int main()
             choice = highlight;
             break;
         default:
-            mvprintw(24, 0, "Charcter pressed is = %3d Hopefully it can be printed as '%c'", c, c);
+            mvprintw(24, 0, "Character pressed is = %3d, hopefully it can be printed as '%c'", c, c);
             refresh();
             break;
         }
@@ -91,7 +92,7 @@ int main()
     wrefresh( menu_win );
     delwin( menu_win );
     refresh();
-    mvprintw(24, 0, "You chose choice %d with choice string %s\n", choice, choices[choice - 1]);
+    mvprintw(24, 0, "You picked choice %d with choice string %s\n", choice, choices[choice - 1]);
     // clrtoeol();
     refresh();
     
@@ -110,17 +111,16 @@ void print_menu(WINDOW *menu_win, int highlight)
     y = 2;
     box(menu_win, 0, 0);
     
-    for(i = 0; i < n_choices; ++i)
+    for(i = 0; i < n_choices; i++)
     {
         if(highlight == i + 1) /* High light the present choice */
         {
             wattron(menu_win, A_REVERSE); 
-            mvwprintw(menu_win, y, x, "%s", choices[i]);
+            mvwprintw(menu_win, y+i, x, "%s", choices[i]);
             wattroff(menu_win, A_REVERSE);
         }
         else
-            mvwprintw(menu_win, y, x, "%s", choices[i]);
-        ++y;
+            mvwprintw(menu_win, y+i, x, "%s", choices[i]);
     }
     wrefresh(menu_win);
 }
