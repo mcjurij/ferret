@@ -1,13 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <curses.h>
+#include <string.h>
 
-
-#define WIDTH 30
-#define HEIGHT 10 
-
-int startx = 0;
-int starty = 0;
 
 const char *choices[] = { 
     "Hello, world!",
@@ -26,7 +21,7 @@ int main()
     WINDOW *menu_win;
     int highlight = 1;
     int choice = 0;
-    int c;
+    int i, c;
 
     initscr();
     clear();
@@ -37,10 +32,17 @@ int main()
     getmaxyx(stdscr, my, mx);
     // keypad( stdscr, TRUE);
 
-    startx = (mx - WIDTH) / 2;
-    starty = (my - HEIGHT) / 2;
-        
-    menu_win = newwin(HEIGHT, WIDTH, starty, startx);
+    int width = 0;
+    for( i = 0; i < n_choices; i++)
+        if( strlen( choices[i] ) > width )
+            width = strlen( choices[i] );
+    
+    width += 4;
+    int height = n_choices + 2;
+    int startx = (mx - width) / 2;
+    int starty = (my - height) / 2;
+    
+    menu_win = newwin( height, width, starty, startx);
     keypad(menu_win, TRUE);
     
     mvprintw(0, 0, "Use arrow keys to go up and down, press enter to select a choice");
@@ -108,7 +110,7 @@ void print_menu(WINDOW *menu_win, int highlight)
     int x, y, i;    
     
     x = 2;
-    y = 2;
+    y = 1;
     box(menu_win, 0, 0);
     
     for(i = 0; i < n_choices; i++)
