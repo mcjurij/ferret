@@ -107,10 +107,8 @@ int main()
 
 void print_menu(WINDOW *menu_win, int highlight)
 {
-    int x, y, i;    
+    int i;    
     
-    x = 2;
-    y = 1;
     box(menu_win, 0, 0);
     
     for(i = 0; i < n_choices; i++)
@@ -118,11 +116,11 @@ void print_menu(WINDOW *menu_win, int highlight)
         if(highlight == i + 1) /* High light the present choice */
         {
             wattron(menu_win, A_REVERSE); 
-            mvwprintw(menu_win, y+i, x, "%s", choices[i]);
+            mvwprintw(menu_win, 1+i, 2, "%s", choices[i]);
             wattroff(menu_win, A_REVERSE);
         }
         else
-            mvwprintw(menu_win, y+i, x, "%s", choices[i]);
+            mvwprintw(menu_win, 1+i, 2, "%s", choices[i]);
     }
     wrefresh(menu_win);
 }
