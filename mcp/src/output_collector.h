@@ -8,9 +8,9 @@
 #include <cassert>
 
 #include "file_manager.h"
+#include "curses_screen.h"
 
 class ProjectXmlNode;
-
 
 class OutputEntry {
 
@@ -25,7 +25,7 @@ public:
 
     ~OutputEntry()
     {}
-
+    
     void append( const std::string &s )
     { o.append( s ); }
     
@@ -48,28 +48,54 @@ public:
     void setError( bool err );
     bool hasError() const
     { return error; }
+
+#ifdef  USE_CURSES
+    void cursesAppend( const std::string &s );
+    void cursesEnd();
+    void appendTo( std::vector<std::string> &lines, int from);
+    int  cursesNumLines() const
+    { return (int)cursesLines.size(); }
+#endif
     
 private:
     int file_id;
     std::string o, so, soh, eo, eoh;
     bool error;
+    
+#ifdef  USE_CURSES
+    std::vector<std::string> cursesLines;
+    std::string cursesLast;
+    int  startY;
+#endif
 };
 
 
 class OutputCollector {
 
 private:    
-    OutputCollector()
-    {}
+    OutputCollector();
 
 public:
     static OutputCollector *getTheOutputCollector();
+    
+    void cursesEnable( unsigned int parallel );
+    void cursesDisable();
+    
+    std::map<int,OutputEntry>::iterator getEntry( int file_id );
     
     void append( int file_id, const std::string &s);
     void appendStd( int file_id, const std::string &s);
     void appendStdHtml( int file_id, const std::string &s);
     void appendErr( int file_id, const std::string &s);
     void appendErrHtml( int file_id, const std::string &s);
+    void cursesAppend( int file_id, const std::string &s);
+    void cursesEnd( int file_id );
+    
+    void cursesSetTopLine( int y, const std::string &l);
+#ifdef  USE_CURSES
+    std::vector<std::string> cursesTop( int last );
+    std::vector<std::string> cursesBottom( int last );
+#endif
     
     std::string getOutput( int file_id ) const;
     std::string getOutputHtml( int file_id ) const;
@@ -99,7 +125,12 @@ private:
     std::map<int,OutputEntry>  entryMap;
 
     std::string projectdir;
+    
+#ifdef  USE_CURSES
+    CursesScreen *screen;
+    std::vector<std::string> topLines;
+#endif
+    
 };
-
 
 #endif

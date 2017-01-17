@@ -34,6 +34,15 @@
 
     <lflags value=" -g -shared "/>
     <eflags value=" -g "/> 
+
+      
+    <tool name="ncurses">
+        <cppflags value="-DUSE_CURSES"/>
+        <cflags value="-DUSE_CURSES"/>
+        <incdir value="/usr/include"/>
+        <libdir value="/usr/lib64"/>
+        <lib value="ncurses"/>
+    </tool>
     
     <!-- <lib    value="rt" /> -->
 </platform>

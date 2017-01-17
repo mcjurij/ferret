@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- mcp = master control program -->
 <project module="ferret" name="ferret" target="ferret" type="executable">
+  <usetool name="ncurses" />
 </project>

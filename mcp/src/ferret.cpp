@@ -392,9 +392,11 @@ static void readBuildProperties( bool initMode, const string &build_properies, c
 
 static void doBuild( FileManager &filesDb, set<string> &userTargets, const string &dbProjDir, bool printTimes)
 {
-    Executor executor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ) );
+    bool curses = false;       // FIXME
+    Executor executor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ), curses);
     bool doScfs = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_SCFS" );
     Engine engine( 911, dbProjDir, filesDb.getCompileMode(), doScfs);
+    engine.cursesEnable( curses );
     
     bool stopOnErr = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_STOP" );
     engine.setStopOnError( stopOnErr );
@@ -747,7 +749,7 @@ int main( int argc, char **argv)
     }
 
     PlatformSpec::getThePlatformSpec()->setBuildDir( buildDir );
-    Executor syncExecutor( 1 );
+    Executor syncExecutor( 1, false);
     PlatformSpec::getThePlatformSpec()->syncTools( syncExecutor, printTimes);
     if( syncExecutor.isInterruptedBySignal() )
         emergency_exit(3);
@@ -863,7 +865,7 @@ int main( int argc, char **argv)
         filesDb.printWhatsChanged();
     }
     
-    Executor incExecutor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ) );
+    Executor incExecutor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ), false);
     IncludeManager::getTheIncludeManager()->createMissingDepFiles( filesDb, incExecutor, printTimes);  // create all missing .d files
     if( incExecutor.isInterruptedBySignal() )
         emergency_exit(3);

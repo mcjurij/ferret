@@ -254,21 +254,28 @@ void Executor::readOutputs()
         {
             int count;
             char buffer[1025];
-
+            string b;
+            
             while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
             {
                 buffer[count] = 0;
+                b = buffer;
                 
-                cmd.appendOutput( buffer );
-                cmd.appendStdOut( buffer );
+                cmd.appendOutput( b );
+                cmd.appendStdOut( b );
+                if( curses )
+                    OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
             }
 
             while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
             {
                 buffer[count] = 0;
+                b = buffer;
                 
-                cmd.appendOutput( buffer );
-                cmd.appendErrOut( buffer );
+                cmd.appendOutput( b );
+                cmd.appendErrOut( b );
+                if( curses )
+                    OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
             }
         }
     }
@@ -354,8 +361,22 @@ void Executor::checkStates( EngineBase &engine )
     struct timespec t;
     t.tv_sec = 0;
     readOutputs();
- 
+    
     map<pid_t,ExecutorCommand>::iterator pit;
+    if( curses )
+    {
+        pit = pidToCmdMap.begin();
+        int y=1;
+        for( ; pit != pidToCmdMap.end(); pit++)
+        {
+            ExecutorCommand &cmd = pit->second;
+            stringstream ss;
+            ss << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid;
+            OutputCollector::getTheOutputCollector()->cursesSetTopLine( y, ss.str());
+            y++;
+        }
+    }
+    
     if( pidToCmdMap.size() == 1 )
     {
         pit = pidToCmdMap.begin();
@@ -405,29 +426,38 @@ void Executor::checkStates( EngineBase &engine )
         }
     }
     
-    
     if( it != pidToCmdMap.end() )
     {
         ExecutorCommand &cmd = it->second;
             
         int count;
         char buffer[1025];
+        string b;
         
         while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
         {
             buffer[count] = 0;
-                
-            cmd.appendOutput( buffer );
-            cmd.appendStdOut( buffer );
+            b = buffer;
+            
+            cmd.appendOutput( b );
+            cmd.appendStdOut( b );
+            if( curses )
+                OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
         }
         
         while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
         {
             buffer[count] = 0;
-                
-            cmd.appendOutput( buffer );
-            cmd.appendErrOut( buffer );
+            b = buffer;
+            
+            cmd.appendOutput( b );
+            cmd.appendErrOut( b );
+            if( curses )
+                OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
         }
+
+        if( curses )
+            OutputCollector::getTheOutputCollector()->cursesEnd( cmd.getFileId() );
         
         if( close( cmd.getStdoutFiledes() ) < 0 )
         {
@@ -454,9 +484,12 @@ void Executor::checkStates( EngineBase &engine )
             string out = cmd.getOutput();
             string std = cmd.getStdOut();
             string err = cmd.getErrOut();
-            
-            cout << "-----------------------------------\n";
-            cout << out;
+
+            if( !curses )
+            {
+                cout << "-----------------------------------\n";
+                cout << out;
+            }
             OutputCollector::getTheOutputCollector()->append( cmd.getFileId(), out);
             OutputCollector::getTheOutputCollector()->appendStd( cmd.getFileId(), std);
             OutputCollector::getTheOutputCollector()->appendErr( cmd.getFileId(), err);

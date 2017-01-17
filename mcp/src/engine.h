@@ -123,6 +123,9 @@ public:
     void addCommand( data_t *cmd );
         
     virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>());
+
+    void cursesEnable( bool en )
+    { curses = en; }
     
 private:
     void analyzeResults();
@@ -165,6 +168,7 @@ private:
     std::vector<int>  file_ids;   // to preserve order
     std::string dbProjDir;
     std::string compileMode;
+    bool curses;
     
     typedef struct fe_bucket {
         command_t *entry;

@@ -102,7 +102,7 @@ ExecutorCommand SyncEngine::nextCommand()
 // -----------------------------------------------------------------------------
 
 Engine::Engine( int table_size, const string &dbProjDir, const string &compileMode, bool doScfs)
-    : EngineBase(), dbProjDir(dbProjDir), compileMode(compileMode),
+    : EngineBase(), dbProjDir(dbProjDir), compileMode(compileMode), curses(false),
       round(0), scfs(doScfs), stopOnError(false)
 {
     int i;
@@ -847,7 +847,15 @@ ExecutorCommand Engine::nextCommand()
         {
             round++;
             validCmdsLastRound = 0;
-            cout << "-------------- ROUND " << round << " --------------\n";
+
+            if( !curses )
+                cout << "-------------- ROUND " << round << " --------------\n";
+            else
+            {
+                stringstream ss;
+                ss << "ROUND " << round;
+                OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, ss.str());
+            }
             return ExecutorCommand( "BARRIER" );
         }
         else
@@ -855,7 +863,8 @@ ExecutorCommand Engine::nextCommand()
     }
     else if( hash_set_get_size( targets_left ) == 0 )
     {
-        cout << "\nNo targets left for compile mode '" << compileMode << "'.\n";
+        if( !curses )
+            cout << "\nNo targets left for compile mode '" << compileMode << "'.\n";
         return ExecutorCommand( "FINALIZE" );
     }
     
@@ -910,10 +919,11 @@ ExecutorCommand Engine::nextCommand()
             }
         }
     }
-    
-    cout << "To do: " << hash_set_get_size( targets_left ) << " (this round " << hash_set_get_size( to_do_set )
-         << ") / in work: " << hash_set_get_size( in_work_set )
-         << " / failed: " << hash_set_get_size( failed_set ) << "\n";
+
+    if( !curses )
+        cout << "To do: " << hash_set_get_size( targets_left ) << " (this round " << hash_set_get_size( to_do_set )
+             << ") / in work: " << hash_set_get_size( in_work_set )
+             << " / failed: " << hash_set_get_size( failed_set ) << "\n";
     
     validCmdsLastRound += validCmds;
     
@@ -923,12 +933,15 @@ ExecutorCommand Engine::nextCommand()
     }
     else if( errors > 0 )
     {
-        cout << "\nerrors. sending finalize.\n";
+        if( !curses )
+            cout << "\nerrors. sending finalize.\n";
         return ExecutorCommand( "FINALIZE" );
     }
     else
     {
-        round++; cout << " sending BARRRIER 2\n";
+        round++;
+        if( !curses )
+            cout << " sending BARRRIER 2\n";
         validCmdsLastRound = 0;
         return ExecutorCommand( "BARRIER" );
     }
@@ -1171,10 +1184,21 @@ int Engine::doWork( ExecutorBase &executor, bool printTimes, const set<string> &
     {
         cout << final_targets.size() << " final target(s).\n";
         
-        cout << "-------------- ROUND 1 --------------\n";
+        if( curses )
+        {
+            OutputCollector::getTheOutputCollector()->cursesEnable( executor.getMaxParallel() );
+            OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, "ROUND 1");
+        }
+        else
+            cout << "-------------- ROUND 1 --------------\n";
         
         executor.processCommands( *this );   // do it!
 
+        // sleep( 10 );
+        
+        if( curses )
+            OutputCollector::getTheOutputCollector()->cursesDisable();
+        
         // print out what's missing
         if( hash_set_get_size( failed_set ) > 0 )
             cerr << "\n" << hash_set_get_size( failed_set ) << " target(s) failed.\n";

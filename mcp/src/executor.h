@@ -17,6 +17,9 @@ public:
     ~ExecutorBase()
     {}
     
+    virtual unsigned int getMaxParallel() const
+    { return 1; }
+    
     virtual void processCommands( EngineBase &engine ) = 0;
 
     virtual int getErrors() const
@@ -86,12 +89,12 @@ public:
     int getStderrFiledes() const
     { return stderr_filedes; }
 
-    void appendOutput( char *s )
-    { output += std::string(s); };
-    void appendStdOut( char *s )
-    { std_output += std::string(s); };
-    void appendErrOut( char *s )
-    { err_output += std::string(s); };
+    void appendOutput( const std::string &s )
+    { output += s; };
+    void appendStdOut( const std::string &s )
+    { std_output += s; };
+    void appendErrOut( const std::string &s )
+    { err_output += s; };
     
     bool hasOutput() const
     { return output.length()>0; }
@@ -122,14 +125,16 @@ private:
 class Executor : public ExecutorBase {
 public:
     Executor()
-        : maxParallel(4), barrierMode(false), finalizeMode(false)
+        : maxParallel(4), curses(false), barrierMode(false), finalizeMode(false)
     {}
     
-    Executor( unsigned int maxParallel )
-        : maxParallel(maxParallel), barrierMode(false), finalizeMode(false)
+    Executor( unsigned int maxParallel, bool curses)
+        : maxParallel(maxParallel), curses(curses), barrierMode(false), finalizeMode(false)
     {}
-    
 
+    virtual unsigned int getMaxParallel() const
+    { return maxParallel; }
+    
     pid_t processCommand( ExecutorCommand &cmd );
     
     virtual void processCommands( EngineBase &engine );
@@ -144,6 +149,7 @@ private:
     
 private:
     unsigned int maxParallel;
+    bool curses;
     std::map<pid_t,ExecutorCommand> pidToCmdMap;
     
     bool barrierMode, finalizeMode;
