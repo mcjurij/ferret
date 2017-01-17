@@ -145,7 +145,7 @@ void OutputCollector::cursesEnable( unsigned int parallel )
     if( !screen )
         screen = new CursesScreen( parallel );
 
-    topLines.resize( screen->getTopY() );
+    topLines.resize( screen->getTopMaxY() );
 #endif
 }
 
@@ -157,6 +157,17 @@ void OutputCollector::cursesDisable()
     {
         delete screen;
         screen = 0;
+    }
+#endif
+}
+
+
+void OutputCollector::cursesEventHandler()
+{
+#ifdef  USE_CURSES
+    if( screen )
+    {
+        screen->eventHandler();
     }
 #endif
 }

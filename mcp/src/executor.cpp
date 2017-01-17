@@ -541,6 +541,9 @@ void Executor::processCommands( EngineBase &engine )
     set_signal_handler();
     
     do {
+        if( curses )
+            OutputCollector::getTheOutputCollector()->cursesEventHandler();  // must not block
+        
         if( barrierMode )
         {
             while( pidToCmdMap.size() > 0 && !terminate_by_signal )

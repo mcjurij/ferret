@@ -5,6 +5,8 @@
 
 #include <curses.h>
 
+#include "curses_menu.h"
+
 // class OutputCollector;
 
 class CursesScreen {
@@ -17,10 +19,14 @@ public:
     ~CursesScreen();
     
     void initScreen();
+    void initBottom();
     
     void update();
 
-    int getTopY() const
+    void eventHandler();
+    void setShowMenu( bool b );
+    
+    int getTopMaxY() const
     { return tmaxY-1; }
     
 private:
@@ -31,7 +37,8 @@ private:
 
     int tmaxX, tmaxY;
     int bmaxY, bmaxX;
-    
+
+    CursesMenu *menu;
 };
 
 

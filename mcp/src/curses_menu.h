@@ -30,7 +30,8 @@ public:
     void addOption( const std::string &s, int group = 0, bool sel = false); // group == 0 => belongs to no group
     void setShow( bool b );
     
-    void eventLoop();   // will not block when poll == true
+    bool eventLoop();   // will not block when poll == true
+    bool eventHandler();
     
     std::set<int> getSelectionSet() const;
     
@@ -45,6 +46,7 @@ private:
     bool poll;
     std::vector<Option> options;
     int maxOptLen;
+    int highlight;
 };
 
 #endif
