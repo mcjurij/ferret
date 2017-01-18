@@ -166,9 +166,16 @@ void OutputCollector::cursesEventHandler()
 {
 #ifdef  USE_CURSES
     if( screen )
-    {
         screen->eventHandler();
-    }
+#endif
+}
+
+
+void OutputCollector::cursesUpdate()
+{
+#ifdef  USE_CURSES
+    if( screen )
+        screen->update();
 #endif
 }
 
@@ -232,9 +239,6 @@ void OutputCollector::cursesAppend( int file_id, const string &s)
     map<int,OutputEntry>::iterator it = getEntry( file_id );
     
     it->second.cursesAppend( s );
-
-    if( screen )
-        screen->update();
 #endif
 }
 
@@ -245,9 +249,6 @@ void OutputCollector::cursesEnd( int file_id )
     map<int,OutputEntry>::iterator it = getEntry( file_id );
     
     it->second.cursesEnd();
-
-    if( screen )
-        screen->update();
 #endif
 }
 

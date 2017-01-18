@@ -22,7 +22,7 @@ public:
     void initBottom();
     
     void update();
-
+    
     void eventHandler();
     void setShowMenu( bool b );
     

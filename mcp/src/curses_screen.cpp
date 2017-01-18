@@ -47,14 +47,12 @@ void CursesScreen::initScreen()
         wrefresh( top );
         delwin( top );
     }
-  
     
     getmaxyx( stdscr, maxY, maxX);
     // keypad( stdscr, TRUE);
     
     top = newwin( p+2, maxX, 0, 0);
     leaveok( top, TRUE);
-    clearok( top, FALSE);
     //nodelay( top, TRUE);
     wtimeout( top, 0);
     
@@ -78,7 +76,6 @@ void CursesScreen::initBottom()
     
     bottom = newwin( maxY-(p+2), maxX, p+2, 0);
     leaveok( bottom, TRUE);
-    clearok( bottom, FALSE);
     //nodelay( bottom, TRUE);
     wtimeout( bottom, 0 );
     
@@ -93,8 +90,8 @@ void CursesScreen::update()
     if( top )
     {
         vector<string> top_lines = OutputCollector::getTheOutputCollector()->cursesTop( tmaxY );
-        //wclear( top );
-        werase( top );
+        wclear( top );
+        //werase( top );
         
         for( i = 0; i < (int)top_lines.size(); i++)
             mvwaddnstr( top, i, 0, top_lines[i].c_str(), tmaxX);
@@ -119,11 +116,14 @@ void CursesScreen::update()
             mvwaddnstr( bottom, offs + i, 0, tail_lines[i].c_str(), bmaxX);
         }
     }
-
+    
     if( top )
         wrefresh( top );
     if( bottom )
         wrefresh( bottom );
+    
+    if( menu )
+        menu->update();
 }
 
 
@@ -159,8 +159,8 @@ void CursesScreen::setShowMenu( bool b )
         
         menu = new CursesMenu( 8, 5, true);
         menu->addOption( "Show top", 0, true);
-        menu->addOption( "Choice 2", 0, false);
-        menu->addOption( "Choice 3", 0, false);
+        menu->addOption( "Choice 2", 1, false);
+        menu->addOption( "Choice 3", 1, false);
         menu->addOption( "Exit", -1);
         menu->setShow( true );
     }

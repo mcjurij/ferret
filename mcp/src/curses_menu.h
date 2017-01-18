@@ -29,6 +29,8 @@ public:
     
     void addOption( const std::string &s, int group = 0, bool sel = false); // group == 0 => belongs to no group
     void setShow( bool b );
+
+    void update();
     
     bool eventLoop();   // will not block when poll == true
     bool eventHandler();
@@ -37,7 +39,7 @@ public:
     
 private: 
     void draw();
-    void highlightChoice( int highlight );
+    void highlightChoice();
     void select( int highlight );
     
 private:

@@ -67,6 +67,16 @@ void CursesMenu::setShow( bool b )
 }
 
 
+void CursesMenu::update()
+{
+    if( win )
+    {
+        highlightChoice();
+        wrefresh( win );
+    }
+}
+
+
 bool CursesMenu::eventLoop()
 {
     int n_choices = (int)options.size();
@@ -119,7 +129,7 @@ bool CursesMenu::eventLoop()
         }
         
         if( pos_changed )
-            highlightChoice( highlight );
+            highlightChoice();
     }
     while( !done );
 
@@ -140,7 +150,7 @@ void CursesMenu::draw()
 {
     box( win, 0, 0);
     
-    highlightChoice( 1 );
+    highlightChoice();
 }
 
 
@@ -159,7 +169,7 @@ set<int> CursesMenu::getSelectionSet() const
 }
 
 
-void CursesMenu::highlightChoice( int highlight )
+void CursesMenu::highlightChoice()
 {
     int i;    
     
@@ -178,7 +188,6 @@ void CursesMenu::highlightChoice( int highlight )
         if( highlight == i + 1 )
             wattroff( win, A_REVERSE);
     }
-    wrefresh( win );
 }
 
 

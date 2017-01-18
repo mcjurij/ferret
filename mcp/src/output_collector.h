@@ -81,6 +81,7 @@ public:
     void cursesEnable( unsigned int parallel );
     void cursesDisable();
     void cursesEventHandler();
+    void cursesUpdate();
     
     std::map<int,OutputEntry>::iterator getEntry( int file_id );
     

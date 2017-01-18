@@ -542,7 +542,10 @@ void Executor::processCommands( EngineBase &engine )
     
     do {
         if( curses )
+        {
             OutputCollector::getTheOutputCollector()->cursesEventHandler();  // must not block
+            OutputCollector::getTheOutputCollector()->cursesUpdate();
+        }
         
         if( barrierMode )
         {
