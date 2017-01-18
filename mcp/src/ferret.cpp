@@ -390,9 +390,8 @@ static void readBuildProperties( bool initMode, const string &build_properies, c
 }
 
 
-static void doBuild( FileManager &filesDb, set<string> &userTargets, const string &dbProjDir, bool printTimes)
+static void doBuild( FileManager &filesDb, set<string> &userTargets, const string &dbProjDir, bool printTimes, bool curses)
 {
-    bool curses = false;       // FIXME
     Executor executor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ), curses);
     bool doScfs = BuildProps::getTheBuildProps()->getBoolValue( "FERRET_SCFS" );
     Engine engine( 911, dbProjDir, filesDb.getCompileMode(), doScfs);
@@ -425,6 +424,7 @@ int main( int argc, char **argv)
     bool writeMakef = false;
     bool doProjHtml = false;
     bool initAndBuild = false;
+    bool doCurses = false;
     
     string targetArg, propertiesFileArg, startProjArg;
     set<string> userTargets;
@@ -545,6 +545,8 @@ int main( int argc, char **argv)
                     arg_err++;
                 }
             }
+            else if( arg == "--cur" || arg == "--curses" )
+                doCurses = true;
             else if( arg == "-v" )
                 verbosity = 1;
             else if( arg == "-vv" )
@@ -569,7 +571,7 @@ int main( int argc, char **argv)
         cerr << "HOSTNAME must be set. exiting.\n";
         emergency_exit( 13 );
     }
-
+    
     if( compileModeSet )
         initMode = true;
     
@@ -932,7 +934,7 @@ int main( int argc, char **argv)
         }
         else if( !writeMakef )
         {
-            doBuild( filesDb, userTargets, dbProjDir, printTimes);
+            doBuild( filesDb, userTargets, dbProjDir, printTimes, doCurses);
         }
         else
         {
@@ -944,7 +946,7 @@ int main( int argc, char **argv)
         }
     }
     else if( initMode && initAndBuild )
-        doBuild( filesDb, userTargets, dbProjDir, printTimes);
+        doBuild( filesDb, userTargets, dbProjDir, printTimes, doCurses);
     
     IncludeManager::getTheIncludeManager()->printFinalWords();
     
