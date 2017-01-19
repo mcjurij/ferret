@@ -16,6 +16,7 @@
 
 using namespace std;
 
+// -----------------------------------------------------------------------------
 
 static int fe_b( int file_id )
 {
@@ -29,7 +30,7 @@ static string genScript( const string &file_name, file_id_t file_id)
 }
 
 // -----------------------------------------------------------------------------
-void EngineBase::indicateDone( int file_id, long long curr_time)
+void EngineBase::indicateDone( int file_id, unsigned int job_id, long long curr_time)
 {
     // default is to do nothing
 }
@@ -37,6 +38,9 @@ void EngineBase::indicateDone( int file_id, long long curr_time)
 // -----------------------------------------------------------------------------
 void DepEngine::addDepCommand( ExecutorCommand ec )
 {
+    unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( ec.getFileName(), ec.getArgs(), ec.getFileId());
+    ec.setJobId( job_id );
+    
     commands.push_back( ec );
 }
 
@@ -63,13 +67,20 @@ ExecutorCommand DepEngine::nextCommand()
     if( pos < commands.size() )
         return commands[ pos++ ];
     else
-        return ExecutorCommand( "FINALIZE" );
+    {
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE_DEP" );
+        
+        return ExecutorCommand( job_id, "FINALIZE" );
+    }
 }
 
 // -----------------------------------------------------------------------------
 
 void SyncEngine::addSyncCommand( ExecutorCommand ec )
 {
+    unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( ec.getFileName(), ec.getArgs(), ec.getFileId());
+    ec.setJobId( job_id );
+    
     commands.push_back( ec );
 }
 
@@ -96,7 +107,11 @@ ExecutorCommand SyncEngine::nextCommand()
     if( pos < commands.size() )
         return commands[ pos++ ];
     else
-        return ExecutorCommand( "FINALIZE" );
+    {
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE_SYNC" );
+        
+        return ExecutorCommand( job_id, "FINALIZE");
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -149,6 +164,7 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
 {
     command_t *e = (command_t *)malloc( sizeof(command_t) );
     e->file_id = cmd->file_id;
+    e->job_id = -1;          // we know the job id once we created a new job in nextCommand()
     e->file_name = strdup( cmd->file_name.c_str() );
     strncpy( e->dep_type, cmd->cmd.c_str(), 15);
     e->dep_type[14] = 0;
@@ -825,7 +841,8 @@ ExecutorCommand Engine::nextCommand()
 {
     if( stopOnError && hash_set_get_size( failed_set ) > 0 )
     {
-        return ExecutorCommand( "FINALIZE" );
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE_STOP" );
+        return ExecutorCommand( job_id, "FINALIZE");
     }
     
     if( hash_set_get_size( to_do_set ) < 30 )
@@ -856,16 +873,23 @@ ExecutorCommand Engine::nextCommand()
                 ss << "ROUND " << round;
                 OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, ss.str());
             }
-            return ExecutorCommand( "BARRIER" );
+            
+            unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "BARRIER" );
+            return ExecutorCommand( job_id, "BARRIER");
         }
         else
-            return ExecutorCommand( "FINALIZE" );
+        {
+            unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE" );
+            return ExecutorCommand( job_id, "FINALIZE");
+        }
     }
     else if( hash_set_get_size( targets_left ) == 0 )
     {
         if( !curses )
             cout << "\nNo targets left for compile mode '" << compileMode << "'.\n";
-        return ExecutorCommand( "FINALIZE" );
+        
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE" );
+        return ExecutorCommand( job_id, "FINALIZE");
     }
     
     ExecutorCommand ec;
@@ -916,6 +940,9 @@ ExecutorCommand Engine::nextCommand()
                 
                 hash_set_remove( to_do_set, c->file_id);
                 hash_set_add( in_work_set, c->file_id);
+                
+                c->job_id = OutputCollector::getTheOutputCollector()->createJob( ec.getFileName(), ec.getArgs(), ec.getFileId());
+                ec.setJobId( c->job_id );
             }
         }
     }
@@ -935,7 +962,9 @@ ExecutorCommand Engine::nextCommand()
     {
         if( !curses )
             cout << "\nerrors. sending finalize.\n";
-        return ExecutorCommand( "FINALIZE" );
+        
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "FINALIZE" );
+        return ExecutorCommand( job_id, "FINALIZE");
     }
     else
     {
@@ -943,12 +972,14 @@ ExecutorCommand Engine::nextCommand()
         if( !curses )
             cout << " sending BARRRIER 2\n";
         validCmdsLastRound = 0;
-        return ExecutorCommand( "BARRIER" );
+        
+        unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "BARRIER_2" );
+        return ExecutorCommand( job_id, "BARRIER");
     }
 }
 
 
-void Engine::indicateDone( int file_id, long long curr_time)           // called by executor
+void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time)       // called by executor
 {
     command_t *c = find_command( file_id );
     assert( c );
@@ -1004,7 +1035,7 @@ void Engine::indicateDone( int file_id, long long curr_time)           // called
                     wait_fails++;
                     // hash_set_add( failed_set, w->file_id);
                     cerr << "Waiting for " << w->file_name << " has FAILED\n";
-                    OutputCollector::getTheOutputCollector()->setError( w->file_id, true);
+                    OutputCollector::getTheOutputCollector()->setJobError( job_id, true);
                 }
             }
         }
@@ -1022,7 +1053,7 @@ void Engine::indicateDone( int file_id, long long curr_time)           // called
         c->has_failed = true;
         hash_set_add( failed_set, c->file_id);
         cerr << "Target " << c->file_name << " has FAILED\n";
-        OutputCollector::getTheOutputCollector()->setError( c->file_id, true);
+        OutputCollector::getTheOutputCollector()->setJobError( job_id, true);
     }
     else
         hash_set_remove( global_mbd_set, c->file_id);
@@ -1097,7 +1128,7 @@ void Engine::analyzeResults()
     //cerr << "Missing targets:\n";
     unsigned int i,s;
     int *a = hash_set_get_as_array( all_targets, &s);
-            
+    
     for( i = 0; i < s; i++)
     {
         command_t *c = find_command( a[i] );
@@ -1107,52 +1138,51 @@ void Engine::analyzeResults()
         else
         {
             // cerr << "  Unreachable: ";
-            OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, string( "Target " ) + c->file_name);
-            OutputCollector::getTheOutputCollector()->setError( c->file_id, true);
+            OutputCollector::getTheOutputCollector()->addFreeHtml( string( "Target " ) + c->file_name );
         }
         
         if( !c->has_failed )
         {
             //cerr << ". Prerequisites missing:\n";
-            OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, " not reachable, as prerequisites are missing:\n<table>");
-                    
+            OutputCollector::getTheOutputCollector()->addFreeHtml( " not reachable, as prerequisites are missing:\n<table>" );
+            
             int k;
             for( k = 0; k < c->deps_size; k++)
             {
                 command_t *d = find_command( c->deps[k] );
-                        
+                
                 if( !d->is_done )
                 {
-                    OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "<tr class=\"target\"><td>");
+                    OutputCollector::getTheOutputCollector()->addFreeHtml( "<tr class=\"target\"><td>" );
                     //cerr << "      " << d->file_name << ", ";
-                    OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, string( d->file_name ) + "</td><td>\n" );
+                    OutputCollector::getTheOutputCollector()->addFreeHtml( string( d->file_name ) + "</td><td>\n" );
                             
                     stringstream ss;
                     ss << d->file_id;
                     if( d->has_failed )
                     {
                         //cerr << "which has failed";
-                        OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "which has failed ");
-                        OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "<a href=\"#" + ss.str() + "\">errors</a>");
+                        OutputCollector::getTheOutputCollector()->addFreeHtml( "which has failed " );
+                        OutputCollector::getTheOutputCollector()->addFreeHtml( "<a href=\"#" + ss.str() + "\">errors</a>" );
                     }
                     else
                     {
                         //cerr << "which is not reachable";
-                        OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "which is not reachable");
-                        OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, " <a href=\"#" + ss.str() + "\">follow</a>");
+                        OutputCollector::getTheOutputCollector()->addFreeHtml( "which is not reachable" );
+                        OutputCollector::getTheOutputCollector()->addFreeHtml( " <a href=\"#" + ss.str() + "\">follow</a>" );
                     }
                             
                     if( !d->is_target )
                     {
                         //cerr << " but surprisingly is not a target";
-                        OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, " but surprisingly is not a target");
+                        OutputCollector::getTheOutputCollector()->addFreeHtml( " but surprisingly is not a target" );
                     }
                             
                     //cerr << "\n";
-                    OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "</td></tr>\n");
+                    OutputCollector::getTheOutputCollector()->addFreeHtml( "</td></tr>\n" );
                 }
             }
-            OutputCollector::getTheOutputCollector()->appendErrHtml( c->file_id, "</table>\n");
+            OutputCollector::getTheOutputCollector()->addFreeHtml( "</table>\n" );
         }
     }
     free( a );

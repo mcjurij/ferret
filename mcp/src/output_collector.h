@@ -8,67 +8,11 @@
 #include <cassert>
 
 #include "file_manager.h"
+#include "job.h"
 #include "curses_screen.h"
 
+
 class ProjectXmlNode;
-
-class OutputEntry {
-
-public: 
-    OutputEntry()
-        : file_id( -1 ), error(false)
-    {}
-    
-    OutputEntry( int file_id )
-        : file_id( file_id ), error(false)
-    {}
-
-    ~OutputEntry()
-    {}
-    
-    void append( const std::string &s )
-    { o.append( s ); }
-    
-    void appendStd( const std::string &s )
-    { so.append( s ); }
-    void appendStdHtml( const std::string &s )
-    { soh.append( s ); }
-    
-    void appendErr( const std::string &s )
-    { eo.append( s ); }
-    void appendErrHtml( const std::string &s )
-    { eoh.append( s ); }
-    
-    std::string getOutput() const;
-    std::string getStdOut() const;
-    std::string getStdOutHtml() const;
-    std::string getErrOut() const;
-    std::string getErrOutHtml() const;
-    
-    void setError( bool err );
-    bool hasError() const
-    { return error; }
-
-#ifdef  USE_CURSES
-    void cursesAppend( const std::string &s );
-    void cursesEnd();
-    void appendTo( std::vector<std::string> &lines, int from);
-    int  cursesNumLines() const
-    { return (int)cursesLines.size(); }
-#endif
-    
-private:
-    int file_id;
-    std::string o, so, soh, eo, eoh;
-    bool error;
-    
-#ifdef  USE_CURSES
-    std::vector<std::string> cursesLines;
-    std::string cursesLast;
-    int  startY;
-#endif
-};
-
 
 class OutputCollector {
 
@@ -77,40 +21,45 @@ private:
 
 public:
     static OutputCollector *getTheOutputCollector();
+
+    unsigned int createJob( const std::string &fn, const std::vector<std::string> &args, int file_id);
+    unsigned int createJob( const std::string &psuedo_fn );
     
     void cursesEnable( unsigned int parallel );
     void cursesDisable();
     void cursesEventHandler();
     void cursesUpdate();
     
-    std::map<int,OutputEntry>::iterator getEntry( int file_id );
+    void appendJobOut( unsigned int job_id, const std::string &s);
+    void appendJobStd( unsigned int job_id, const std::string &s);
+    void appendJobErr( unsigned int job_id, const std::string &s);
+    bool hasJobOut( unsigned int job_id ) const;
     
-    void append( int file_id, const std::string &s);
-    void appendStd( int file_id, const std::string &s);
-    void appendStdHtml( int file_id, const std::string &s);
-    void appendErr( int file_id, const std::string &s);
-    void appendErrHtml( int file_id, const std::string &s);
-    void cursesAppend( int file_id, const std::string &s);
-    void cursesEnd( int file_id );
+    void cursesAppend( unsigned int job_id, const std::string &s);
+    void cursesEnd( unsigned int job_id );
     
     void cursesSetTopLine( int y, const std::string &l);
-#ifdef  USE_CURSES
-    std::vector<std::string> cursesTop( int last );
-    std::vector<std::string> cursesBottom( int last );
-#endif
     
-    std::string getOutput( int file_id ) const;
-    std::string getOutputHtml( int file_id ) const;
-    std::string getStdOut( int file_id ) const;
-    std::string getStdOutHtml( int file_id ) const;
-    std::string getErrOut( int file_id ) const;
-    std::string getErrOutHtml( int file_id ) const;
+    
+    std::string getJobOut( unsigned int job_id ) const;
+    std::string getJobOutHtml( unsigned int job_id  ) const;
+    std::string getJobStd( unsigned int job_id  ) const;
+    std::string getJobStdHtml( unsigned int job_id ) const;
+    std::string getJobErr( unsigned int job_id ) const;
+    std::string getJobErrHtml( unsigned int job_id ) const;
     
     void text( std::ofstream &os );
     void html( std::ofstream &os );
+    void addHtml( unsigned int job_id, const std::string &s);
+    std::string getHtml( unsigned int job_id ) const;
+    void addFreeHtml( const std::string &s )
+    { freeHtml.append( s ); }
     void resetHtml( std::ofstream &os );
 
-    void setError( int file_id, bool err);
+    void setJobError( unsigned int job_id, bool err);
+    bool hasJobError( unsigned int job_id );
+    int  getJobFileId( unsigned int job_id );
+    
     void clear();
     
     void setProjectNodesDir( const std::string &dir );
@@ -122,15 +71,18 @@ private:
 
 private:
     static OutputCollector *theOutputCollector;
-
+    
+    JobStorer jobStorer;
+    std::map<unsigned int,std::string> jobHtml;
+    std::string freeHtml;
+    
     std::vector<int> file_ids;
-    std::map<int,OutputEntry>  entryMap;
+    //std::map<int,OutputEntry>  entryMap;
 
     std::string projectdir;
     
 #ifdef  USE_CURSES
     CursesScreen *screen;
-    std::vector<std::string> topLines;
 #endif
     
 };

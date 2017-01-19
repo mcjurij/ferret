@@ -7,83 +7,6 @@
 using namespace std;
 
 
-string OutputEntry::getOutput() const
-{
-    return o;
-}
-
-
-string OutputEntry::getStdOut() const
-{
-    return so;
-}
-
-
-string OutputEntry::getStdOutHtml() const
-{
-    return soh;
-}
-
-
-string OutputEntry::getErrOut() const
-{
-    return eo;
-}
-
-
-string OutputEntry::getErrOutHtml() const
-{
-    return eoh;
-}
-
-
-void OutputEntry::setError( bool err )
-{
-    error = err;
-}
-
-
-#ifdef  USE_CURSES
-void OutputEntry::cursesAppend( const string &s )
-{
-    string line = cursesLast;
-    size_t i;
-    
-    for( i = 0; i < s.length(); i++)
-    {
-        if( s[i] != '\n' )
-            line += s[i];
-        else
-        {
-            cursesLines.push_back( line );
-            line = "";
-        }
-    }
-
-    cursesLast = line;
-}
-
-
-void OutputEntry::cursesEnd()
-{
-    if( cursesLast.length() > 0 )
-    {
-        cursesLines.push_back( cursesLast );
-        cursesLast = "";
-    }
-}
-
-
-void OutputEntry::appendTo( vector<string> &lines, int from)
-{
-    int i;
-    for( i = from; i < (int)cursesLines.size(); i++)
-        lines.push_back( cursesLines[i] );
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
 static string replaceEntities( const string &s )
 {
     size_t i;
@@ -139,13 +62,23 @@ OutputCollector *OutputCollector::getTheOutputCollector()
 }
 
 
+unsigned int OutputCollector::createJob( const string &fn, const vector<string> &args, int file_id)
+{
+    return jobStorer.createJob( fn, args, file_id);
+}
+
+
+unsigned int OutputCollector::createJob( const string &psuedo_fn )
+{
+    return jobStorer.createJob( psuedo_fn, vector<string>(), -1);
+}
+
+
 void OutputCollector::cursesEnable( unsigned int parallel )
 {
 #ifdef  USE_CURSES
     if( !screen )
         screen = new CursesScreen( parallel );
-
-    topLines.resize( screen->getTopMaxY() );
 #endif
 }
 
@@ -180,75 +113,51 @@ void OutputCollector::cursesUpdate()
 }
 
 
-map<int,OutputEntry>::iterator OutputCollector::getEntry( int file_id )
+void OutputCollector::appendJobOut( unsigned int job_id, const string &s)
 {
-    map<int,OutputEntry>::iterator it = entryMap.find( file_id );
-    
-    if( it == entryMap.end() )
-    {
-        file_ids.push_back( file_id );
-        it = entryMap.insert( make_pair( file_id, OutputEntry( file_id ) ) ).first;
-    }
-    
-    return it;
+    jobStorer.append( job_id, s);
 }
 
 
-void OutputCollector::append( int file_id, const string &s)
+void OutputCollector::appendJobStd( unsigned int job_id, const string &s)
 {
-    getEntry( file_id )->second.append( s );
+    jobStorer.appendStd( job_id, s);
 }
 
 
-void OutputCollector::appendStd( int file_id, const string &s)
+void OutputCollector::appendJobErr( unsigned int job_id, const string &s)
 {
-    map<int,OutputEntry>::iterator it = getEntry( file_id );
-    
-    it->second.appendStd( s );
-    it->second.appendStdHtml( "<pre>" + replaceEntities( s ) + "</pre>" );
-}
-
-
-void OutputCollector::appendStdHtml( int file_id, const string &s)
-{
-    getEntry( file_id )->second.appendStdHtml( s );
-}
-
-
-void OutputCollector::appendErr( int file_id, const string &s)
-{
-    map<int,OutputEntry>::iterator it = getEntry( file_id );
-    
     if( s.length() > 0  )
-    {
-        it->second.appendErr( s );
-        it->second.appendErrHtml( "<pre>" + replaceEntities( s ) + "</pre>" );
-    }
+        jobStorer.appendErr( job_id, s);
 }
 
 
-void OutputCollector::appendErrHtml( int file_id, const string &s)
+bool OutputCollector::hasJobOut( unsigned int job_id ) const
 {
-    getEntry( file_id )->second.appendErrHtml( s );
+    return jobStorer.hasOutput( job_id );
 }
 
 
-void OutputCollector::cursesAppend( int file_id, const string &s)
+void OutputCollector::cursesAppend( unsigned int job_id, const string &s)
 {
 #ifdef  USE_CURSES
-    map<int,OutputEntry>::iterator it = getEntry( file_id );
-    
-    it->second.cursesAppend( s );
+    if( screen )
+    {
+        screen->jobAppend( job_id, s);
+        screen->setUpdateBottomNeeded( true );
+    }
 #endif
 }
 
 
-void OutputCollector::cursesEnd( int file_id )
+void OutputCollector::cursesEnd( unsigned int job_id )
 {
 #ifdef  USE_CURSES
-    map<int,OutputEntry>::iterator it = getEntry( file_id );
-    
-    it->second.cursesEnd();
+    if( screen )
+    {
+        screen->jobEnd( job_id );
+        screen->setUpdateBottomNeeded( true );
+    }
 #endif
 }
 
@@ -256,128 +165,57 @@ void OutputCollector::cursesEnd( int file_id )
 void OutputCollector::cursesSetTopLine( int y, const string &l)
 {
 #ifdef  USE_CURSES
-    if( y < (int)topLines.size() )
-        topLines[ y ] = l;
+    if( screen )
+    {
+        screen->setTopLine( y, l);
+        screen->setUpdateTopNeeded( true );
+    }
 #endif
 }
 
 
-#ifdef  USE_CURSES
-vector<string> OutputCollector::cursesTop( int last )
+string OutputCollector::getJobOut( unsigned int job_id ) const
 {
-    if( last <= (int)topLines.size() )
-        return topLines;
-    else
-    {
-        vector<string> h = topLines;
-        h.resize( last );
-        return h;
-    }
+    return jobStorer.getOutput( job_id );
 }
 
 
-vector<string> OutputCollector::cursesBottom( int last )
+string OutputCollector::getJobStd( unsigned int job_id ) const
 {
-    int i;
-    vector<string> tailLines;
-    if( file_ids.size() == 0 )
-        return tailLines;
-    
-    int k = 0, idx=-1;
-    int first_line = 0;
-    for( i = 0; i < (int)file_ids.size(); i++)
-    {
-        idx = (file_ids.size()-1) - i;
-        k += entryMap[ file_ids[ idx ] ].cursesNumLines();
-
-        if( k > last )
-        {
-            first_line = k - last;
-            break;
-        }
-    }
-    
-    for( i = idx; i < (int)file_ids.size(); i++)
-    {
-        entryMap[ file_ids[ i ] ].appendTo( tailLines, first_line);
-        first_line = 0;
-    }
-
-    return tailLines;
-}
-#endif
-
-
-string OutputCollector::getOutput( int file_id ) const
-{
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return entryMap.at( file_id ).getOutput();
-    
-    return "";
+    return jobStorer.getStdOut( job_id );
 }
 
 
-string OutputCollector::getStdOut( int file_id ) const
+string OutputCollector::getJobErr( unsigned int job_id ) const
 {
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return entryMap.at( file_id ).getStdOut();
-    
-    return "";
+    return jobStorer.getErrOut( job_id );
 }
 
 
-string OutputCollector::getErrOut( int file_id ) const
+string OutputCollector::getJobOutHtml( unsigned int job_id ) const
 {
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return entryMap.at( file_id ).getErrOut();
-    
-    return "";
-}
-
-string OutputCollector::getOutputHtml( int file_id ) const
-{
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return replaceEntities( entryMap.at( file_id ).getOutput() );
-    
-    return "";
+    return "<pre>" + replaceEntities( jobStorer.getOutput( job_id ) ) + "</pre>";
 }
 
 
-string OutputCollector::getStdOutHtml( int file_id ) const
+string OutputCollector::getJobStdHtml( unsigned int job_id  ) const
 {
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return entryMap.at( file_id ).getStdOutHtml();
-    
-    return "";
+    return "<pre>" + replaceEntities( jobStorer.getStdOut( job_id ) ) + "</pre>";
 }
 
 
-string OutputCollector::getErrOutHtml( int file_id ) const
+string OutputCollector::getJobErrHtml( unsigned int job_id ) const
 {
-    map<int,OutputEntry>::const_iterator it = entryMap.find( file_id );
-    
-    if( it != entryMap.end() )
-        return entryMap.at( file_id ).getErrOutHtml();
-    
-    return "";
+    return "<pre>" + replaceEntities( jobStorer.getErrOut( job_id ) ) + "</pre>";
 }
+
 
 void OutputCollector::text( ofstream &os )
 {
     size_t i;
     
-    for( i = 0; i < file_ids.size(); i++)
-        os << getOutput( file_ids[i] );    
+    for( i = 0; i < jobStorer.getSize(); i++)
+        os << jobStorer.getOutput( i+1 );
 }
 
 
@@ -409,20 +247,19 @@ void OutputCollector::html( ofstream &os )
         "<table>\n";
     
     size_t i;
-    for( i = 0; i < file_ids.size(); i++)
+    for( i = 0; i < jobStorer.getSize(); i++)
     {
-        map<int,OutputEntry>::const_iterator it = entryMap.find( file_ids[i] );
-        const OutputEntry &e = it->second;
+        unsigned int job_id = i + 1;
         
-        if( e.getErrOut().length() > 0 )
+        if( getJobErr( job_id ).length() > 0 )
         {
             os << "<tr><td>\n";
-            os << "<a href=\"#" << file_ids[i] << "\">";
-            if( e.hasError() )
+            os << "<a href=\"#" << getJobFileId( job_id ) << "\">";
+            if( hasJobError( job_id ) )
                 os << "Errors/warnings of #";
             else
                 os << "Warnings of #";
-            os << file_ids[i] << "</a>\n"
+            os << getJobFileId( job_id ) << "</a>\n"
                 "</td>\n"
                 "</tr>\n";
         }
@@ -431,10 +268,31 @@ void OutputCollector::html( ofstream &os )
     os << "</table>\n"
         "<table>\n";
 
-    for( i = 0; i < file_ids.size(); i++)
+    for( i = 0; i < jobStorer.getSize(); i++)
     {
-        string so = getStdOutHtml( file_ids[i] );
-        if( so.length() > 0 )
+        unsigned int job_id = i + 1;
+
+        os << "<!-- entry for job id: " << job_id << " -->\n";
+
+        os << "<!-- job state is ";
+        Job::state_t st = jobStorer.getState( job_id );
+
+        if( st == Job::QUEUED )
+            os << "QUEUED";
+        else if( st == Job::DONE )
+            os << "DONE";
+        else if( st == Job::FAILED )
+            os << "FAILED";
+        else if( st == Job::SPECIAL_QUEUED )
+            os << "SPECIAL_QUEUED";
+        else if( st == Job::SPECIAL_DONE )
+            os << "SPECIAL_DONE";
+        else
+            os << "?";
+        os << " -->\n";
+        
+        string so = getJobStdHtml( job_id );
+        if( getJobStd( job_id ).length() > 0 )
         {
             os << "<tr class=\"stdout\">\n<td>";
             os << so;
@@ -442,18 +300,55 @@ void OutputCollector::html( ofstream &os )
                 "</tr>\n";
         }
 
-        string err = getErrOutHtml( file_ids[i] );
-        if( err.length() > 0 )
+        string err = getJobErrHtml( job_id );
+        if( getJobErr( job_id ).length() > 0 )
         {
-            os << "<tr class=\"stderr\">\n<td id=\"" << file_ids[i] << "\">\n";
-
+            os << "<tr class=\"stderr\">\n<td id=\"" << getJobFileId( job_id ) << "\">\n";
             os << err;
             os << "</td>\n"
                 "</tr>\n";
         }
+
+        string err2 = getHtml( job_id );
+        if( err2.length() > 0 )
+        {
+            os << "<tr>\n<td>\n";
+            os << err2;
+            os << "</td>\n"
+                "</tr>\n";
+        }
     }
+
+    os << "</table>\n\n" << freeHtml
+       << "\n</body>\n</html>\n";
+}
+
+
+void OutputCollector::addHtml( unsigned int job_id, const string &s)
+{
+    //if( job_id == (unsigned int)-1 )
+    if( job_id == -1 )
+        return;
     
-    os << "</table>\n</body>\n</html>\n";
+    assert( job_id >= 1 && job_id <= jobStorer.getSize() );
+    
+    map<unsigned int,string>::iterator it = jobHtml.find( job_id );
+    
+    if( it != jobHtml.end() )
+        it->second.append( s );
+    else
+        jobHtml[ job_id ] = s;
+}
+
+
+string OutputCollector::getHtml( unsigned int job_id ) const
+{
+    map<unsigned int,string>::const_iterator it = jobHtml.find( job_id );
+
+    if( it != jobHtml.end() )
+        it->second;
+    
+    return "";
 }
 
 
@@ -473,16 +368,30 @@ void OutputCollector::resetHtml( std::ofstream &os )
 }
 
 
-void OutputCollector::setError( int file_id, bool err)
+void OutputCollector::setJobError( unsigned int job_id, bool err)
 {
-    getEntry( file_id )->second.setError( err );
+    jobStorer.setError( job_id, err);
+}
+
+
+bool OutputCollector::hasJobError( unsigned int job_id )
+{
+    return jobStorer.hasError( job_id );
+}
+
+
+int  OutputCollector::getJobFileId( unsigned int job_id )
+{
+    return jobStorer.getFileId( job_id );
 }
 
 
 void OutputCollector::clear()
 {
     file_ids.clear();
-    entryMap.clear();
+    jobStorer.clear();
+    jobHtml.clear();
+    freeHtml = "";
 }
 
 

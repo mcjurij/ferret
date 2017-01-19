@@ -77,7 +77,14 @@ static void restore_signal_handler()
         sigaction( SIGTERM, &old_action_term, NULL);
 }
 
+
 // ------------------------------------------------------------
+void ExecutorCommand::setJobId( unsigned int id )
+{
+    jobid = id;
+}
+
+
 string ExecutorCommand::getStateAsString()
 {
     string s;
@@ -105,6 +112,7 @@ string ExecutorCommand::getStateAsString()
 }
 
 
+#if 0 
 string ExecutorCommand::getOutput()
 {
     string tmp = output;
@@ -127,7 +135,7 @@ string ExecutorCommand::getErrOut()
     err_output = "";
     return tmp;
 }
-
+#endif
 
 // -----------------------------------------------------------------------------
 
@@ -255,27 +263,28 @@ void Executor::readOutputs()
             int count;
             char buffer[1025];
             string b;
+            OutputCollector *oc = OutputCollector::getTheOutputCollector();
             
             while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
             {
                 buffer[count] = 0;
                 b = buffer;
                 
-                cmd.appendOutput( b );
-                cmd.appendStdOut( b );
+                oc->appendJobOut( cmd.getJobId(), b);
+                oc->appendJobStd( cmd.getJobId(), b);
                 if( curses )
-                    OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
+                    oc->cursesAppend( cmd.getJobId(), b);
             }
-
+            
             while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
             {
                 buffer[count] = 0;
                 b = buffer;
                 
-                cmd.appendOutput( b );
-                cmd.appendErrOut( b );
+                oc->appendJobOut( cmd.getJobId(), b);
+                oc->appendJobErr( cmd.getJobId(), b);
                 if( curses )
-                    OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
+                    oc->cursesAppend( cmd.getJobId(), b);
             }
         }
     }
@@ -316,7 +325,7 @@ void Executor::checkExitState( ExecutorCommand &cmd, int status, EngineBase &eng
             cmd.state = ExecutorCommand::DONE;
         
         if( cmd.getFileId() != -1 )
-            engine.indicateDone( cmd.getFileId(), curr_time);
+            engine.indicateDone( cmd.getFileId(), cmd.getJobId(), curr_time);
     }
     else
     {
@@ -333,8 +342,8 @@ void Executor::checkExitState( ExecutorCommand &cmd, int status, EngineBase &eng
         
         if( terminate_by_signal )
         {
-            OutputCollector::getTheOutputCollector()->append( cmd.getFileId(), "\nProcess terminated by signal from parent");
-            OutputCollector::getTheOutputCollector()->appendErr( cmd.getFileId(), "\nProcess terminated by signal from parent");
+            OutputCollector::getTheOutputCollector()->appendJobOut( cmd.getJobId(), "\nProcess terminated by signal from parent");
+            OutputCollector::getTheOutputCollector()->appendJobErr( cmd.getJobId(), "\nProcess terminated by signal from parent");
         }
         
         if( cmd.getFilesToRemoveAfterSignal().size() > 0 )
@@ -363,19 +372,6 @@ void Executor::checkStates( EngineBase &engine )
     readOutputs();
     
     map<pid_t,ExecutorCommand>::iterator pit;
-    if( curses )
-    {
-        pit = pidToCmdMap.begin();
-        int y=1;
-        for( ; pit != pidToCmdMap.end(); pit++)
-        {
-            ExecutorCommand &cmd = pit->second;
-            stringstream ss;
-            ss << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid;
-            OutputCollector::getTheOutputCollector()->cursesSetTopLine( y, ss.str());
-            y++;
-        }
-    }
     
     if( pidToCmdMap.size() == 1 )
     {
@@ -433,16 +429,17 @@ void Executor::checkStates( EngineBase &engine )
         int count;
         char buffer[1025];
         string b;
+        OutputCollector *oc = OutputCollector::getTheOutputCollector();
         
         while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
         {
             buffer[count] = 0;
             b = buffer;
             
-            cmd.appendOutput( b );
-            cmd.appendStdOut( b );
+            oc->appendJobOut( cmd.getJobId(), b);
+            oc->appendJobStd( cmd.getJobId(), b);
             if( curses )
-                OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
+                oc->cursesAppend( cmd.getJobId(), b);
         }
         
         while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
@@ -450,14 +447,14 @@ void Executor::checkStates( EngineBase &engine )
             buffer[count] = 0;
             b = buffer;
             
-            cmd.appendOutput( b );
-            cmd.appendErrOut( b );
+            oc->appendJobOut( cmd.getJobId(), b);
+            oc->appendJobErr( cmd.getJobId(), b);
             if( curses )
-                OutputCollector::getTheOutputCollector()->cursesAppend( cmd.getFileId(), b);
+                oc->cursesAppend( cmd.getJobId(), b);
         }
 
         if( curses )
-            OutputCollector::getTheOutputCollector()->cursesEnd( cmd.getFileId() );
+            oc->cursesEnd( cmd.getJobId() );
         
         if( close( cmd.getStdoutFiledes() ) < 0 )
         {
@@ -478,21 +475,17 @@ void Executor::checkStates( EngineBase &engine )
     for( pit = pidToCmdMap.begin(); pit != pidToCmdMap.end(); pit++)
     {
         ExecutorCommand &cmd = pit->second;
+        OutputCollector *oc = OutputCollector::getTheOutputCollector();
         
-        if( cmd.hasOutput() )
+        if( oc->hasJobOut( cmd.getJobId() ) )
         {
-            string out = cmd.getOutput();
-            string std = cmd.getStdOut();
-            string err = cmd.getErrOut();
-
+            string out = oc->getJobOut( cmd.getJobId() );
+            
             if( !curses )
             {
                 cout << "-----------------------------------\n";
                 cout << out;
             }
-            OutputCollector::getTheOutputCollector()->append( cmd.getFileId(), out);
-            OutputCollector::getTheOutputCollector()->appendStd( cmd.getFileId(), std);
-            OutputCollector::getTheOutputCollector()->appendErr( cmd.getFileId(), err);
         }
         
         if( cmd.state == ExecutorCommand::PROCESSING )
@@ -584,7 +577,24 @@ void Executor::processCommands( EngineBase &engine )
                     break;
                 }
                 else
+                {
                     pidToCmdMap[ cmd.pid ] = cmd;
+                    
+                    if( curses )
+                    {
+                        map<pid_t,ExecutorCommand>::iterator pit = pidToCmdMap.begin();
+                        int y = 1;
+                        for( ; pit != pidToCmdMap.end(); pit++)
+                        {
+                            ExecutorCommand &cmd = pit->second;
+                            stringstream ss;
+                            ss << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid;
+                            OutputCollector::getTheOutputCollector()->cursesSetTopLine( y, ss.str());
+                            y++;
+                        }
+                    }
+                    
+                }
             }
         }
 

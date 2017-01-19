@@ -38,30 +38,34 @@ public:
     typedef enum { INVALID=0, WAITING, PROCESSING, DONE, FAILED} state_t;
     
     ExecutorCommand()
-        : cmdType("invalid"), state(INVALID), pid(-1)
+        : jobid(-1), cmdType("invalid"), state(INVALID), pid(-1)
     {
     }
     
-    ExecutorCommand( const std::string &type )
-        : cmdType(type),  file_id(-1), state(WAITING), pid(-1)
+    ExecutorCommand( unsigned int id, const std::string &type)
+        : jobid(id), cmdType(type), file_id(-1), state(WAITING), pid(-1)
     {
     }
     
     ExecutorCommand( const std::string &fn, int file_id)
-        : cmdType("EXSH"), fileName(fn), file_id(file_id), state(WAITING), pid(-1)
+        : jobid(-1), cmdType("EXSH"), fileName(fn), file_id(file_id), state(WAITING), pid(-1)
     {
     }
-
+    
     ExecutorCommand( const std::string &fn, const std::vector<std::string> &args)
-        : cmdType("EXSH"), fileName(fn), args(args), file_id(-1), state(WAITING), pid(-1)
+        : jobid(-1), cmdType("EXSH"), fileName(fn), args(args), file_id(-1), state(WAITING), pid(-1)
     {
     }
     
     ExecutorCommand( const std::vector<std::string> &args )    // for dependency file generation
-        : cmdType("DEP"), args(args), file_id(-1), state(WAITING), pid(-1)
+        : jobid(-1), cmdType("DEP"), args(args), file_id(-1), state(WAITING), pid(-1)
     {
     }
 
+public:
+    void setJobId( unsigned int id );
+    unsigned int getJobId() const
+    { return jobid; }
     state_t getState() const
     { return state; }
     std::string getStateAsString();
@@ -89,6 +93,7 @@ public:
     int getStderrFiledes() const
     { return stderr_filedes; }
 
+#if 0
     void appendOutput( const std::string &s )
     { output += s; };
     void appendStdOut( const std::string &s )
@@ -102,8 +107,10 @@ public:
     std::string getOutput();
     std::string getStdOut();
     std::string getErrOut();
+#endif
     
 private:
+    unsigned int jobid;
     std::string cmdType;   // DEP = dependencies, EXSH = execute sh script
     std::string fileName;
     std::vector<std::string> args;
@@ -116,9 +123,6 @@ public:
     state_t state;
     pid_t pid;
     int returnCode;
-
-private:
-    std::string output, std_output, err_output;
 };
 
 

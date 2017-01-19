@@ -21,7 +21,7 @@ public:
     
     virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>()) = 0;
     virtual ExecutorCommand nextCommand() = 0;
-    virtual void indicateDone( int file_id, long long curr_time);
+    virtual void indicateDone( int file_id, unsigned int job_id, long long curr_time);
     
 protected:
     int errors;
@@ -78,6 +78,7 @@ class Engine : public EngineBase
     typedef struct command
     {
         int file_id;
+        unsigned int job_id;
         char dep_type[15];
         char *file_name;
         
@@ -155,7 +156,7 @@ private:
     
 public:
     virtual ExecutorCommand nextCommand();
-    virtual void indicateDone( int file_id, long long curr_time);
+    virtual void indicateDone( int file_id, unsigned int job_id, long long curr_time);
 
     void setStopOnError( bool stop )
     { stopOnError = stop; }

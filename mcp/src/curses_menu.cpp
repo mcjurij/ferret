@@ -22,10 +22,10 @@ CursesMenu::~CursesMenu()
 }
 
 
-void CursesMenu::addOption( const string &s, int group, bool sel)    // group == 0 => belongs to no group
+void CursesMenu::addOption( int idx, const string &s, int group, bool sel)    // group == 0 => belongs to no group
 {
     if( s.length() > 0 )
-        options.push_back( Option( s, sel, group) );
+        options.push_back( Option( idx, s, sel, group) );
 }
 
 
@@ -71,8 +71,7 @@ void CursesMenu::update()
 {
     if( win )
     {
-        highlightChoice();
-        wrefresh( win );
+        draw();
     }
 }
 
@@ -115,6 +114,8 @@ bool CursesMenu::eventLoop()
                 {
                     done = true;
                     close = true;
+                    
+                    options[ highlight - 1 ].selected = true;
                 }
                 break;
                 
@@ -148,9 +149,8 @@ bool CursesMenu::eventHandler()
 
 void CursesMenu::draw()
 {
-    box( win, 0, 0);
-    
     highlightChoice();
+    wnoutrefresh( win );
 }
 
 
@@ -161,8 +161,8 @@ set<int> CursesMenu::getSelectionSet() const
     
     for( i = 0; i < (int)options.size(); i++)
     {
-        if( options[i].selected && options[i].group >= 0 )
-            s.insert( i );
+        if( options[i].selected  )
+            s.insert( options[i].idx );
     }
     
     return s;
@@ -171,11 +171,13 @@ set<int> CursesMenu::getSelectionSet() const
 
 void CursesMenu::highlightChoice()
 {
+    box( win, 0, 0);
+    
     int i;    
     
     for( i = 0; i < (int)options.size(); i++)
     {
-        if( highlight == i + 1 )   // high light choice 
+        if( highlight == i + 1 )
             wattron( win, A_REVERSE);
         
         mvwaddstr( win, 1+i, 2, options[i].displ.c_str());
