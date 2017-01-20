@@ -37,7 +37,7 @@ public:
         : EngineBase()
     {}
     
-    void addDepCommand( ExecutorCommand ec );
+    void addDepCommand( ExecutorCommand &ec );
     
     virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>());
     virtual ExecutorCommand nextCommand();

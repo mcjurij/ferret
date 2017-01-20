@@ -7,7 +7,7 @@
 
 class Job {
 public:
-    typedef enum { INVALID=0, QUEUED, DONE, FAILED, SPECIAL_QUEUED, SPECIAL_DONE} state_t;
+    typedef enum { INVALID=0, QUEUED, DONE, FAILED, SPECIAL} state_t;
     
     Job()
         : jobid(-1), file_id(-1), state(INVALID)
@@ -25,15 +25,13 @@ public:
     { return jobid; }
     state_t getState() const
     { return state; }
-    // std::string getStateAsString();
-    
+    std::string getStateAsString();
     std::string getFileName() const
     { return fileName; }
     std::vector<std::string> getArgs() const
     { return args; }
     int getFileId() const
     { return file_id; }
-
     
     void appendOutput( const std::string &s )
     { output += s; };
@@ -72,6 +70,8 @@ public:
 public:
     unsigned int createJob( const std::string &fn, const std::vector<std::string> &args, int file_id);
     Job::state_t getState( unsigned int job_id ) const;
+    std::string getStateAsString( unsigned int job_id );
+    std::string getFileName( unsigned int job_id ) const;
     
     void append( unsigned int job_id, const std::string &s);
     void appendStd( unsigned int job_id, const std::string &s);

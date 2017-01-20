@@ -14,6 +14,32 @@ static unsigned int job_idgen()
 }
 
 // -----------------------------------------------------------------------------
+string Job::getStateAsString()
+{
+    string s;
+    
+    switch( state )
+    {
+        case INVALID:
+            s = "INVALID";
+            break;
+        case QUEUED:
+            s = "QUEUED";
+            break;
+        case DONE:
+            s = "DONE";
+            break;
+        case FAILED:
+            s = "FAILED";
+            break;
+        case SPECIAL:
+            s = "SPECIAL";
+            break;
+    }
+    
+    return s;
+}
+
 
 string Job::getOutput() const
 {
@@ -41,7 +67,7 @@ void Job::setError( bool err )
 
 bool Job::hasError() const
 {
-    return state != DONE && state != SPECIAL_DONE;
+    return state != DONE && state != SPECIAL;
 }
 
 // -----------------------------------------------------------------------------
@@ -64,7 +90,7 @@ unsigned int JobStorer::createJob( const string &fn, const vector<string> &args,
     
     Job::state_t st = Job::QUEUED;
     if( file_id < 0 )
-        st = Job::SPECIAL_QUEUED;
+        st = Job::SPECIAL;
     
     if( i >= jobs.size() )
         jobs.resize( i + 1 );
@@ -81,6 +107,24 @@ Job::state_t JobStorer::getState( unsigned int job_id ) const
     assert( i < jobs.size() );
     
     return jobs[ i ].getState();
+}
+
+
+string JobStorer::getStateAsString( unsigned int job_id )
+{
+    size_t i = jobidx( job_id );
+    assert( i < jobs.size() );
+    
+    return jobs[ i ].getStateAsString();
+}
+
+
+string JobStorer::getFileName( unsigned int job_id ) const
+{
+    size_t i = jobidx( job_id );
+    assert( i < jobs.size() );
+    
+    return jobs[ i ].getFileName();
 }
 
 

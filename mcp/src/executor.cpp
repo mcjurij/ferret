@@ -111,32 +111,6 @@ string ExecutorCommand::getStateAsString()
     return s;
 }
 
-
-#if 0 
-string ExecutorCommand::getOutput()
-{
-    string tmp = output;
-    output = "";
-    return tmp;
-}
-
-
-string ExecutorCommand::getStdOut()
-{
-    string tmp = std_output;
-    std_output = "";
-    return tmp;
-}
-
-
-string ExecutorCommand::getErrOut()
-{
-    string tmp = err_output;
-    err_output = "";
-    return tmp;
-}
-#endif
-
 // -----------------------------------------------------------------------------
 
 static pid_t execCmd( const string &ex, ExecutorCommand &cmd, vector<string> args)
@@ -251,41 +225,47 @@ pid_t Executor::processCommand( ExecutorCommand &cmd )
 }
 
 
+void Executor::readOutput( const ExecutorCommand &cmd )
+{
+    OutputCollector *oc = OutputCollector::getTheOutputCollector();
+    int count;
+    char buffer[1025];
+    string b;
+            
+    while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
+    {
+        buffer[count] = 0;
+        b = buffer;
+        
+        oc->appendJobOut( cmd.getJobId(), b);
+        oc->appendJobStd( cmd.getJobId(), b);
+        if( curses )
+            oc->cursesAppend( cmd.getJobId(), b);
+    }
+    
+    while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
+    {
+        buffer[count] = 0;
+        b = buffer;
+        
+        oc->appendJobOut( cmd.getJobId(), b);
+        oc->appendJobErr( cmd.getJobId(), b);
+        if( curses )
+            oc->cursesAppend( cmd.getJobId(), b);
+    }
+}
+
+
 void Executor::readOutputs()
 {
-    map<pid_t,ExecutorCommand>::iterator pit = pidToCmdMap.begin();
+    map<pid_t,ExecutorCommand>::const_iterator pit = pidToCmdMap.begin();
     
     for( pit = pidToCmdMap.begin(); pit != pidToCmdMap.end(); pit++)
     {
-        ExecutorCommand &cmd = pit->second;
-        if( cmd.state == ExecutorCommand::PROCESSING )
+        const ExecutorCommand &cmd = pit->second;
+        if( cmd.state == ExecutorCommand::PROCESSING && cmd.getCmdType() != "BARRIER" && cmd.getCmdType() != "FINALIZE" )
         {
-            int count;
-            char buffer[1025];
-            string b;
-            OutputCollector *oc = OutputCollector::getTheOutputCollector();
-            
-            while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
-            {
-                buffer[count] = 0;
-                b = buffer;
-                
-                oc->appendJobOut( cmd.getJobId(), b);
-                oc->appendJobStd( cmd.getJobId(), b);
-                if( curses )
-                    oc->cursesAppend( cmd.getJobId(), b);
-            }
-            
-            while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
-            {
-                buffer[count] = 0;
-                b = buffer;
-                
-                oc->appendJobOut( cmd.getJobId(), b);
-                oc->appendJobErr( cmd.getJobId(), b);
-                if( curses )
-                    oc->cursesAppend( cmd.getJobId(), b);
-            }
+            readOutput( cmd );
         }
     }
 }
@@ -310,6 +290,8 @@ void Executor::checkExitState( ExecutorCommand &cmd, int status, EngineBase &eng
 {
     if( WIFEXITED(status) )
     {
+        if( verbosity > 2 )
+            cout << "checking exit state of job " << cmd.getJobId() << "\n";
         cmd.returnCode = WEXITSTATUS(status);
         if( cmd.returnCode != 0 )
         {
@@ -369,7 +351,8 @@ void Executor::checkStates( EngineBase &engine )
     struct timespec t;
     t.tv_sec = 0;
     readOutputs();
-    
+
+#if 0
     map<pid_t,ExecutorCommand>::iterator pit;
     
     if( pidToCmdMap.size() == 1 )
@@ -384,6 +367,7 @@ void Executor::checkStates( EngineBase &engine )
     }
     if( pidToCmdMap.size() == 0 )
         return;
+#endif
     
     // wait a bit to prevent unnecessary waitpid calls
     t.tv_nsec = delaySampler();
@@ -402,13 +386,12 @@ void Executor::checkStates( EngineBase &engine )
     if( p == 0 )
         return;  // ok, nothing to do
     
-    map<pid_t,ExecutorCommand>::iterator it = pidToCmdMap.find( p );
-    if( it != pidToCmdMap.end() )
+    map<pid_t,ExecutorCommand>::iterator pit, it = pidToCmdMap.find( p );
+    if( it == pidToCmdMap.end() )
     {
-        checkExitState( it->second, status, engine);
-    }
-    else
         cerr << "error: a child exited that we do not know (pid = " << p << ")\n";
+        return;
+    }
     
     if( verbosity > 2 )
     {
@@ -417,41 +400,17 @@ void Executor::checkStates( EngineBase &engine )
         for( ; pit != pidToCmdMap.end(); pit++)
         {
             ExecutorCommand &cmd = pit->second;
-            cout << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid << "\n";
+            cout << "   " << cmd.getJobId() << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid << "\n";
         }
     }
     
     if( it != pidToCmdMap.end() )
     {
         ExecutorCommand &cmd = it->second;
-            
-        int count;
-        char buffer[1025];
-        string b;
         OutputCollector *oc = OutputCollector::getTheOutputCollector();
         
-        while( (count = read( cmd.getStdoutFiledes(), buffer, 1024)) > 0 )
-        {
-            buffer[count] = 0;
-            b = buffer;
-            
-            oc->appendJobOut( cmd.getJobId(), b);
-            oc->appendJobStd( cmd.getJobId(), b);
-            if( curses )
-                oc->cursesAppend( cmd.getJobId(), b);
-        }
+        readOutput( cmd );
         
-        while( (count = read( cmd.getStderrFiledes(), buffer, 1024)) > 0 )
-        {
-            buffer[count] = 0;
-            b = buffer;
-            
-            oc->appendJobOut( cmd.getJobId(), b);
-            oc->appendJobErr( cmd.getJobId(), b);
-            if( curses )
-                oc->cursesAppend( cmd.getJobId(), b);
-        }
-
         if( curses )
             oc->cursesEnd( cmd.getJobId() );
         
@@ -466,6 +425,16 @@ void Executor::checkStates( EngineBase &engine )
             perror( "close" );
             exit(1);
         }
+        
+        if( !curses && oc->hasJobOut( cmd.getJobId() ) )
+        {
+            string out = oc->getJobOut( cmd.getJobId() );
+            
+            cout << "-----------------------------------\n";
+            cout << out;
+        }
+        
+        checkExitState( cmd, status, engine);
     }
     
     map<pid_t,ExecutorCommand> help;  // warning: std::map.erase() behaviour has changed with gcc 5 onwards. Don't use!
@@ -474,18 +443,6 @@ void Executor::checkStates( EngineBase &engine )
     for( pit = pidToCmdMap.begin(); pit != pidToCmdMap.end(); pit++)
     {
         ExecutorCommand &cmd = pit->second;
-        OutputCollector *oc = OutputCollector::getTheOutputCollector();
-        
-        if( oc->hasJobOut( cmd.getJobId() ) )
-        {
-            string out = oc->getJobOut( cmd.getJobId() );
-            
-            if( !curses )
-            {
-                cout << "-----------------------------------\n";
-                cout << out;
-            }
-        }
         
         if( cmd.state == ExecutorCommand::PROCESSING )
             help[ pit->first ] = pit->second;
@@ -506,7 +463,7 @@ void Executor::checkStates( EngineBase &engine )
         ExecutorCommand &cmd = pit->second;
         if( cmd.getCmdType() == "BARRIER" )   // last entry is barrier?
         {
-            pidToCmdMap.clear();             // remove it!
+            pidToCmdMap.clear();              // remove it!
             barrierMode = false;
         }
     }

@@ -272,22 +272,12 @@ void OutputCollector::html( ofstream &os )
         unsigned int job_id = i + 1;
 
         os << "<!-- job id: " << job_id << " begins -->\n";
-
         os << "<!-- job state is ";
-        Job::state_t st = jobStorer.getState( job_id );
-
-        if( st == Job::QUEUED )
-            os << "QUEUED";
-        else if( st == Job::DONE )
-            os << "DONE";
-        else if( st == Job::FAILED )
-            os << "FAILED";
-        else if( st == Job::SPECIAL_QUEUED )
-            os << "SPECIAL_QUEUED";
-        else if( st == Job::SPECIAL_DONE )
-            os << "SPECIAL_DONE";
-        else
-            os << "?";
+        os << jobStorer.getStateAsString( job_id );
+        os << " -->\n";
+        
+        os << "<!-- file is ";
+        os << jobStorer.getFileName( job_id );
         os << " -->\n";
         
         string so = getJobStdHtml( job_id );

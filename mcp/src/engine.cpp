@@ -36,7 +36,7 @@ void EngineBase::indicateDone( int file_id, unsigned int job_id, long long curr_
 }
 
 // -----------------------------------------------------------------------------
-void DepEngine::addDepCommand( ExecutorCommand ec )
+void DepEngine::addDepCommand( ExecutorCommand &ec )
 {
     unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( ec.getFileName(), ec.getArgs(), ec.getFileId());
     ec.setJobId( job_id );

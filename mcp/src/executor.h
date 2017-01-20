@@ -93,25 +93,9 @@ public:
     int getStderrFiledes() const
     { return stderr_filedes; }
 
-#if 0
-    void appendOutput( const std::string &s )
-    { output += s; };
-    void appendStdOut( const std::string &s )
-    { std_output += s; };
-    void appendErrOut( const std::string &s )
-    { err_output += s; };
-    
-    bool hasOutput() const
-    { return output.length()>0; }
-    
-    std::string getOutput();
-    std::string getStdOut();
-    std::string getErrOut();
-#endif
-    
 private:
     unsigned int jobid;
-    std::string cmdType;   // DEP = dependencies, EXSH = execute sh script
+    std::string cmdType;   // DEP = dependencies, EXSH = execute sh script, BARRIER, FINALIZE
     std::string fileName;
     std::vector<std::string> args;
     int file_id;
@@ -146,6 +130,7 @@ public:
     
 private:
     void cleanUpAfterSignal( int signum, EngineBase &engine);
+    void readOutput( const ExecutorCommand &cmd );
     void readOutputs();
     long delaySampler();
     void checkExitState( ExecutorCommand &cmd, int status, EngineBase &engine);

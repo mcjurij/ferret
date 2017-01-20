@@ -109,11 +109,11 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                         vector<string> args;
                         args.push_back( it.getFile() );
                         args.push_back( depfn );
-                    
+                        
                         ExecutorCommand ec = ExecutorCommand( args );
                         ec.addFileToRemoveAfterSignal( depfn );
                         FindFiles::remove( depfn.c_str() );
-                    
+                        
                         depEngine.addDepCommand( ec );
                     
                         filesWithUpdate.push_back( it.getFile() );
