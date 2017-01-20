@@ -260,8 +260,7 @@ void OutputCollector::html( ofstream &os )
             else
                 os << "Warnings of #";
             os << getJobFileId( job_id ) << "</a>\n"
-                "</td>\n"
-                "</tr>\n";
+                "</td>\n</tr>\n";
         }
     }
     
@@ -272,7 +271,7 @@ void OutputCollector::html( ofstream &os )
     {
         unsigned int job_id = i + 1;
 
-        os << "<!-- entry for job id: " << job_id << " -->\n";
+        os << "<!-- job id: " << job_id << " begins -->\n";
 
         os << "<!-- job state is ";
         Job::state_t st = jobStorer.getState( job_id );
@@ -299,7 +298,7 @@ void OutputCollector::html( ofstream &os )
             os << "</td>\n"
                 "</tr>\n";
         }
-
+        
         string err = getJobErrHtml( job_id );
         if( getJobErr( job_id ).length() > 0 )
         {
@@ -308,15 +307,16 @@ void OutputCollector::html( ofstream &os )
             os << "</td>\n"
                 "</tr>\n";
         }
-
-        string err2 = getHtml( job_id );
-        if( err2.length() > 0 )
+        
+        string msg = getHtml( job_id );
+        if( msg.length() > 0 )
         {
-            os << "<tr>\n<td>\n";
-            os << err2;
+            os << "<tr>\n<td>";
+            os << msg;
             os << "</td>\n"
                 "</tr>\n";
         }
+        os << "<!-- job id: " << job_id << " ends -->\n\n";
     }
 
     os << "</table>\n\n" << freeHtml
@@ -388,7 +388,6 @@ int  OutputCollector::getJobFileId( unsigned int job_id )
 
 void OutputCollector::clear()
 {
-    file_ids.clear();
     jobStorer.clear();
     jobHtml.clear();
     freeHtml = "";

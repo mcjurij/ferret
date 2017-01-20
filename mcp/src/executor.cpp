@@ -324,8 +324,7 @@ void Executor::checkExitState( ExecutorCommand &cmd, int status, EngineBase &eng
         else
             cmd.state = ExecutorCommand::DONE;
         
-        if( cmd.getFileId() != -1 )
-            engine.indicateDone( cmd.getFileId(), cmd.getJobId(), curr_time);
+        engine.indicateDone( cmd.getFileId(), cmd.getJobId(), curr_time);
     }
     else
     {

@@ -76,9 +76,6 @@ private:
     std::map<unsigned int,std::string> jobHtml;
     std::string freeHtml;
     
-    std::vector<int> file_ids;
-    //std::map<int,OutputEntry>  entryMap;
-
     std::string projectdir;
     
 #ifdef  USE_CURSES

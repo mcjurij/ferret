@@ -41,6 +41,7 @@ public:
     
     virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>());
     virtual ExecutorCommand nextCommand();
+    virtual void indicateDone( int file_id, unsigned int job_id, long long curr_time);
     
 private:
     std::vector<ExecutorCommand> commands;
@@ -60,7 +61,8 @@ public:
     
     virtual int doWork( ExecutorBase &executor, bool printTimes, const std::set<std::string> &userTargets = std::set<std::string>());
     virtual ExecutorCommand nextCommand();
-
+    virtual void indicateDone( int file_id, unsigned int job_id, long long curr_time);
+    
     bool hasCommands() const
     { return commands.size(); }
     

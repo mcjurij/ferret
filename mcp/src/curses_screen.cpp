@@ -119,34 +119,32 @@ void CursesScreen::update()
     
     if( top && updateTopNeeded )
     {
-        vector<string> top_lines = cursesTop( tmaxY );
+        cursesTop( tmaxY );
         werase( top );
         
-        for( i = 0; i < (int)top_lines.size(); i++)
-            mvwaddnstr( top, i, 0, top_lines[i].c_str(), tmaxX);
+        for( i = 0; i < (int)topLines.size(); i++)
+            mvwaddnstr( top, i, 0, topLines[i].c_str(), tmaxX);
         
         mvwhline( top, p+1, 0, ACS_HLINE, maxX);
 
-        //redrawwin( top );
         wnoutrefresh( top );
         updateTopNeeded = false;
     }
     
     if( bottom && updateBottomNeeded )
     {
-        vector<string> tail_lines = cursesBottom( bmaxY );
+        cursesBottom( bmaxY );
         werase( bottom );
         
-        int no_lines = (int)tail_lines.size();
+        int no_lines = (int)bottomLines.size();
         
         int offs = 0;
         if( no_lines < bmaxY )
             offs = bmaxY - no_lines;
         
         for( i = 0; i < no_lines; i++)
-            mvwaddnstr( bottom, offs + i, 0, tail_lines[i].c_str(), bmaxX);
+            mvwaddnstr( bottom, offs + i, 0, bottomLines[i].c_str(), bmaxX);
         
-        //redrawwin( bottom );
         wnoutrefresh( bottom );
         updateBottomNeeded = false;
     }
@@ -184,8 +182,9 @@ void CursesScreen::setShowMenu( bool b )
         
         menu = new CursesMenu( 8, 5, true);
         menu->addOption( 1, "Show top", 0, getLastSelState( 1 ));
-        menu->addOption( 2, "Choice 2", 1, getLastSelState( 2 ));
-        menu->addOption( 3, "Choice 3", 1, getLastSelState( 3 ));
+        menu->addOption( 2, "All", 1, getLastSelState( 2 ));
+        menu->addOption( 3, "Errors/Warnings", 1, getLastSelState( 3 ));
+        menu->addOption( 4, "Errors", 1, getLastSelState( 4 ));
         menu->addOption( -1, "Exit", -1);
         menu->setShow( true );
     }
@@ -250,7 +249,7 @@ void CursesScreen::jobEnd( unsigned int job_id )
 }
 
 
-void CursesScreen::jobAppendTo( unsigned int job_id, vector<string> &lines, int from)
+void CursesScreen::jobAppendTo( unsigned int job_id, int from)
 {
     size_t i = job_id - 1;
 
@@ -259,7 +258,7 @@ void CursesScreen::jobAppendTo( unsigned int job_id, vector<string> &lines, int 
     
     JobOutput &j = jobs[ i ];
     
-    j.appendTo( lines, from);
+    j.appendTo( bottomLines, from);
 }
 
 
@@ -269,25 +268,19 @@ bool CursesScreen::getLastSelState( int idx )
 }
 
 
-vector<string> CursesScreen::cursesTop( int last )
+void CursesScreen::cursesTop( int last )
 {
-    if( last <= (int)topLines.size() )
-        return topLines;
-    else
-    {
-        vector<string> h = topLines;
-        h.resize( last );
-        return h;
-    }
+    if( last > (int)topLines.size() )
+        topLines.resize( last );
 }
 
 
-vector<string> CursesScreen::cursesBottom( int last )
+void CursesScreen::cursesBottom( int last )
 {
     int i;
-    vector<string> tailLines;
+    bottomLines.clear();
     if( jobs.size() == 0 )
-        return tailLines;
+        return;
     
     int k = 0, idx=-1;
     int first_line = 0;
@@ -295,7 +288,7 @@ vector<string> CursesScreen::cursesBottom( int last )
     {
         idx = (jobs.size()-1) - i;
         k += jobs[ idx ].numLines();
-
+        
         if( k > last )
         {
             first_line = k - last;
@@ -305,11 +298,9 @@ vector<string> CursesScreen::cursesBottom( int last )
     
     for( i = idx; i < (int)jobs.size(); i++)
     {
-        jobAppendTo( i+1, tailLines, first_line);
+        jobAppendTo( i+1, first_line);
         first_line = 0;
     }
-
-    return tailLines;
 }
 
 

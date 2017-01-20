@@ -55,13 +55,14 @@ public:
     
     void jobAppend( unsigned int job_id, const std::string &s);
     void jobEnd( unsigned int job_id );
-    void jobAppendTo( unsigned int job_id, std::vector<std::string> &lines, int from);
     
 private:
+    void jobAppendTo( unsigned int job_id, int from);
+    
     bool getLastSelState( int idx );
     
-    std::vector<std::string> cursesTop( int last );
-    std::vector<std::string> cursesBottom( int last );
+    void cursesTop( int last );
+    void cursesBottom( int last );
     
 private:
     int maxX, maxY;
@@ -76,8 +77,9 @@ private:
     CursesMenu *menu;
     std::set<int> lastSel;
     
-    std::vector<std::string> topLines;
     std::vector<JobOutput> jobs;
+    std::vector<std::string> topLines;
+    std::vector<std::string> bottomLines;
 };
 
 

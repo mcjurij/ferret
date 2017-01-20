@@ -74,6 +74,12 @@ ExecutorCommand DepEngine::nextCommand()
     }
 }
 
+
+void DepEngine::indicateDone( int file_id, unsigned int job_id, long long curr_time)
+{
+    OutputCollector::getTheOutputCollector()->setJobError( job_id, false);
+}
+
 // -----------------------------------------------------------------------------
 
 void SyncEngine::addSyncCommand( ExecutorCommand ec )
@@ -112,6 +118,12 @@ ExecutorCommand SyncEngine::nextCommand()
         
         return ExecutorCommand( job_id, "FINALIZE");
     }
+}
+
+
+void SyncEngine::indicateDone( int file_id, unsigned int job_id, long long curr_time)
+{
+    OutputCollector::getTheOutputCollector()->setJobError( job_id, false);    
 }
 
 // -----------------------------------------------------------------------------
@@ -981,6 +993,7 @@ ExecutorCommand Engine::nextCommand()
 
 void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time)       // called by executor
 {
+    assert( file_id != -1 );
     command_t *c = find_command( file_id );
     assert( c );
     
@@ -1035,7 +1048,6 @@ void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time
                     wait_fails++;
                     // hash_set_add( failed_set, w->file_id);
                     cerr << "Waiting for " << w->file_name << " has FAILED\n";
-                    OutputCollector::getTheOutputCollector()->setJobError( job_id, true);
                 }
             }
         }
@@ -1056,7 +1068,10 @@ void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time
         OutputCollector::getTheOutputCollector()->setJobError( job_id, true);
     }
     else
+    {
         hash_set_remove( global_mbd_set, c->file_id);
+        OutputCollector::getTheOutputCollector()->setJobError( job_id, false);
+    }
 }
 
 

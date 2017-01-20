@@ -14,6 +14,7 @@ static unsigned int job_idgen()
 }
 
 // -----------------------------------------------------------------------------
+
 string Job::getOutput() const
 {
     return output;
@@ -42,7 +43,9 @@ bool Job::hasError() const
 {
     return state != DONE && state != SPECIAL_DONE;
 }
+
 // -----------------------------------------------------------------------------
+
 static size_t jobidx( unsigned int job_id )
 {
     return job_id - 1;
