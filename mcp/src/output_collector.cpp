@@ -162,6 +162,17 @@ void OutputCollector::cursesEnd( unsigned int job_id )
 }
 
 
+void OutputCollector::cursesSetStderr( unsigned int job_id )
+{
+#ifdef  USE_CURSES
+    if( screen )
+    {
+        screen->jobStderr( job_id );
+    }
+#endif
+}
+
+
 void OutputCollector::cursesSetTopLine( int y, const string &l)
 {
 #ifdef  USE_CURSES
@@ -361,6 +372,11 @@ void OutputCollector::resetHtml( std::ofstream &os )
 void OutputCollector::setJobError( unsigned int job_id, bool err)
 {
     jobStorer.setError( job_id, err);
+
+#ifdef  USE_CURSES
+    if( screen )
+        screen->jobSetError( job_id, err);
+#endif
 }
 
 

@@ -29,6 +29,14 @@ CursesScreen::CursesScreen( unsigned int parallel )
 }
 
 
+void CursesScreen::JobOutput::appendTo( vector<string> &lines, int from)
+{
+    int i;
+    for( i = from; i < (int)cursesLines.size(); i++)
+        lines.push_back( cursesLines[i] );
+}
+
+
 CursesScreen::~CursesScreen()
 {
     if( menu )
@@ -249,6 +257,27 @@ void CursesScreen::jobEnd( unsigned int job_id )
 }
 
 
+void CursesScreen::jobStderr( unsigned int job_id )
+{
+    size_t ji = job_id - 1;
+
+    if( ji >= jobs.size() )
+        jobs.resize( ji + 1 );
+
+    JobOutput &j = jobs[ ji ];
+    j.setStderr();
+}
+
+
+void CursesScreen::jobSetError( unsigned int job_id, bool e)
+{
+    size_t ji = job_id - 1;
+    JobOutput &j = jobs.at( ji );
+
+    j.setError( e );
+}
+
+
 void CursesScreen::jobAppendTo( unsigned int job_id, int from)
 {
     size_t i = job_id - 1;
@@ -281,25 +310,53 @@ void CursesScreen::cursesBottom( int last )
     bottomLines.clear();
     if( jobs.size() == 0 )
         return;
+
+    bool warningserrors = getLastSelState( 3 );
+    bool errors = getLastSelState( 4 );
     
     int k = 0, idx=-1;
     int first_line = 0;
     for( i = 0; i < (int)jobs.size(); i++)
     {
         idx = (jobs.size()-1) - i;
-        k += jobs[ idx ].numLines();
+
+        bool add = false;
         
-        if( k > last )
+        if( warningserrors )
+            add = jobs[ idx ].showWhenErrorsWarnings();
+        else if( errors )
+            add = jobs[ idx ].showWhenErrors();
+        else
+            add = true;
+        
+        if( add )
         {
-            first_line = k - last;
-            break;
+            k += jobs[ idx ].numLines();
+            
+            if( k > last )
+            {
+                first_line = k - last;
+                break;
+            }
         }
     }
     
     for( i = idx; i < (int)jobs.size(); i++)
     {
-        jobAppendTo( i+1, first_line);
-        first_line = 0;
+        bool add = false;
+        
+        if( warningserrors )
+            add = jobs[ i ].showWhenErrorsWarnings();
+        else if( errors )
+            add = jobs[ i ].showWhenErrors();
+        else
+            add = true;
+        
+        if( add )
+        {
+            jobAppendTo( i+1, first_line);
+            first_line = 0;
+        }
     }
 }
 

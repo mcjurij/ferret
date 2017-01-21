@@ -14,18 +14,44 @@ private:
     CursesScreen();
 
     struct JobOutput {
-        std::vector<std::string> cursesLines;
-        std::string cursesLast;
+        typedef enum { UNDECIDED, ALL, HAS_STDERR, WARNINGS, FAILED} show_t;
+
+        JobOutput()
+            : show( UNDECIDED )
+        {}
         
         int numLines() const
         { return (int)cursesLines.size(); }
         
-        void appendTo( std::vector<std::string> &lines, int from)
+        void appendTo( std::vector<std::string> &lines, int from);
+        
+        void setStderr()
+        { show = HAS_STDERR; }
+        
+        void setError( bool e )
         {
-            int i;
-            for( i = from; i < (int)cursesLines.size(); i++)
-                lines.push_back( cursesLines[i] );
+            if( e )
+                show = FAILED;
+            else if( show == HAS_STDERR )
+                show = WARNINGS;
+            else
+                show = ALL;
         }
+
+        bool showWhenErrorsWarnings() const
+        {
+            return( show == UNDECIDED || show == HAS_STDERR || show == WARNINGS || show == FAILED );
+        }
+        
+        bool showWhenErrors() const
+        {
+            return( show == UNDECIDED || show == HAS_STDERR || show == FAILED );
+        }
+        
+        show_t show;
+        std::vector<std::string> cursesLines;
+        std::string cursesLast;
+        
     };
     
 public:
@@ -55,6 +81,8 @@ public:
     
     void jobAppend( unsigned int job_id, const std::string &s);
     void jobEnd( unsigned int job_id );
+    void jobStderr( unsigned int job_id );
+    void jobSetError( unsigned int job_id, bool e);
     
 private:
     void jobAppendTo( unsigned int job_id, int from);

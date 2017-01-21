@@ -251,7 +251,10 @@ void Executor::readOutput( const ExecutorCommand &cmd )
         oc->appendJobOut( cmd.getJobId(), b);
         oc->appendJobErr( cmd.getJobId(), b);
         if( curses )
+        {
             oc->cursesAppend( cmd.getJobId(), b);
+            oc->cursesSetStderr( cmd.getJobId() );
+        }
     }
 }
 
