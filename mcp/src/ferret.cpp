@@ -26,7 +26,7 @@
 using namespace std;
 
 
-static const string ferretVersion = "1.1.6";
+static const string ferretVersion = "1.2.0";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -73,6 +73,9 @@ static void show_usage()
         "   --make                  write Makefile\n"
         "   --html                  write HTML directory containing depedency structure\n"
         "   --info                  show info level messages\n"
+#ifdef  USE_CURSES
+        "   --cur or --curses       enter curses mode, press 'm' for pop up\n"
+#endif
         "   -v,-vv,-vvv             verbosity, more verbosity, incredible verbosity\n"
         "   --times                 show various time consumptions\n\n"
         "Version " + ferretVersion + "\n";
@@ -545,8 +548,10 @@ int main( int argc, char **argv)
                     arg_err++;
                 }
             }
+#ifdef  USE_CURSES
             else if( arg == "--cur" || arg == "--curses" )
                 doCurses = true;
+#endif
             else if( arg == "-v" )
                 verbosity = 1;
             else if( arg == "-vv" )

@@ -12,7 +12,7 @@ class CursesScreen {
 
 private:
     CursesScreen();
-
+    
     struct JobOutput {
         typedef enum { UNDECIDED, ALL, HAS_STDERR, WARNINGS, FAILED} show_t;
 
@@ -28,16 +28,8 @@ private:
         void setStderr()
         { show = HAS_STDERR; }
         
-        void setError( bool e )
-        {
-            if( e )
-                show = FAILED;
-            else if( show == HAS_STDERR )
-                show = WARNINGS;
-            else
-                show = ALL;
-        }
-
+        void setError( bool e );
+        
         bool showWhenErrorsWarnings() const
         {
             return( show == UNDECIDED || show == HAS_STDERR || show == WARNINGS || show == FAILED );
@@ -51,7 +43,6 @@ private:
         show_t show;
         std::vector<std::string> cursesLines;
         std::string cursesLast;
-        
     };
     
 public:

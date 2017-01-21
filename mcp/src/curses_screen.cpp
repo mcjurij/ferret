@@ -37,6 +37,17 @@ void CursesScreen::JobOutput::appendTo( vector<string> &lines, int from)
 }
 
 
+void CursesScreen::JobOutput::setError( bool e )
+{
+    if( e )
+        show = FAILED;
+    else if( show == HAS_STDERR )
+        show = WARNINGS;
+    else
+        show = ALL;
+}
+
+
 CursesScreen::~CursesScreen()
 {
     if( menu )
