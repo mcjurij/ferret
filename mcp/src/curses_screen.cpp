@@ -48,6 +48,15 @@ void CursesScreen::JobOutput::setError( bool e )
 }
 
 
+string CursesScreen::JobOutput::getFirstLine() const
+{
+    if( cursesLines.size() > 0 )
+        return cursesLines[0];
+    else
+        return "waiting for output...";
+}
+
+
 CursesScreen::~CursesScreen()
 {
     if( menu )
@@ -226,6 +235,13 @@ void CursesScreen::setTopLine( int y, const std::string &l)
 }
 
 
+void CursesScreen::topShowJob( unsigned int job_id )
+{
+    topShowJobs.insert( job_id );
+    updateTopNeeded = true;
+}
+
+
 void CursesScreen::jobAppend( unsigned int job_id, const string &s)
 {
     size_t ji = job_id - 1;
@@ -249,6 +265,7 @@ void CursesScreen::jobAppend( unsigned int job_id, const string &s)
     }
 
     j.cursesLast = line;
+    updateTopNeeded = true;
 }
 
 
@@ -265,6 +282,8 @@ void CursesScreen::jobEnd( unsigned int job_id )
         j.cursesLines.push_back( j.cursesLast );
         j.cursesLast = "";
     }
+
+    topShowJobs.erase( job_id );
 }
 
 
@@ -310,8 +329,20 @@ bool CursesScreen::getLastSelState( int idx )
 
 void CursesScreen::cursesTop( int last )
 {
-    if( last > (int)topLines.size() )
-        topLines.resize( last );
+    set<unsigned int>::const_iterator it = topShowJobs.begin();
+    int y = 1;
+    for( ; it != topShowJobs.end() && y < (int)topLines.size(); it++, y++)
+    {
+        unsigned int job_id = *it;
+
+        if( job_id-1 < jobs.size() )
+        {
+            const JobOutput &j = jobs[ job_id-1 ];
+            setTopLine( y, j.getFirstLine());
+        }
+        else
+            setTopLine( y, "waiting for first line...");
+    }
 }
 
 

@@ -540,19 +540,7 @@ void Executor::processCommands( EngineBase &engine )
                     pidToCmdMap[ cmd.pid ] = cmd;
                     
                     if( curses )
-                    {
-                        map<pid_t,ExecutorCommand>::iterator pit = pidToCmdMap.begin();
-                        int y = 1;
-                        for( ; pit != pidToCmdMap.end(); pit++)
-                        {
-                            ExecutorCommand &cmd = pit->second;
-                            stringstream ss;
-                            ss << "  " << cmd.getCmdType() << "    " << cmd.getStateAsString() << " pid: " << cmd.pid;
-                            OutputCollector::getTheOutputCollector()->cursesSetTopLine( y, ss.str());
-                            y++;
-                        }
-                    }
-                    
+                        OutputCollector::getTheOutputCollector()->cursesTopShowJob( cmd.getJobId() );
                 }
             }
         }

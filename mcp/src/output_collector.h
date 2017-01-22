@@ -40,7 +40,7 @@ public:
     void cursesSetStderr( unsigned int job_id );
     
     void cursesSetTopLine( int y, const std::string &l);
-    
+    void cursesTopShowJob( unsigned int job_id );
     
     std::string getJobOut( unsigned int job_id ) const;
     std::string getJobOutHtml( unsigned int job_id  ) const;

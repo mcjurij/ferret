@@ -185,6 +185,14 @@ void OutputCollector::cursesSetTopLine( int y, const string &l)
 }
 
 
+void OutputCollector::cursesTopShowJob( unsigned int job_id )
+{
+#ifdef  USE_CURSES
+    if( screen )
+        screen->topShowJob( job_id );
+#endif
+}
+
 string OutputCollector::getJobOut( unsigned int job_id ) const
 {
     return jobStorer.getOutput( job_id );

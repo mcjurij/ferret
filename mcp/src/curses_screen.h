@@ -3,6 +3,7 @@
 
 #ifdef  USE_CURSES
 
+#include <set>
 #include <curses.h>
 
 #include "curses_menu.h"
@@ -39,6 +40,8 @@ private:
         {
             return( show == UNDECIDED || show == HAS_STDERR || show == FAILED );
         }
+
+        std::string getFirstLine() const;
         
         show_t show;
         std::vector<std::string> cursesLines;
@@ -69,6 +72,7 @@ public:
     { return tmaxY-1; }
     
     void setTopLine( int y, const std::string &l);
+    void topShowJob( unsigned int job_id );
     
     void jobAppend( unsigned int job_id, const std::string &s);
     void jobEnd( unsigned int job_id );
@@ -95,7 +99,8 @@ private:
 
     CursesMenu *menu;
     std::set<int> lastSel;
-    
+
+    std::set<unsigned int> topShowJobs;
     std::vector<JobOutput> jobs;
     std::vector<std::string> topLines;
     std::vector<std::string> bottomLines;
