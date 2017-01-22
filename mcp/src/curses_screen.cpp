@@ -284,6 +284,7 @@ void CursesScreen::jobEnd( unsigned int job_id )
     }
 
     topShowJobs.erase( job_id );
+    updateTopNeeded = true;
 }
 
 
