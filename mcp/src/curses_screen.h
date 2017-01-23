@@ -31,16 +31,6 @@ private:
         
         void setError( bool e );
         
-        bool showWhenErrorsWarnings() const
-        {
-            return( show == UNDECIDED || show == HAS_STDERR || show == WARNINGS || show == FAILED );
-        }
-        
-        bool showWhenErrors() const
-        {
-            return( show == UNDECIDED || show == HAS_STDERR || show == FAILED );
-        }
-
         std::string getFirstLine() const;
         
         show_t show;
@@ -86,6 +76,7 @@ private:
     
     void cursesTop( int last );
     void cursesBottom( int last );
+    void cursesAssembleErrWarn( int last, std::vector<unsigned int> &show);
     
 private:
     int maxX, maxY;
@@ -104,6 +95,8 @@ private:
     std::vector<JobOutput> jobs;
     std::vector<std::string> topLines;
     std::vector<std::string> bottomLines;
+    std::vector<unsigned int> showErrWarn, showErr;
+    std::set<unsigned int> showErrWarnSet, showErrSet;
 };
 
 

@@ -297,6 +297,13 @@ void CursesScreen::jobStderr( unsigned int job_id )
 
     JobOutput &j = jobs[ ji ];
     j.setStderr();
+
+    if( showErrWarnSet.find( job_id ) == showErrWarnSet.end() )
+    {
+        showErrWarnSet.insert( job_id );
+        showErrWarn.push_back( job_id );
+        updateBottomNeeded = true;
+    }
 }
 
 
@@ -306,6 +313,13 @@ void CursesScreen::jobSetError( unsigned int job_id, bool e)
     JobOutput &j = jobs.at( ji );
 
     j.setError( e );
+
+    if( e && showErrSet.find( job_id ) == showErrSet.end() )
+    {
+        showErrSet.insert( job_id );
+        showErr.push_back( job_id );
+        updateBottomNeeded = true;
+    }
 }
 
 
@@ -354,26 +368,18 @@ void CursesScreen::cursesBottom( int last )
     if( jobs.size() == 0 )
         return;
 
-    bool warningserrors = getLastSelState( 3 );
-    bool errors = getLastSelState( 4 );
-    
-    int k = 0, idx=-1;
-    int first_line = 0;
-    for( i = 0; i < (int)jobs.size(); i++)
+    if( getLastSelState( 3 ) )
+        cursesAssembleErrWarn( last, showErrWarn);
+    else if( getLastSelState( 4 ) )
+        cursesAssembleErrWarn( last, showErr);
+    else
     {
-        idx = (jobs.size()-1) - i;
-
-        bool add = false;
-        
-        if( warningserrors )
-            add = jobs[ idx ].showWhenErrorsWarnings();
-        else if( errors )
-            add = jobs[ idx ].showWhenErrors();
-        else
-            add = true;
-        
-        if( add )
+        int k = 0, idx=-1;
+        int first_line = 0;
+        for( i = 0; i < (int)jobs.size(); i++)
         {
+            idx = (jobs.size()-1) - i;
+            
             k += jobs[ idx ].numLines();
             
             if( k > last )
@@ -382,20 +388,8 @@ void CursesScreen::cursesBottom( int last )
                 break;
             }
         }
-    }
-    
-    for( i = idx; i < (int)jobs.size(); i++)
-    {
-        bool add = false;
         
-        if( warningserrors )
-            add = jobs[ i ].showWhenErrorsWarnings();
-        else if( errors )
-            add = jobs[ i ].showWhenErrors();
-        else
-            add = true;
-        
-        if( add )
+        for( i = idx; i < (int)jobs.size(); i++)
         {
             jobAppendTo( i+1, first_line);
             first_line = 0;
@@ -403,5 +397,38 @@ void CursesScreen::cursesBottom( int last )
     }
 }
 
+
+void CursesScreen::cursesAssembleErrWarn( int last, vector<unsigned int> &show)
+{
+    int i;
+    
+    if( show.size() == 0 )
+        return;
+    
+    int k = 0;
+    int start_idx = 0;
+    int first_line = 0;
+    for( i = 0; i < (int)show.size(); i++)
+    {
+        start_idx = (show.size()-1) - i;
+        unsigned int job_id = show[ start_idx ];
+        int idx = job_id - 1;
+        
+        k += jobs[ idx ].numLines();
+        
+        if( k > last )
+        {
+            first_line = k - last;
+            break;
+        }
+    }
+    
+    for( i = start_idx; i < (int)show.size(); i++)
+    {
+        unsigned int job_id = show[ i ];
+        jobAppendTo( job_id, first_line);
+        first_line = 0;
+    }
+}
 
 #endif

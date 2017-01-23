@@ -879,12 +879,6 @@ ExecutorCommand Engine::nextCommand()
 
             if( !curses )
                 cout << "-------------- ROUND " << round << " --------------\n";
-            else
-            {
-                stringstream ss;
-                ss << "ROUND " << round;
-                OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, ss.str());
-            }
             
             unsigned int job_id = OutputCollector::getTheOutputCollector()->createJob( "BARRIER" );
             return ExecutorCommand( job_id, "BARRIER");
@@ -963,6 +957,14 @@ ExecutorCommand Engine::nextCommand()
         cout << "To do: " << hash_set_get_size( targets_left ) << " (this round " << hash_set_get_size( to_do_set )
              << ") / in work: " << hash_set_get_size( in_work_set )
              << " / failed: " << hash_set_get_size( failed_set ) << "\n";
+    else
+    {
+        stringstream ss;
+        ss << "To do: " << hash_set_get_size( targets_left ) << " (this round " << hash_set_get_size( to_do_set )
+             << ") / in work: " << hash_set_get_size( in_work_set )
+             << " / failed: " << hash_set_get_size( failed_set ) << "\n";
+        OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, ss.str());
+    }
     
     validCmdsLastRound += validCmds;
     
@@ -1047,7 +1049,14 @@ void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time
                     w->has_failed = true;
                     wait_fails++;
                     // hash_set_add( failed_set, w->file_id);
-                    cerr << "Waiting for " << w->file_name << " has FAILED\n";
+                    if( !curses )
+                        cerr << "Waiting for " << w->file_name << " has FAILED\n";
+                    else
+                    {
+                        stringstream ss;
+                        ss << "Waiting for " << w->file_name << " has FAILED\n";
+                        OutputCollector::getTheOutputCollector()->cursesAppend( job_id, ss.str());
+                    }
                 }
             }
         }
@@ -1064,7 +1073,15 @@ void Engine::indicateDone( int file_id, unsigned int job_id, long long curr_time
     {
         c->has_failed = true;
         hash_set_add( failed_set, c->file_id);
-        cerr << "Target " << c->file_name << " has FAILED\n";
+        if( !curses )
+            cerr << "Target " << c->file_name << " has FAILED\n";
+        else
+        {
+            stringstream ss;
+            ss << "\nTarget " << c->file_name << " has FAILED\n\n";
+            OutputCollector::getTheOutputCollector()->cursesAppend( job_id, ss.str());
+        }
+        
         OutputCollector::getTheOutputCollector()->setJobError( job_id, true);
     }
     else
@@ -1232,7 +1249,6 @@ int Engine::doWork( ExecutorBase &executor, bool printTimes, const set<string> &
         if( curses )
         {
             OutputCollector::getTheOutputCollector()->cursesEnable( executor.getMaxParallel() );
-            OutputCollector::getTheOutputCollector()->cursesSetTopLine( 0, "ROUND 1");
         }
         else
             cout << "-------------- ROUND 1 --------------\n";
