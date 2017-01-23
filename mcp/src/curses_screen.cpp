@@ -6,6 +6,25 @@
 using namespace std;
 
 
+void CursesScreen::JobOutput::appendTo( vector<string> &lines, int from)
+{
+    int i;
+    for( i = from; i < (int)cursesLines.size(); i++)
+        lines.push_back( cursesLines[i] );
+}
+
+
+void CursesScreen::JobOutput::setError( bool e )
+{
+    if( e )
+        show = FAILED;
+    else if( show == HAS_STDERR )
+        show = WARNINGS;
+    else
+        show = ALL;
+}
+
+
 CursesScreen::CursesScreen( unsigned int parallel )
     : p(parallel), menu(0)
 {
@@ -26,25 +45,6 @@ CursesScreen::CursesScreen( unsigned int parallel )
     lastSel.insert( 2 );
     
     topLines.resize( getTopMaxY() );
-}
-
-
-void CursesScreen::JobOutput::appendTo( vector<string> &lines, int from)
-{
-    int i;
-    for( i = from; i < (int)cursesLines.size(); i++)
-        lines.push_back( cursesLines[i] );
-}
-
-
-void CursesScreen::JobOutput::setError( bool e )
-{
-    if( e )
-        show = FAILED;
-    else if( show == HAS_STDERR )
-        show = WARNINGS;
-    else
-        show = ALL;
 }
 
 
