@@ -1,57 +1,65 @@
 
 #include "traverse_structure.h"
+#include "file_manager.h"
 
 using namespace std;
 
-
-TraverseStructure::TraverseStructure( FileManager &filesDb, ProjectXmlNode *xmlRootNode)
+template<class NodeT>
+TraverseStructure<NodeT>::TraverseStructure( FileManager &filesDb, NodeT *xmlRootNode)
     : filesDb(filesDb), rootNode(xmlRootNode), cntRemoved(0), cntNew(0)
 {
 }
 
 
-void TraverseStructure::traverseXmlStructureForChildren()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForChildren()
 {
-    rootNode->traverseXmlStructureForChildren();
+    rootNode->traverseStructureForChildren();
 }
 
 
-void TraverseStructure::traverseXmlStructureForDeletedFiles()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForDeletedFiles()
 {
     reset();
     traverser( FOR_DELETED_FILES, rootNode, 0);
 }
 
 
-void TraverseStructure::traverseXmlStructureForNewFiles()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForNewFiles()
 {
     reset();
     traverser( FOR_NEW_FILES, rootNode, 0);
 }
 
 
-void TraverseStructure::traverseXmlStructureForNewIncdirFiles()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForNewIncdirFiles()
 {
     reset();
     traverser( FOR_NEW_INCDIR_FILES, rootNode, 0);
 }
 
 
-void TraverseStructure::traverseXmlStructureForExtensions()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForExtensions()
 {
     reset();
     traverser( FOR_EXTENSIONS, rootNode, 0);
 }
 
 
-void TraverseStructure::traverseXmlStructureForTargets()
+template<class NodeT>
+void TraverseStructure<NodeT>::traverseStructureForTargets()
 {
     reset();
     traverser( FOR_TARGETS, rootNode, 0);
 }
 
 
-void TraverseStructure::traverser( for_what_t for_what, ProjectXmlNode *node, int level)
+template<class NodeT>
+void TraverseStructure<NodeT>::traverser( for_what_t for_what, NodeT *node, int level)
 {
     map<string,bool>::const_iterator it = dirTargetMap.find( node->getDir() );
     if( it != dirTargetMap.end() )
@@ -59,7 +67,7 @@ void TraverseStructure::traverser( for_what_t for_what, ProjectXmlNode *node, in
     
     for( size_t i = 0; i < node->childNodes.size(); i++)
     {
-        ProjectXmlNode *d = node->childNodes[ i ];
+        NodeT *d = node->childNodes[ i ];
         traverser( for_what, d, level + 1);
     }
 

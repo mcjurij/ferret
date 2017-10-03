@@ -10,7 +10,7 @@ class Engine;
 class MakefileEngine;
 
 struct hash_set;
-class ProjectXmlNode;
+class BaseNode;
 
 typedef struct data {
     int file_id;
@@ -21,7 +21,7 @@ typedef struct data {
     file_state_t state;
     structural_state_t structural_state;
     
-    ProjectXmlNode *xmlNode;
+    BaseNode *baseNode;
     
     struct hash_set *deps_set;              // upward, same as in file db
     struct hash_set *downward_deps_set;     // downward, meaning: all files that point to this file
@@ -64,7 +64,7 @@ public:
         std::string getFile() const;
         int getId() const;
         std::string getCmd() const;
-        const ProjectXmlNode *getXmlNode() const;
+        const BaseNode *getBaseNode() const;
         data_t::structural_state_t getStructuralState() const;
         
         const struct hash_set *getDepsSet() const;
@@ -81,7 +81,7 @@ public:
 
     ~FileMap();
     
-    void add( int file_id, const std::string &file_name, ProjectXmlNode *xmlNode, const std::string &cmd = "D", data_t::structural_state_t ss = data_t::UNCHANGED);
+    void add( int file_id, const std::string &file_name, BaseNode *baseNode, const std::string &cmd = "D", data_t::structural_state_t ss = data_t::UNCHANGED);
     void remove( int file_id );
 
 private:
@@ -116,7 +116,7 @@ public:
     
     hash_set *getDependencies( int id );
     hash_set *prerequisiteFor( int id );
-    ProjectXmlNode *getXmlNodeFor( int id );
+    BaseNode *getBaseNodeFor( int id );
     
     bool hasDependency( int from_id, int to_id);
     int whatsChanged();

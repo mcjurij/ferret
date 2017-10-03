@@ -36,7 +36,7 @@ public:
     void addBlockedId( file_id_t id );
     void addBlockedIds( const std::set<file_id_t> &blids );
     
-    void removeFile( FileManager &fileDb, file_id_t id, const std::string &fn, const ProjectXmlNode *xmlNode, const std::set<file_id_t> &prereqs);
+    void removeFile( FileManager &fileDb, file_id_t id, const std::string &fn, const BaseNode *node, const std::set<file_id_t> &prereqs);
     
     void resolve( FileManager &fileDb, bool initMode, bool writeIgnHdr);
     
@@ -44,7 +44,7 @@ public:
     
 private:
    
-    int readDepFile( const std::string &fn, const std::string &depfn, const ProjectXmlNode *xmlNode);
+    int readDepFile( const std::string &fn, const std::string &depfn, const BaseNode *node);
     bool readDepFiles( FileManager &fileDb, bool writeIgnHdr);
     void addSeeker( const std::string &from, const std::string &localDir, const std::vector<std::string> &searchIncDirs,
                     const std::vector<std::string> &lookingFor);

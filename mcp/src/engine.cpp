@@ -7,7 +7,7 @@
 
 #include "engine.h"
 #include "executor.h"
-#include "project_xml_node.h"
+#include "base_node.h"
 #include "file_manager.h"
 #include "glob_utility.h"
 #include "script_template.h"
@@ -180,7 +180,7 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
     e->file_name = strdup( cmd->file_name.c_str() );
     strncpy( e->dep_type, cmd->cmd.c_str(), 15);
     e->dep_type[14] = 0;
-    e->xmlNode = cmd->xmlNode;
+    e->baseNode = cmd->baseNode;
     
     unsigned int deps_s;
     e->deps = (int *)hash_set_get_as_array( cmd->deps_set, &deps_s);
@@ -197,7 +197,7 @@ Engine::command_t *Engine::init_entry( data_t *cmd )
     e->downward_size = 0;
     e->downward_deep = true;
 
-    if( e->xmlNode && !e->xmlNode->doDeep() && strcmp( e->dep_type, "L") == 0 )  // do not go deep for shared libraries
+    if( e->baseNode && !e->baseNode->doDeep() && strcmp( e->dep_type, "L") == 0 )  // do not go deep for shared libraries
         e->downward_deep = false;
     
     e->marked_by_deps_changed = cmd->mark_by_deps_changed;

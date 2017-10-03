@@ -6,7 +6,7 @@
 #include "include_manager.h"
 #include "glob_utility.h"
 #include "engine.h"
-#include "project_xml_node.h"
+#include "base_node.h"
 #include "hash_set.h"
 
 using namespace std;
@@ -60,8 +60,8 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
     
     while( fileDb.hasNext( it ) )
     {
-        const ProjectXmlNode *xmlNode = it.getXmlNode();
-        if( xmlNode )
+        const BaseNode *node = it.getBaseNode();
+        if( node )
         {
             string dummy, bn, ext;
             breakPath( it.getFile(), dummy, bn, ext);
@@ -75,7 +75,7 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                 }
                 else
                 {
-                    string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
+                    string depfn = tempDepDir + "/" + node->getDir() + "/" + bn + ".d";
 
                     if( uniqueBasenames.find( bn ) == uniqueBasenames.end() )
                         uniqueBasenames[ bn ] = it.getId();
@@ -98,7 +98,7 @@ void IncludeManager::createMissingDepFiles( FileManager &fileDb, Executor &execu
                     }
                     else if( FindFiles::exists( it.getFile() ) )
                     {
-                        mkdir_p( tempDepDir + "/" + xmlNode->getDir() );
+                        mkdir_p( tempDepDir + "/" + node->getDir() );
                         do_dep = true;
                     }
                     else
@@ -169,12 +169,12 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
             if( fileDb.hasId( from_id ) && blockedIds.find( from_id ) == blockedIds.end() )
             {
                 string from_fn = fileDb.getFileForId( from_id );
-                ProjectXmlNode *xmlNode = fileDb.getXmlNodeFor( from_id );
-                if( xmlNode )
+                BaseNode *node = fileDb.getBaseNodeFor( from_id );
+                if( node )
                 {
                     string dummy, bn, ext;
                     breakPath( from_fn, dummy, bn, ext);
-                    string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
+                    string depfn = tempDepDir + "/" + node->getDir() + "/" + bn + ".d";
                     
                     const map<string,Seeker>::const_iterator &mit = seekerMap.find( from_fn );
 
@@ -189,7 +189,7 @@ void IncludeManager::resolve( FileManager &fileDb, bool initMode, bool writeIgnH
                             hash_set_remove( unsat_set, from_id);
                     }
                     else
-                        if( readDepFile( from_fn, depfn, xmlNode) > 0 )
+                        if( readDepFile( from_fn, depfn, node) > 0 )
                             resolveFile( fileDb, from_id, seekerMap.at( from_fn ), writeIgnHdr, notFound);
                     
                     if( notFound == 0 )
@@ -260,7 +260,7 @@ void IncludeManager::printFinalWords() const
 }
 
 
-int IncludeManager::readDepFile( const string &fn, const string &depfn, const ProjectXmlNode *xmlNode)
+int IncludeManager::readDepFile( const string &fn, const string &depfn, const BaseNode *node)
 {
     int entries = 0;
     
@@ -284,7 +284,7 @@ int IncludeManager::readDepFile( const string &fn, const string &depfn, const Pr
             if( fn != df.target )
                 cerr << "warning: unexpected target file name in dependency file '" << df.target << "', expected '" << fn << "'\n";
             
-            addSeeker( fn, xmlNode->getSrcDir(), xmlNode->searchIncDirs,   // it.getFile() should be equal to df.target
+            addSeeker( fn, node->getSrcDir(), node->searchIncDirs,   // it.getFile() should be equal to df.target
                        df.depIncludes);
             entries++;
         }
@@ -302,8 +302,8 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool writeIgnHdr)
     
     while( fileDb.hasNext( it ) )
     {
-        const ProjectXmlNode *xmlNode = it.getXmlNode();
-        if( xmlNode )
+        const BaseNode *node = it.getBaseNode();
+        if( node )
         {
             string dummy, bn, ext;
             breakPath( it.getFile(), dummy, bn, ext);
@@ -318,11 +318,11 @@ bool IncludeManager::readDepFiles( FileManager &fileDb, bool writeIgnHdr)
                 }
                 else if( seekerMap.find( it.getFile() ) == seekerMap.end() )
                 {
-                    string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
+                    string depfn = tempDepDir + "/" + node->getDir() + "/" + bn + ".d";
                     
                     if( FindFiles::existsUncached( depfn ) )
                     {
-                        readDepFile( it.getFile(), depfn, xmlNode);
+                        readDepFile( it.getFile(), depfn, node);
                         hash_set_add( unsat_set, it.getId());
                     }
                     else
@@ -395,11 +395,11 @@ void IncludeManager::addBlockedIds( const set<file_id_t> &blids )
 }
 
 
-void IncludeManager::removeFile( FileManager &fileDb, file_id_t id, const string &fn, const ProjectXmlNode *xmlNode, const set<file_id_t> &prereqs)
+void IncludeManager::removeFile( FileManager &fileDb, file_id_t id, const string &fn, const BaseNode *node, const set<file_id_t> &prereqs)
 {
     string dummy, bn, ext;
     breakPath( fn, dummy, bn, ext);
-    string depfn = tempDepDir + "/" + xmlNode->getDir() + "/" + bn + ".d";
+    string depfn = tempDepDir + "/" + node->getDir() + "/" + bn + ".d";
     fileRemoved = true;
     
     if( verbosity > 0 )

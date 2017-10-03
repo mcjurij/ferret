@@ -8,7 +8,7 @@
 #include "file_manager.h"
 #include "file_map.h"
 //#include "find_files.h"
-#include "project_xml_node.h"
+#include "base_node.h"
 #include "glob_utility.h"
 
 using namespace std;
@@ -24,7 +24,7 @@ static int idgen()
 static FileMap allDeps( 10007 );
 
 
-file_id_t FileManager::addFile( const string &fn, ProjectXmlNode *node)
+file_id_t FileManager::addFile( const string &fn, BaseNode *node)
 {
     file_id_t id;
 
@@ -43,7 +43,7 @@ file_id_t FileManager::addFile( const string &fn, ProjectXmlNode *node)
 }
 
 
-file_id_t FileManager::addNewFile( const string &fn, ProjectXmlNode *node)
+file_id_t FileManager::addNewFile( const string &fn, BaseNode *node)
 {
     file_id_t id;
     
@@ -151,7 +151,7 @@ bool FileManager::compareAndReplaceDependencies( file_id_t id, hash_set_t *again
 }
 
 
-file_id_t FileManager::addCommand( const string &fn, const string &cmd, ProjectXmlNode *node)
+file_id_t FileManager::addCommand( const string &fn, const string &cmd, BaseNode *node)
 {
     file_id_t id;
     
@@ -179,7 +179,7 @@ file_id_t FileManager::addCommand( const string &fn, const string &cmd, ProjectX
 }
 
 
-file_id_t FileManager::addExtensionCommand( const string &fn, const std::string &cmd, ProjectXmlNode *node)
+file_id_t FileManager::addExtensionCommand( const string &fn, const std::string &cmd, BaseNode *node)
 {
     assert( node );
     assert( cmd != "D" && cmd != "Cpp" && cmd != "C" && cmd != "L" && cmd != "X" && cmd != "A" );
@@ -253,9 +253,9 @@ set<file_id_t> FileManager::prerequisiteFor( file_id_t id )
 }
 
 
-ProjectXmlNode *FileManager::getXmlNodeFor( file_id_t id )
+BaseNode *FileManager::getBaseNodeFor( file_id_t id )
 {
-    return allDeps.getXmlNodeFor( id );
+    return allDeps.getBaseNodeFor( id );
 }
 
 
@@ -338,13 +338,13 @@ bool FileManager::readDb( const string &projDir, bool ignoreXmlNodes)    // igno
             }
             else if( allDeps.hasId( file_id ) == 0 )
             {
-                ProjectXmlNode *node = 0;
+                BaseNode *node = 0;
                 
                 if( !ignoreXmlNodes )
                 {
                     if( strcmp( node_name, "*") != 0 )
                     {
-                        node = ProjectXmlNode::getNodeByName( node_name );
+                        node = BaseNode::getNodeByName( node_name );
                         if( node == 0 )
                         {
                             cerr << "error: line "<< line << ": module or name '" << node_name << "' unknown. do --init run.\n";
@@ -427,7 +427,7 @@ void FileManager::writeDb( const string &projDir )
     while( hasNext( itFile ) )
     {
         if( itFile.getStructuralState() != data_t::GONE )
-            fprintf( fp, "%d %s %s %s\n", itFile.getId(), itFile.getXmlNode() ? itFile.getXmlNode()->getNodeName().c_str() : "*",
+            fprintf( fp, "%d %s %s %s\n", itFile.getId(), itFile.getBaseNode() ? itFile.getBaseNode()->getNodeName().c_str() : "*",
                      itFile.getCmd().c_str(), itFile.getFile().c_str());
     }
     

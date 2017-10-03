@@ -12,7 +12,7 @@
 #include "curses_screen.h"
 
 
-class ProjectXmlNode;
+class BaseNode;
 
 class OutputCollector {
 
@@ -21,7 +21,7 @@ private:
 
 public:
     static OutputCollector *getTheOutputCollector();
-
+    
     unsigned int createJob( const std::string &fn, const std::vector<std::string> &args, int file_id);
     unsigned int createJob( const std::string &psuedo_fn );
     
@@ -56,7 +56,7 @@ public:
     void addFreeHtml( const std::string &s )
     { freeHtml.append( s ); }
     void resetHtml( std::ofstream &os );
-
+    
     void setJobError( unsigned int job_id, bool err);
     bool hasJobError( unsigned int job_id );
     int  getJobFileId( unsigned int job_id );
@@ -64,12 +64,12 @@ public:
     void clear();
     
     void setProjectNodesDir( const std::string &dir );
-    void htmlProjectNodes( ProjectXmlNode *node, FileManager &fileMan, int level = 0);
-
+    void htmlProjectNodes( BaseNode *node, FileManager &fileMan, int level = 0);
+    
 private:
-    void htmlProjectNode( bool index, ProjectXmlNode *node, FileManager &fileMan, int level);
-    void htmlProjectFile( bool index, file_id_t id, ProjectXmlNode *node, FileManager &fileMan);
-
+    void htmlProjectNode( bool index, BaseNode *node, FileManager &fileMan, int level);
+    void htmlProjectFile( bool index, file_id_t id, BaseNode *node, FileManager &fileMan);
+    
 private:
     static OutputCollector *theOutputCollector;
     

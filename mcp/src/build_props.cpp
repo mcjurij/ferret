@@ -5,7 +5,7 @@
 
 #include "build_props.h"
 #include "glob_utility.h"
-#include "project_xml_node.h"
+#include "base_node.h"
 
 using namespace std;
 
@@ -210,7 +210,7 @@ static string replKeysWithPrjValues( const string &rs, const map<string,string> 
 }
 
 
-PrjBuildProps BuildProps::getPrjBuildProps( const ProjectXmlNode *node )
+PrjBuildProps BuildProps::getPrjBuildProps( const BaseNode *node )
 {
     map<string,string> prjPropMap = staticPropMap;
     prjPropMap[ "proj_dir" ] = node->getDir();

@@ -12,6 +12,7 @@ void setupExtensions();
 
 
 class ProjectXmlNode;
+class BaseNode;
 
 class ExtensionBase
 {
@@ -29,7 +30,8 @@ public:
     virtual std::string getType() const = 0;           // yac, flex, anything from the xml configuration
 
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node ) = 0;
-
+    virtual ExtensionBase *createExtensionDriver( BaseNode *node ){ return 0; }    // FIXME missing
+    
     virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs) = 0;
 
     virtual std::string getScriptTemplName() const = 0;
@@ -58,6 +60,7 @@ public:
     
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
+    virtual ExtensionBase *createExtensionDriver( BaseNode *node ){ return 0; }    // FIXME missing
     
     virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
@@ -78,7 +81,8 @@ public:
     
     virtual std::string getType() const;
     virtual ExtensionBase *createExtensionDriver( ProjectXmlNode *node );
-
+    virtual ExtensionBase *createExtensionDriver( BaseNode *node ){ return 0; }    // FIXME missing
+    
     virtual void createCommands( FileManager &fileMan, const std::map<std::string,std::string> &xmlAttribs);
 
     virtual std::string getScriptTemplName() const
@@ -126,7 +130,8 @@ public:
     void addExtension( ExtensionBase *e );
     void addXmlExtension( const ExtensionEntry *entry );
     
-    ExtensionBase *createExtensionDriver( const std::string &type, ProjectXmlNode *node);
+    virtual ExtensionBase *createExtensionDriver( const std::string &type, ProjectXmlNode *node);
+    virtual ExtensionBase *createExtensionDriver( const std::string &type, BaseNode *node){ return 0; }    // FIXME missing
     
     bool parseExtension( SimpleXMLStream *xmls );
     bool checkExtensionDependencies( const ExtensionEntry *entry );

@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "output_collector.h"
+#include "base_node.h"
 #include "project_xml_node.h"
 #include "file_manager.h"
 
@@ -416,21 +417,26 @@ void OutputCollector::setProjectNodesDir( const string &dir )
 
 static map<string,string> dirTargetMap;
 
-static string mkXmlNodeFn( ProjectXmlNode *node )
+static string mkXmlNodeFn( BaseNode *node )
 {
     return node->getModule() + "__" + node->getName() + ".html";
 }
 
 
-void OutputCollector::htmlProjectNodes( ProjectXmlNode *node, FileManager &fileMan, int level)
+void OutputCollector::htmlProjectNodes( BaseNode *node, FileManager &fileMan, int level)
 {
+    // FIXME this is only a stupid hack until child nodes work for Bazel nodes
+    ProjectXmlNode *xmlNode = dynamic_cast<ProjectXmlNode *>( node );
+    if( !xmlNode )
+        return;
+    
     map<string,string>::const_iterator it = dirTargetMap.find( node->getDir() );
     if( it != dirTargetMap.end() )
         return;
     
-    for( size_t i=0; i < node->childNodes.size(); i++)
+    for( size_t i=0; i < xmlNode->childNodes.size(); i++)
     {
-        ProjectXmlNode *d = node->childNodes[ i ];
+        BaseNode *d = xmlNode->childNodes[ i ];
         htmlProjectNodes( d, fileMan, level + 1);
     }
     
@@ -450,7 +456,7 @@ void OutputCollector::htmlProjectNodes( ProjectXmlNode *node, FileManager &fileM
 }
 
 
-void OutputCollector::htmlProjectNode( bool index, ProjectXmlNode *node, FileManager &fileMan, int level)
+void OutputCollector::htmlProjectNode( bool index, BaseNode *node, FileManager &fileMan, int level)
 {
     assert( node );
     
@@ -481,11 +487,21 @@ void OutputCollector::htmlProjectNode( bool index, ProjectXmlNode *node, FileMan
         os << " with target '" << node->getScriptTarget() << "'"; 
     os << "</p>";
     
+    
+    // FIXME this is only a stupid hack until child nodes work for Bazel nodes
+    ProjectXmlNode *xmlNode = dynamic_cast<ProjectXmlNode *>( node );
+    if( !xmlNode )
+    {
+        os << "</body>\n</html>\n";
+        return;
+    }
+
     os << "<p>Uses:\n";
     os << "<table>\n";
-    for( size_t i=0; i < node->childNodes.size(); i++)
+    
+    for( size_t i=0; i < xmlNode->childNodes.size(); i++)
     {
-        ProjectXmlNode *d = node->childNodes[ i ];
+        BaseNode *d = xmlNode->childNodes[ i ];
         os << "<tr><td><a href=\"" << dirTargetMap[ d->getDir() ] << "\">\n";
         os << d->getModule() + " / " + d->getName() + " / " + d->getTarget();
         os << "</a></td></tr>\n";
@@ -525,7 +541,7 @@ void OutputCollector::htmlProjectNode( bool index, ProjectXmlNode *node, FileMan
 
 static map<file_id_t,bool> idDoneMap;
 
-void OutputCollector::htmlProjectFile( bool index, file_id_t id, ProjectXmlNode *node, FileManager &fileMan)
+void OutputCollector::htmlProjectFile( bool index, file_id_t id, BaseNode *node, FileManager &fileMan)
 {
     assert( node );
     
@@ -604,7 +620,7 @@ void OutputCollector::htmlProjectFile( bool index, file_id_t id, ProjectXmlNode 
         os << fn;
         os << "</a></td></tr>\n";
 
-        htmlProjectFile( index, down, fileMan.getXmlNodeFor( down ), fileMan);
+        htmlProjectFile( index, down, fileMan.getBaseNodeFor( down ), fileMan);
     }
     
     os << "</table>\n";

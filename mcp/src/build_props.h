@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-class ProjectXmlNode;
+class BaseNode;
 
 class PrjBuildProps
 {
@@ -52,8 +52,7 @@ public:
     
     void setStaticProp( const std::string &key, const std::string &val);
     
-    PrjBuildProps getPrjBuildProps( const ProjectXmlNode *node );
-
+    PrjBuildProps getPrjBuildProps( const BaseNode *node );
     
 private:
     static BuildProps *theBuildProps;

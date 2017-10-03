@@ -11,14 +11,15 @@
 #include "glob_utility.h"
 
 
-class ProjectXmlNode;
+class BaseNode;
 
 class FileManager {
 public:
     typedef enum { UNKNOWN, UNCHANGED, NEW, GONE, DEP_CHANGED, TOUCHED} state_t;
     
-    file_id_t addFile( const std::string &fn, ProjectXmlNode *node);
-    file_id_t addNewFile( const std::string &fn, ProjectXmlNode *node);
+    file_id_t addFile( const std::string &fn, BaseNode *node);
+    file_id_t addNewFile( const std::string &fn, BaseNode *node);
+    
     bool removeFile( const std::string &fn );
     
     void addDependency( const std::string &from_fn, const std::string &to_fn);
@@ -32,8 +33,8 @@ public:
     
     bool compareAndReplaceDependencies( file_id_t id, hash_set_t *against);
     
-    file_id_t addCommand( const std::string &fn, const std::string &cmd, ProjectXmlNode *node);
-    file_id_t addExtensionCommand( const std::string &fn, const std::string &cmd, ProjectXmlNode *node);
+    file_id_t addCommand( const std::string &fn, const std::string &cmd, BaseNode *node);
+    file_id_t addExtensionCommand( const std::string &fn, const std::string &cmd, BaseNode *node);
     
     file_id_t getIdForFile( const std::string &fn );
     std::string getFileForId( file_id_t fid );
@@ -45,7 +46,7 @@ public:
     bool isTargetCommand( file_id_t );
     std::set<file_id_t> getDependencies( file_id_t id );
     std::set<file_id_t> prerequisiteFor( file_id_t id );
-    ProjectXmlNode *getXmlNodeFor( file_id_t id );
+    BaseNode *getBaseNodeFor( file_id_t id );
     
     void touchFile( const std::string &fn );
     //state_t getFileState( const std::string &fn );

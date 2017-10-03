@@ -8,7 +8,7 @@
 #include "file_map.h"
 #include "hash_set.h"
 #include "engine.h"
-#include "project_xml_node.h"
+#include "base_node.h"
 #include "glob_utility.h"
 
 using namespace std;
@@ -140,12 +140,12 @@ string FileMap::Iterator::getCmd() const
     return current_next->data->cmd;
 }
 
-const ProjectXmlNode *FileMap::Iterator::getXmlNode() const
+const BaseNode *FileMap::Iterator::getBaseNode() const
 {
     assert( current_next != 0 );
     assert( current_next->data != 0 );
     
-    return current_next->data->xmlNode;
+    return current_next->data->baseNode;
 }
 
 data_t::structural_state_t FileMap::Iterator::getStructuralState() const
@@ -248,7 +248,7 @@ FileMap::~FileMap()
 }
 
 
-void FileMap::add( int file_id, const string &file_name, ProjectXmlNode *node, const string &cmd, data_t::structural_state_t ss)
+void FileMap::add( int file_id, const string &file_name, BaseNode *node, const string &cmd, data_t::structural_state_t ss)
 {
     // node can be null
     
@@ -300,7 +300,7 @@ void FileMap::add( int file_id, const string &file_name, ProjectXmlNode *node, c
         nd->state = (ss == data_t::NEW || ss == data_t::DEP_CHANGED) ? data_t::TOUCHED : data_t::UNTOUCHED;
         nd->structural_state = ss;
         nd->cmd = cmd;
-        nd->xmlNode = node;
+        nd->baseNode = node;
         if( node )
             node->addFileId( file_id );
         nd->mark_by_deps_changed = false;
@@ -374,8 +374,8 @@ void FileMap::remove( int file_id )
         removeAllDeps( h->data );
         removeAllWeakDeps( h->data );
         
-        if( h->data->xmlNode )
-            h->data->xmlNode->removeFileId( file_id );
+        if( h->data->baseNode )
+            h->data->baseNode->removeFileId( file_id );
         
         h->data = 0;
         hashmap->buckets[ b ] = h->next;
@@ -399,8 +399,8 @@ void FileMap::remove( int file_id )
             removeAllDeps( del->data );
             removeAllWeakDeps( del->data );
 
-            if( del->data->xmlNode )
-                del->data->xmlNode->removeFileId( file_id );
+            if( del->data->baseNode )
+                del->data->baseNode->removeFileId( file_id );
         }
         else
             return;     // not found
@@ -753,6 +753,7 @@ string FileMap::getCmdForId( int file_id )
         return "?";
 }
 
+
 hash_set_t *FileMap::getDependencies( int id )
 {
     bucket_t *b = hash_map_find( this->hashmap, id);
@@ -773,11 +774,11 @@ hash_set_t *FileMap::prerequisiteFor( int id )
 }
 
 
-ProjectXmlNode *FileMap::getXmlNodeFor( int id )
+BaseNode *FileMap::getBaseNodeFor( int id )
 {
     bucket_t *b = hash_map_find( this->hashmap, id);
     if( b )
-        return b->data->xmlNode;
+        return b->data->baseNode;
     else
         return 0;
 }

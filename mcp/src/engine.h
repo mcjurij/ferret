@@ -72,7 +72,7 @@ private:
 };
 
 
-class ProjectXmlNode;
+class BaseNode;
 
 // build engine
 class Engine : public EngineBase
@@ -84,7 +84,7 @@ class Engine : public EngineBase
         char dep_type[15];
         char *file_name;
         
-        ProjectXmlNode *xmlNode;
+        BaseNode *baseNode;
         
         int *deps;
         int deps_size;

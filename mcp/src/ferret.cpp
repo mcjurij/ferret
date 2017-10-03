@@ -26,7 +26,7 @@
 using namespace std;
 
 
-static const string ferretVersion = "1.2.0";
+static const string ferretVersion = "1.2.5";
 
 
 void printXmlStructure( ProjectXmlNode *node, int level=0)
@@ -781,7 +781,7 @@ int main( int argc, char **argv)
     ProjectXmlNode *xmlRootNode = ProjectXmlNode::traverseXml( startProjDir, projXmlTs);
     if( ProjectXmlNode::hasXmlErrors() )
         emergency_exit( 7 );
-
+    
     if( xmlRootNode == 0 )
     {
         cerr << "error: no root node at '" << startProjDir << "'. check your setup.\n";
@@ -801,7 +801,7 @@ int main( int argc, char **argv)
     IncludeManager::getTheIncludeManager()->readUnsatSet( initMode );
     
     // printXmlStructure( xmlRootNode );
-    TraverseStructure traverse( filesDb, xmlRootNode);
+    TraverseStructure<ProjectXmlNode> traverse( filesDb, xmlRootNode);
     
     if( !initMode )
     {
@@ -819,7 +819,7 @@ int main( int argc, char **argv)
         BuildProps::getTheBuildProps()->setValue( "FERRET_M", compileMode);
         BuildProps::getTheBuildProps()->setStaticProp( "compile_mode", compileMode);
         
-        traverse.traverseXmlStructureForChildren();
+        traverse.traverseStructureForChildren();
         if( printTimes )
             cout << "traversing structure for children " << get_diff() << "s\n";
         
@@ -828,7 +828,7 @@ int main( int argc, char **argv)
         
         filesDb.persistMarkByDeletions( global_mbd_set );
         
-        traverse.traverseXmlStructureForDeletedFiles();
+        traverse.traverseStructureForDeletedFiles();
         
         if( traverse.getCntRemoved() )
         {
@@ -845,7 +845,7 @@ int main( int argc, char **argv)
         BuildProps::getTheBuildProps()->setStaticProp( "compile_mode", compileMode);
         filesDb.setCompileMode( compileMode );
         
-        traverse.traverseXmlStructureForChildren();
+        traverse.traverseStructureForChildren();
         if( printTimes )
             cout << "traversing structure for children " << get_diff() << "s\n";
         
@@ -853,12 +853,12 @@ int main( int argc, char **argv)
             cout << "Compile mode is '" << compileMode << "'\n";
     }
             
-    traverse.traverseXmlStructureForExtensions();
+    traverse.traverseStructureForExtensions();
     if( printTimes )
         cout << "traversing structure for extensions took " << get_diff() << "s\n";
     
-    traverse.traverseXmlStructureForNewFiles();
-    traverse.traverseXmlStructureForNewIncdirFiles();
+    traverse.traverseStructureForNewFiles();
+    traverse.traverseStructureForNewIncdirFiles();
     if( !initMode && traverse.getCntNew() )
     {
         cout << "Found " << traverse.getCntNew() << " new file(s).\n";
@@ -893,7 +893,7 @@ int main( int argc, char **argv)
         filesDb.printWhatsChanged();
     }
     
-    traverse.traverseXmlStructureForTargets();
+    traverse.traverseStructureForTargets();
 
     if( printTimes )
         cout << "traversing structure for targets took " << get_diff() << "s\n";
