@@ -6,6 +6,8 @@
 #include <cmath>
 #include <map>
 
+
+class BazelNode;
 class FctPVariable;
 
 class MiniBazelParserOperators;
@@ -43,8 +45,6 @@ public:
     
     FctPVariable *addVariable( const std::string &name );
 
-    void bindVariable( const std::string &name, double *addr) const;
-    
     std::vector<std::string> getVariables() const;
     
     void addConstant( const std::string &name, double val);
@@ -110,6 +110,7 @@ private:
     
 public:
     bool parse();
+    BazelNode *getStartNode();
     
 private:
     MiniBazelParserOperators *opera;
@@ -129,8 +130,6 @@ private:
     
 };
 
-
-class BazelNode;
 
 class MiniBazelParserOperators {
 
@@ -152,7 +151,7 @@ public:
     void setCurrentAssignTo( const std::string &name );
     void addAssign( const std::string &v );
     void finishAssign();
-    
+
 private:
     BazelNode *startNode, *currNode;
     std::string dir;

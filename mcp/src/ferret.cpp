@@ -411,6 +411,165 @@ static void doBuild( FileManager &filesDb, set<string> &userTargets, const strin
 }
 
 
+static void grokAndDoBuild( bool initMode, bool initAndBuild, bool doWriteIgnHdr, bool doProjHtml, bool writeMakef, bool doCurses, bool printTimes,
+                            BazelNode *rootNode, const string &build_properies, const string &dbProjDir,
+                            FileManager &filesDb, const string &startProjDir, set<string> &userTargets)
+{
+    // printXmlStructure( xmlRootNode );
+    TraverseStructure<BazelNode> traverse( filesDb, rootNode);
+    
+    if( !initMode )
+    {
+        if( !filesDb.readDb( startProjDir ) )
+        {
+            cerr << "error: error(s) in ferret file db, rerun using --init.\n";
+            emergency_exit( 5 );
+        }
+        if( printTimes )
+            cout << "reading files db took " << get_diff() << "s\n";
+        
+        readBuildProperties( false, filesDb.getPropertiesFile(), startProjDir);
+        
+        compileMode = filesDb.getCompileMode();
+        BuildProps::getTheBuildProps()->setValue( "FERRET_M", compileMode);
+        BuildProps::getTheBuildProps()->setStaticProp( "compile_mode", compileMode);
+        
+        traverse.traverseStructureForChildren();
+        if( printTimes )
+            cout << "traversing structure for children " << get_diff() << "s\n";
+        
+        if( verbosity > 0 )
+            cout << "Compile mode is '" << compileMode << "'\n";
+        
+        filesDb.persistMarkByDeletions( global_mbd_set );
+        
+        traverse.traverseStructureForDeletedFiles();
+        
+        if( traverse.getCntRemoved() )
+        {
+            filesDb.seeWhatsNewOrGone();       // deletes gone files/commands
+        }
+        if( printTimes )
+            cout << "checking for deleted files took " << get_diff() << "s\n";
+    }
+    else // initMode == true
+    {
+        readBuildProperties( true, build_properies, startProjDir);
+        
+        compileMode = BuildProps::getTheBuildProps()->getValue( "FERRET_M" );
+        BuildProps::getTheBuildProps()->setStaticProp( "compile_mode", compileMode);
+        filesDb.setCompileMode( compileMode );
+        
+        traverse.traverseStructureForChildren();
+        if( printTimes )
+            cout << "traversing structure for children " << get_diff() << "s\n";
+        
+        if( verbosity > 0 )
+            cout << "Compile mode is '" << compileMode << "'\n";
+    }
+            
+    traverse.traverseStructureForExtensions();
+    if( printTimes )
+        cout << "traversing structure for extensions took " << get_diff() << "s\n";
+    
+    traverse.traverseStructureForNewFiles();
+    traverse.traverseStructureForNewIncdirFiles();
+    if( !initMode && traverse.getCntNew() )
+    {
+        cout << "Found " << traverse.getCntNew() << " new file(s).\n";
+    }
+    if( printTimes )
+        cout << "checking for new files took " << get_diff() << "s\n";
+    
+    if( !initMode && verbosity > 1 )
+    {
+        cout << "CHANGED 1: \n";
+        filesDb.printWhatsChanged();
+    }
+    
+    Executor incExecutor( BuildProps::getTheBuildProps()->getIntValue( "FERRET_P" ), false);
+    IncludeManager::getTheIncludeManager()->createMissingDepFiles( filesDb, incExecutor, printTimes);  // create all missing .d files
+    if( incExecutor.isInterruptedBySignal() )
+        emergency_exit(3);
+    
+    if( printTimes )
+        cout << "updating dependency files took " << get_diff() << "s\n";
+
+    if( initMode )
+    {
+        hash_set_clear( global_mbd_set );
+        remove_mbd( dbProjDir );
+        ::remove( stackPath( dbProjDir, "ferret_scfs").c_str() );
+    }
+    
+    if( verbosity > 1 )
+    {
+        cout << "CHANGED 2: \n";
+        filesDb.printWhatsChanged();
+    }
+    
+    traverse.traverseStructureForTargets();
+
+    if( printTimes )
+        cout << "traversing structure for targets took " << get_diff() << "s\n";
+    
+    if( verbosity > 1 )
+    {
+        cout << "CHANGED 3: \n";
+        filesDb.printWhatsChanged();
+    }
+
+    IncludeManager::getTheIncludeManager()->resolve( filesDb, initMode, doWriteIgnHdr);
+    if( printTimes )
+        cout << "resolving dependencies took " << get_diff() << "s\n";
+    
+    filesDb.removeCycles();
+    
+    if( printTimes )
+        cout << "removing cycles took " << get_diff() << "s\n";
+    
+    filesDb.writeDb( startProjDir );
+    
+    if( printTimes )
+        cout << "writing files db took " << get_diff() << "s\n";
+
+    ScriptManager::getTheScriptManager()->setCompileMode( compileMode );
+    
+    if( !initMode )
+    {
+        if( verbosity > 1 )
+        {
+            cout << "CHANGED 4: \n";
+            filesDb.printWhatsChanged();
+        }
+        
+        if( doProjHtml )
+        {
+            mkdir_p( "ferret_html" );
+            OutputCollector::getTheOutputCollector()->setProjectNodesDir( "ferret_html" );
+            OutputCollector::getTheOutputCollector()->htmlProjectNodes( rootNode, filesDb);
+            
+            if( printTimes )
+                cout << "writing html files took " << get_diff() << "s\n";
+        }
+        else if( !writeMakef )
+        {
+            doBuild( filesDb, userTargets, dbProjDir, printTimes, doCurses);
+        }
+        else
+        {
+            MakefileEngine engine( filesDb, "Makefile");
+            filesDb.sendToMakefileEngine( engine );
+            
+            MakefileExec makeExec;
+            engine.doWork( makeExec, printTimes);
+        }
+    }
+    else if( initMode && initAndBuild )
+        doBuild( filesDb, userTargets, dbProjDir, printTimes, doCurses);
+    
+}
+
 //------------------------------------------------------------------------------
 int main( int argc, char **argv)
 {
@@ -428,9 +587,11 @@ int main( int argc, char **argv)
     bool doProjHtml = false;
     bool initAndBuild = false;
     bool doCurses = false;
+    bool bazelMode = false;
     
     string targetArg, propertiesFileArg, startProjArg;
     set<string> userTargets;
+    string bazelStartDir;
     int i;
 
     compileMode = "DEBUG";
@@ -444,6 +605,20 @@ int main( int argc, char **argv)
         {
             if( arg == "--init" )
                 initMode = true;
+            else if( arg == "--bazel" )
+            {
+                bazelMode = true;
+                if( (i+1)<argc )
+                {
+                    i++;
+                    bazelStartDir = argv[i];
+                }
+                else
+                {
+                    cerr << "error: option bazel requires an argument. start directory\n";
+                    arg_err++;
+                }
+            }
             else if( arg == "-q" )
                 quickMode = true;
             else if( arg == "--times" )
@@ -776,29 +951,68 @@ int main( int argc, char **argv)
   
     mkdir_p( dbProjDir );
     set_up_mbd_set( dbProjDir );
+
+    ProjectXmlNode *xmlRootNode = 0;
+    BazelNode *rootNode = 0;
     
-    // always start with reading all project xml files
-    ProjectXmlNode *xmlRootNode = ProjectXmlNode::traverseXml( startProjDir, projXmlTs);
-    if( ProjectXmlNode::hasXmlErrors() )
-        emergency_exit( 7 );
-    
-    if( xmlRootNode == 0 )
+    if( !bazelMode )
     {
-        cerr << "error: no root node at '" << startProjDir << "'. check your setup.\n";
-        emergency_exit( 5 );
+        // always start with reading all project xml files
+        xmlRootNode = ProjectXmlNode::traverseXml( startProjDir, projXmlTs);
+        if( ProjectXmlNode::hasXmlErrors() )
+            emergency_exit( 7 );
+        
+        if( xmlRootNode == 0 )
+        {
+            cerr << "error: no root node at '" << startProjDir << "'. check your setup.\n";
+            emergency_exit( 5 );
+        }
+        
+        if( initMode )
+        {
+            projXmlTs.addFile( platform_spec );    // changing platform XML may effect the entire build
+            projXmlTs.writeTimes();
+        }
+        
+        if( printTimes )
+            cout << "reading XML took " << get_diff() << "s\n";
     }
-    
-    if( initMode )
+    else
     {
-        projXmlTs.addFile( platform_spec );    // changing platform XML may effect the entire build
-        projXmlTs.writeTimes();
+        // always start with reading all BUILD files
+        rootNode = BazelNode::traverseBUILD( bazelStartDir );
+        //if( ProjectXmlNode::hasXmlErrors() )
+        //    emergency_exit( 7 );
+        
+        if( rootNode == 0 )
+        {
+            cerr << "error: no root node at '" << startProjDir << "'. check your setup.\n";
+            emergency_exit( 5 );
+        }
+        
+        //if( initMode )
+        //{
+        //    projXmlTs.addFile( platform_spec );    // changing platform XML may effect the entire build
+        //    projXmlTs.writeTimes();
+        // }
+        
+        if( printTimes )
+            cout << "reading BUILD files took " << get_diff() << "s\n";
     }
-    
-    if( printTimes )
-        cout << "reading XML took " << get_diff() << "s\n";
     
     IncludeManager::getTheIncludeManager()->setDbProjDir( dbProjDir );
     IncludeManager::getTheIncludeManager()->readUnsatSet( initMode );
+    
+    if( bazelMode )
+    {
+        grokAndDoBuild( initMode, initAndBuild, doWriteIgnHdr, doProjHtml, writeMakef, doCurses, printTimes,
+                        rootNode, build_properies, dbProjDir,
+                        filesDb, startProjDir, userTargets);
+        
+        IncludeManager::getTheIncludeManager()->printFinalWords();
+        
+        return 0;
+    }
     
     // printXmlStructure( xmlRootNode );
     TraverseStructure<ProjectXmlNode> traverse( filesDb, xmlRootNode);

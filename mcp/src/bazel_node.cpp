@@ -75,9 +75,14 @@ BazelNode *BazelNode::traverseBUILD( const string &start, int level)
     MiniBazelParser parser( buffer.str(), start);
     BazelNode *node = 0;
     
+    parser.parse();
+    
+    node = parser.getStartNode();
+    
     dirToNodeMap[ start ] = node;
     return node;
 }
+
 
 void BazelNode::traverseStructureForChildren()
 {

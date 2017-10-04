@@ -257,17 +257,6 @@ FctPVariable *MiniBazelParser::addVariable( const string &name )
 }
 
 
-void MiniBazelParser::bindVariable( const string &name, double *addr) const
-{
-    Variables_t::const_iterator it = variables.find( name );
-    
-    if( it != variables.end() )
-        it->second->bind( addr );
-    else
-        cerr << "error: no such variable '" << name << "'\n";
-}
-
-
 vector<string> MiniBazelParser::getVariables() const
 {
     Variables_t::const_iterator itv;
@@ -821,3 +810,8 @@ bool MiniBazelParser::parse()
     return !err_state;
 }
 
+
+BazelNode *MiniBazelParser::getStartNode()
+{
+    return opera->getStartNode();
+}
