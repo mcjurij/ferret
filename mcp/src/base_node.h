@@ -81,7 +81,7 @@ public:
     
     std::string getLibDir();
     
-    void traverseSrc();
+    void collectSrcs();
 
     std::vector<File> getFiles() const;
     

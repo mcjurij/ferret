@@ -217,7 +217,7 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, ProjectXmlTime
 
     if( node )
     {
-        node->traverseSrc();
+        node->collectSrcs();
         
         node->incdirs = incdirs;
         

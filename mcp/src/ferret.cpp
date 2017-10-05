@@ -897,7 +897,7 @@ int main( int argc, char **argv)
     
     ProjectXmlTimestamps projXmlTs( dbProjDir );
 
-    if( !initMode )
+    if( !initMode && !bazelMode )
     {
         if( !projXmlTs.readTimes() )
         {

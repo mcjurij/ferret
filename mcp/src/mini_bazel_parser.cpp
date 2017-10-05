@@ -119,6 +119,12 @@ BazelNode *MiniBazelParserOperators::mkNewNode()
 }
 
 
+void MiniBazelParserOperators::finishNode()
+{
+    currNode->collectSrcs();    // FIXME  ignores srcs for now
+}
+
+
 void MiniBazelParserOperators::setCurrentAssignTo( const string &name )
 {
     assignName = name;
@@ -603,6 +609,11 @@ void MiniBazelParser::eval_call( const string &name )
     while( is_here( T_COMMA ) );
     
     expect( T_RPAREN );
+    
+    if( name == "cc_library" || name == "cc_binary" )
+    {
+        opera->finishNode();
+    }
     
     //opera->function_op( it->second );
 }

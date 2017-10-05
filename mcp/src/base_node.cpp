@@ -92,7 +92,7 @@ string BaseNode::getLibDir()
 }
 
 
-void BaseNode::traverseSrc()
+void BaseNode::collectSrcs()
 {
     if( FindFiles::exists( srcdir ) )
         nodeFiles.traverse( srcdir,  false /* not deep */);
@@ -356,7 +356,7 @@ void BaseNode::createCommands( FileManager &fileMan )
             breakPath( srcfn, dummy, bn);
             breakFileName( bn, bext, ext);
             
-            if( ext == ".cpp" || ext == ".C" )
+            if( ext == ".cpp" || ext == ".C" || ext == ".cc" )
             {
                 string o = o_outputdir + bext + ".o";
                 

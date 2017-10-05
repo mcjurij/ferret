@@ -172,7 +172,7 @@ vector<File> FindFiles::getSourceFiles() const
             {
                 string ext = f.substr( pos );
                 
-                if( ext == ".cpp" || ext == ".c" ||
+                if( ext == ".cpp" || ext == ".c" || ext == ".cc" ||
                     ext == ".h" || ext == ".hpp" || ext == ".C" )
                     sources.push_back( *it );
             }

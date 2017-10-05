@@ -129,9 +129,6 @@ public:
     data_t::file_state_t getState( const std::string &fn );
     data_t::structural_state_t getStructuralState( const std::string &fn );
     
-    //void writeFiles( FILE *fp );
-    //void writeDeps( FILE *fp );
-    
 private:
     void markByDeletions( const std::set<int> &gone_set );
     void findRoots( data_t *c, int level = 0);

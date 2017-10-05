@@ -145,6 +145,7 @@ public:
     { return startNode; }
     
     BazelNode *mkNewNode();
+    void finishNode();
     BazelNode *getCurrNode()
     { return currNode; }
     
