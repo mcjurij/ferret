@@ -137,7 +137,10 @@ void MiniBazelParserOperators::finishAssign()
     if( assignValues.size() > 0 )
     {
         if( assignName == "name" )
+        {
             currNode->setName( assignValues[0] );
+            currNode->setTarget( assignValues[0] );
+        }
         else if( assignName == "srcs" )
             currNode->setSrcs( assignValues );
         else if( assignName == "hdrs" )
@@ -275,14 +278,14 @@ void MiniBazelParser::addConstant( const string &name, double val)
 }
 
     
-void MiniBazelParser::scanner_init( const char *fkt ) 
+void MiniBazelParser::scanner_init( const char *fmb ) 
 {
     current_char = 0;
     at_eof = true;
     current_pos = 0;
 
-    scanner_fct = fkt;
-    if( (current_char = scanner_fct[0] ) != 0 )
+    scanner_inp = fmb;
+    if( (current_char = scanner_inp[0] ) != 0 )
     {
         at_eof = false;
     }
@@ -296,14 +299,14 @@ void MiniBazelParser::scanner_reset()
     current_pos = 0;
     current_token.type = T_INVALID;
 
-    current_char = scanner_fct[0];
+    current_char = scanner_inp[0];
 }
 
 
 char MiniBazelParser::consume_char()
 {
     char cc = current_char;
-    if( (current_char = scanner_fct[++current_pos]) != 0 )
+    if( (current_char = scanner_inp[++current_pos]) != 0 )
     {
         return cc;
     }
@@ -450,7 +453,7 @@ MiniBazelParser::token_t MiniBazelParser::tokenize()
         {
             consume_char();
             
-            while( !at_eof && c!='"' )   // FIXME handle escaped "
+            while( !at_eof && peek_char()!='"' )   // FIXME handle escaped "
             {
                 *s = consume_char(); s++;
             }

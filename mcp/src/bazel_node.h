@@ -25,12 +25,12 @@ public:
     
     static BazelNode *traverseBUILD( const std::string &start, int level=0);
     
-    void traverseStructureForChildren();
+    std::vector<std::string> traverseStructureForChildren( int level = 0 );
     std::vector<BazelNode *> childNodes;
-
+    
     void setSibling( BazelNode *n )
     { sibling = n; }
-
+    
     void setSrcs( const std::vector<std::string> &l );
     void setHdrs( const std::vector<std::string> &l );
     void setDeps( const std::vector<std::string> &l );

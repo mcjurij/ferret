@@ -50,7 +50,7 @@ public:
     void addConstant( const std::string &name, double val);
     
 private:
-    void scanner_init( const char *fkt );
+    void scanner_init( const char *fmb );
     void scanner_reset();
     char consume_char();
     char peek_char();
@@ -117,9 +117,9 @@ private:
     
     char current_token_value[1024];
     char current_char;
-
+    
     int current_pos;
-    const char *scanner_fct;
+    std::string scanner_inp;
     token_t current_token;
     
     bool err_state;

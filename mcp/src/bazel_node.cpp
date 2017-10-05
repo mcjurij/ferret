@@ -84,9 +84,31 @@ BazelNode *BazelNode::traverseBUILD( const string &start, int level)
 }
 
 
-void BazelNode::traverseStructureForChildren()
+static map<string,vector<string> > subsMap;
+vector<string> BazelNode::traverseStructureForChildren( int level )
 {
+    map<string,vector<string> >::iterator it = subsMap.find( getDir() );
+    if( it != subsMap.end() )
+        return it->second;
+    
+    assignBuildProperties();
+    
+    for( size_t i = 0; i < childNodes.size(); i++)   // collect all deps of this node
+    {
+        BazelNode *d = childNodes[ childNodes.size() - 1 - i ];
+        vector<string> subs = d->traverseStructureForChildren( level + 1 );
+        
+        vector<string>::iterator sit = subs.begin();
+        for( ; sit != subs.end(); sit++)
+            allSubDirs.push_back( *sit );
+    }
+    
+    allSubDirs.push_back( getDir() );
 
+    // FIXME ....missing 
+    subsMap[ getDir() ] = allSubDirs;
+    
+    return allSubDirs;
 }
 
 
