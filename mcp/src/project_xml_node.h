@@ -11,9 +11,8 @@
 #include "base_node.h"
 
 // -----------------------------------------------------------------------------
-// XML traversal
+// XML node
 // -----------------------------------------------------------------------------
-
 
 class ProjectXmlNode : public BaseNode {
     
@@ -22,6 +21,20 @@ public:
                     const std::string &target, const std::string &type,
                     const std::vector<std::string> &cppflags, const std::vector<std::string> &cflags,
                     const std::vector<std::string> &usetools, const std::vector<std::string> &localLibs);
+
+    virtual ProjectXmlNode *getSibling() const    // never used, for compatibility in TraverseStructure
+    { return 0; }
+    
+    virtual void setName( const std::string &n );
+
+    void addChildNode( ProjectXmlNode *n )
+    { childNodes.push_back( n ); }
+    
+    std::vector<ProjectXmlNode *> getChildNodes() const
+    { return childNodes; }
+    
+    std::string getNodePath() const              // never used, for compatibility in TraverseStructure
+    { return "!"; }
     
     static ProjectXmlNode *traverseXml( const std::string &start, ProjectXmlTimestamps &projXmlTs, int level=0);
     static bool hasXmlErrors();
@@ -32,11 +45,11 @@ private:
     std::vector<std::string> traverseXmlStructureForChildren( int level );
     
 public:
-    static ProjectXmlNode *getNodeByName( const std::string &name );
-
-    std::vector<ProjectXmlNode *> childNodes;
+    int checkForNewFiles( FileManager &fileMan );
     
 private:
+    std::vector<ProjectXmlNode *> childNodes;
+    
     static bool xmlHasErrors;
 };
 

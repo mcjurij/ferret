@@ -613,14 +613,14 @@ void Engine::fill_target_set()
                     make_targets_by_dom_set( c );
             }
         }
-        else if( c->user_selected && c->weak_size > 0 && make_target_by_wait( c ) ) // weak_size > 0 only true for extension nodes
+        else if( c->user_selected && c->weak_size > 0 && make_target_by_wait( c ) )  // weak_size > 0 only true for extension nodes
         {
             c->is_target = true;
             hash_set_add( all_targets, c->file_id);
             
             if( verbosity > 0 )
-                cout << "target planner   adding "  << c->file_name << " (" << c->file_id << ") to target set (trough wait node)\n";
-
+                cout << "target planner   adding "  << c->file_name << " (" << c->file_id << ") to target set (through wait node)\n";
+            
             if( c->downward_deep )
                 make_targets_by_dom_set( c );
         }
@@ -915,7 +915,7 @@ ExecutorCommand Engine::nextCommand()
             exit( 11 );
         }
         
-        if( strcmp( dep_type, "W") == 0 )             // a wait command from .msg (or other extension that creates more than one file)
+        if( strcmp( dep_type, "W") == 0 )             // a wait command from an extension that creates more than one file
         {
             if( verbosity > 0 )
                 cout << "# waiting for " << c->file_name << "\n";
@@ -1255,8 +1255,6 @@ int Engine::doWork( ExecutorBase &executor, bool printTimes, const set<string> &
         
         executor.processCommands( *this );   // do it!
 
-        // sleep( 10 );
-        
         if( curses )
             OutputCollector::getTheOutputCollector()->cursesDisable();
         

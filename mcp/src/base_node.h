@@ -24,6 +24,8 @@ struct Extension
 
 
 class BaseNode {
+protected:
+    static std::map<std::string, BaseNode *> nameToNodeMap;
     
 public:
     std::vector<std::string> incdirs;        // from XML
@@ -50,6 +52,9 @@ public:
     
     virtual ~BaseNode() {}
     
+    virtual BaseNode *getSibling() const
+    { return 0; }
+    
     void assignBuildProperties();
     
     std::string getDir() const
@@ -61,7 +66,7 @@ public:
     std::string getModule() const
     { return module; }
 
-    void setName( const std::string &n );
+    virtual void setName( const std::string &n ) = 0;
     std::string getName() const
     { return name; }
     
@@ -81,7 +86,7 @@ public:
     
     std::string getLibDir();
     
-    void collectSrcs();
+    void collectFiles();
 
     std::vector<File> getFiles() const;
     
@@ -98,7 +103,6 @@ public:
     
 public:
     int  manageDeletedFiles( FileManager &fileMan );
-    int  checkForNewFiles( FileManager &fileMan );
     int  checkForNewIncdirFiles( FileManager &fileMan );
     
     void readExistingDepFiles();
@@ -110,7 +114,7 @@ public:
     bool doDeep();   // wether to follow library from this node, via downward pointers, to all downward nodes or not
     
     std::string getNodeName() const
-    { return nodeName; }
+    { return nodeName; }         // NOT the bazel node name
     
     static BaseNode *getNodeByName( const std::string &nodeName );
     

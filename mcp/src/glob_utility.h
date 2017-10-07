@@ -38,4 +38,6 @@ void breakFileName( const std::string &fn, std::string &bext, std::string &ext);
 
 bool mkdir_p( const std::string &path );
 
+void breakBazelDep( const std::string &dep, std::string &dir, std::string &name);
+
 #endif

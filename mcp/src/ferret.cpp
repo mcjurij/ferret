@@ -41,9 +41,9 @@ void printXmlStructure( ProjectXmlNode *node, int level=0)
     snprintf( buf, 10, "%02d", level);
     cout << buf << string( level*4, ' ') << node->getDir() << "\n";
 
-    for( size_t i=0; i < node->childNodes.size(); i++)
+    for( size_t i=0; i < node->getChildNodes().size(); i++)
     {
-        ProjectXmlNode *d = node->childNodes[ i ];
+        ProjectXmlNode *d = node->getChildNodes()[ i ];
         printXmlStructure( d, level + 1);
     }
 }
@@ -416,7 +416,7 @@ static void grokAndDoBuild( bool initMode, bool initAndBuild, bool doWriteIgnHdr
                             FileManager &filesDb, const string &startProjDir, set<string> &userTargets)
 {
     // printXmlStructure( xmlRootNode );
-    TraverseStructure<BazelNode> traverse( filesDb, rootNode);
+    TraverseStructure<BazelNode> traverse( filesDb, rootNode, true /* bazelMode on */);
     
     if( !initMode )
     {

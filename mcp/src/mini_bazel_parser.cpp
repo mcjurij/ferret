@@ -4,18 +4,12 @@
  *
  */
 
-
-#include <cstdio>
 #include <cassert>
-#include <cstdlib>
-#include <cstring>
-
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cmath>
 #include <map>
-#include <list>
 
 #include "mini_bazel_parser.h"
 #include "bazel_node.h"
@@ -121,7 +115,6 @@ BazelNode *MiniBazelParserOperators::mkNewNode()
 
 void MiniBazelParserOperators::finishNode()
 {
-    currNode->collectSrcs();    // FIXME  ignores srcs for now
 }
 
 
@@ -232,7 +225,7 @@ private:
 // MiniBazelParser --------------------------------------------------------------
 MiniBazelParser::MiniBazelParser( const string &fmb, const string &d)
 {
-    scanner_init( fmb.c_str() );
+    scanner_init( fmb );
     err_state = false;
     done = false;
     
@@ -284,12 +277,13 @@ void MiniBazelParser::addConstant( const string &name, double val)
 }
 
     
-void MiniBazelParser::scanner_init( const char *fmb ) 
+void MiniBazelParser::scanner_init( const string &fmb ) 
 {
     current_char = 0;
     at_eof = true;
     current_pos = 0;
-
+    current_line = 1;
+    
     scanner_inp = fmb;
     if( (current_char = scanner_inp[0] ) != 0 )
     {
@@ -303,6 +297,7 @@ void MiniBazelParser::scanner_reset()
 {
     at_eof = false;
     current_pos = 0;
+    current_line = 1;
     current_token.type = T_INVALID;
 
     current_char = scanner_inp[0];
@@ -314,6 +309,8 @@ char MiniBazelParser::consume_char()
     char cc = current_char;
     if( (current_char = scanner_inp[++current_pos]) != 0 )
     {
+        if( cc == '\n' )
+            current_line++;
         return cc;
     }
     else
@@ -440,7 +437,8 @@ MiniBazelParser::token_t MiniBazelParser::tokenize()
         if( is_white(c) )
         {
             while( !at_eof && is_white(peek_char()) )
-                consume_char(); 
+                consume_char();
+            
             tt = T_ISWHITE;
         }
         else if( is_entity_beg(c) )
@@ -498,7 +496,8 @@ MiniBazelParser::token_t MiniBazelParser::tokenize()
             consume_char();
             tt = T_RBRACK;
         }
-        else if( is_fpnum_beg(c) ) {
+        else if( is_fpnum_beg(c) )
+        {
             bool is_int;
             if( !scanDecimalLiteral( s, &is_int) )
                 errors++;
@@ -599,10 +598,10 @@ void MiniBazelParser::eval_call( const string &name )
     int count_args = 0;
     
     do {
-        consume();  // consume first '(', ',' afterwards
+        consume();     // consume first '(', ',' afterwards
         if( is_here( T_RPAREN ) )
             break;
-        
+
         eval_expr();
         count_args++;
     }
@@ -614,8 +613,6 @@ void MiniBazelParser::eval_call( const string &name )
     {
         opera->finishNode();
     }
-    
-    //opera->function_op( it->second );
 }
 
 
@@ -799,10 +796,14 @@ bool MiniBazelParser::parse()
 {
     try {
         consume();
-        eval_expr();
+        
+        do{
+            eval_expr();
+        }
+        while( !is_here( T_EOF ) );
     }
     catch( MiniBazelParserException & e ) {
-        cerr << e.reason() << endl;
+        cerr << "line " << current_line << ": " << e.reason() << endl;
         err_state = true;
     }
 
@@ -817,8 +818,6 @@ bool MiniBazelParser::parse()
             err_state = true;
         }
     }
-    
-    // opera->assembleInstructions();
     
     scanner_reset();   // reset scanner
     return !err_state;

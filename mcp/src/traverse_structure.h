@@ -16,7 +16,7 @@ private:
     TraverseStructure();
     
 public:
-    TraverseStructure( FileManager &filesDb, NodeT *xmlRootNode);
+    TraverseStructure( FileManager &filesDb, NodeT *rootNode, bool bazelMode = false);
     
     void traverseStructureForChildren();
     void traverseStructureForDeletedFiles();
@@ -26,7 +26,7 @@ public:
     void traverseStructureForTargets();
     
     void reset()
-    { dirTargetMap.clear(); }
+    { dirTargetMap.clear(); bazelTargetMap.clear(); }
     
     int getCntRemoved() const
     { return cntRemoved; }
@@ -35,13 +35,16 @@ public:
     { return cntNew; }
     
 private:
-    typedef enum { FOR_DELETED_FILES, FOR_NEW_FILES, FOR_NEW_INCDIR_FILES, FOR_EXTENSIONS, FOR_TARGETS} for_what_t;
+    typedef enum { FOR_CHILDREN, FOR_DELETED_FILES, FOR_NEW_FILES, FOR_NEW_INCDIR_FILES, FOR_EXTENSIONS, FOR_TARGETS} for_what_t;
     void traverser( for_what_t for_what, NodeT *node, int level);
-
+    void what( for_what_t for_what, NodeT *node);
+    
 private:
-    std::map<std::string,bool> dirTargetMap;
+    std::map<std::string,bool> dirTargetMap;      // bazelMode = false
+    std::map<std::string,bool> bazelTargetMap;    // bazelMode = true
     FileManager  &filesDb;
     NodeT *rootNode;
+    bool bazelMode;
     int cntRemoved;
     int cntNew;
 };

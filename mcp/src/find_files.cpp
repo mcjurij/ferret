@@ -183,6 +183,31 @@ vector<File> FindFiles::getSourceFiles() const
 }
 
 
+vector<File> FindFiles::getSourceFiles( const vector<string> &srcs ) const
+{
+    vector<File> sources;
+    vector<File>::const_iterator it = files.begin();
+    
+    for( ; it != files.end(); it++)
+    {
+        map<string,File>::const_iterator all_it = allFiles.find( it->getPath() );
+        
+        if( all_it != allFiles.end() && !all_it->second.isRemoved() )
+        {
+            const string &f = it->getBasename();
+
+            for( size_t i = 0; i < srcs.size(); i++)
+            {
+                if( srcs[i] == f )
+                    sources.push_back( *it );
+            }
+        }
+    }
+    
+    return sources;
+}
+
+
 vector<File> FindFiles::getHeaderFiles() const
 {
     vector<File> sources;

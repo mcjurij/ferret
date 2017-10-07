@@ -13,7 +13,7 @@ using namespace std;
 
 static bool isCppFile( const string &ext )
 {
-    return ext == ".cpp" || ext == ".c" ||
+    return ext == ".cpp" || ext == ".c" || ext == ".cc" ||
         ext == ".h" || ext == ".hpp" ||
         ext == ".C" || ext == ".cxx"; // ||
 //        ext == ".nsmap";

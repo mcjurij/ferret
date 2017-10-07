@@ -14,7 +14,8 @@
 using namespace std;
 
 
-static map<string, BaseNode *> nameToNodeMap;
+map<string, BaseNode *> BaseNode::nameToNodeMap;
+
 
 BaseNode::BaseNode( const string &d, const string &module)
     : dir(d), module(module),
@@ -22,6 +23,7 @@ BaseNode::BaseNode( const string &d, const string &module)
       target_file_id(-1)
 {
     srcdir = dir;
+    collectFiles();
 }
 
 
@@ -33,23 +35,14 @@ BaseNode::BaseNode( const string &d, const string &module, const string &name,
       module(module), name(name), madeObjDir(false), madeBinDir(false), madeLibDir(false), usetools(usetools),
       target_file_id(-1)
 {
-    setName( name );
-    
     srcdir = stackPath( dir, "src");
+    collectFiles();
 }
 
 
 void BaseNode::assignBuildProperties()
 {
     prjBuildProps = BuildProps::getTheBuildProps()->getPrjBuildProps( this );
-}
-
-
-void BaseNode::setName( const string &n )
-{
-    name = n;
-    nodeName = module + "*" + name;
-    nameToNodeMap[ nodeName ] = this;
 }
 
 
@@ -92,7 +85,7 @@ string BaseNode::getLibDir()
 }
 
 
-void BaseNode::collectSrcs()
+void BaseNode::collectFiles()
 {
     if( FindFiles::exists( srcdir ) )
         nodeFiles.traverse( srcdir,  false /* not deep */);
@@ -139,29 +132,6 @@ int BaseNode::manageDeletedFiles( FileManager &fileMan )
         }
     }
     
-    return cnt;
-}
-
-
-int BaseNode::checkForNewFiles( FileManager &fileMan )
-{
-    size_t i;
-    int cnt = 0;
-    vector<File> sources = nodeFiles.getSourceFiles();
-    
-    for( i=0; i < sources.size(); i++)
-    {
-        const File &f = sources[i];
-        
-        if( !fileMan.hasFileName( f.getPath() ) )   // already in files db?
-        {
-            sourceIds.push_back( fileMan.addNewFile( f.getPath(), this) );
-            cnt++;
-        }
-        else
-            sourceIds.push_back( fileMan.getIdForFile( f.getPath() ) );
-    }
-
     return cnt;
 }
 

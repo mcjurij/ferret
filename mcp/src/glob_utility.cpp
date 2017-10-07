@@ -276,3 +276,22 @@ bool mkdir_p( const string &path )
     
     return true;
 }
+
+
+void breakBazelDep( const string &dep, string &dir, string &name)
+{
+    vector<string> parts = split( ':', dep);  // hopefully not more than one :
+
+    if( parts.size() >= 2 )
+    {
+        dir = parts[0];
+        name = parts[1];
+    }
+    else if( parts.size() == 1 )
+    {
+         dir = parts[0];
+         name = "";
+    }
+    else
+        dir = name = "";
+}

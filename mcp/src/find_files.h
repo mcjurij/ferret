@@ -92,6 +92,7 @@ public:
     }
     
     std::vector<File> getSourceFiles() const;
+    std::vector<File> getSourceFiles( const std::vector<std::string> &srcs ) const;
     std::vector<File> getHeaderFiles() const;
     
     static bool exists( const std::string &path );

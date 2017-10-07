@@ -5,8 +5,8 @@
 using namespace std;
 
 template<class NodeT>
-TraverseStructure<NodeT>::TraverseStructure( FileManager &filesDb, NodeT *xmlRootNode)
-    : filesDb(filesDb), rootNode(xmlRootNode), cntRemoved(0), cntNew(0)
+TraverseStructure<NodeT>::TraverseStructure( FileManager &filesDb, NodeT *rootNode, bool bazelMode)
+    : filesDb(filesDb), rootNode(rootNode), bazelMode(bazelMode), cntRemoved(0), cntNew(0)
 {
 }
 
@@ -14,7 +14,13 @@ TraverseStructure<NodeT>::TraverseStructure( FileManager &filesDb, NodeT *xmlRoo
 template<class NodeT>
 void TraverseStructure<NodeT>::traverseStructureForChildren()
 {
-    rootNode->traverseStructureForChildren();
+    if( !bazelMode )
+        rootNode->traverseStructureForChildren();
+    else
+    {
+        reset();
+        traverser( FOR_CHILDREN, rootNode, 0);
+    }
 }
 
 
@@ -60,19 +66,57 @@ void TraverseStructure<NodeT>::traverseStructureForTargets()
 
 template<class NodeT>
 void TraverseStructure<NodeT>::traverser( for_what_t for_what, NodeT *node, int level)
-{
-    map<string,bool>::const_iterator it = dirTargetMap.find( node->getDir() );
-    if( it != dirTargetMap.end() )
-        return;
-    
-    for( size_t i = 0; i < node->childNodes.size(); i++)
+{   
+    if( !bazelMode )
     {
-        NodeT *d = node->childNodes[ i ];
-        traverser( for_what, d, level + 1);
-    }
+        map<string,bool>::const_iterator it = dirTargetMap.find( node->getDir() );
+        if( it != dirTargetMap.end() )
+            return;
 
+        vector<NodeT *> childNodes = node->getChildNodes();
+        for( size_t i = 0; i < childNodes.size(); i++)
+        {
+            NodeT *d = childNodes[ i ];
+            traverser( for_what, d, level + 1);
+        }
+
+        what( for_what, node);
+        
+        dirTargetMap[ node->getDir() ] = true;
+    }
+    else
+    {
+        map<string,bool>::const_iterator it = bazelTargetMap.find( node->getNodePath() );
+        if( it != bazelTargetMap.end() )
+            return;
+        
+        NodeT *sibling = node;
+        do {
+            vector<NodeT *> childNodes = sibling->getChildNodes();
+            for( size_t i = 0; i < childNodes.size(); i++)
+            {
+                NodeT *child = childNodes[ i ];
+                traverser( for_what, child, level + 1);
+            }
+
+            what( for_what, sibling);
+            bazelTargetMap[ sibling->getNodePath() ] = true;
+            
+            sibling = sibling->getSibling();
+        }
+        while( sibling );
+    }
+}
+
+
+template<class NodeT>
+void TraverseStructure<NodeT>::what( for_what_t for_what, NodeT *node)
+{
     switch( for_what )
     {
+        case FOR_CHILDREN:         
+            node->traverseStructureForChildren();             // called here only in bazel mode
+            break;
         case FOR_DELETED_FILES:
             cntRemoved += node->manageDeletedFiles( filesDb );
             break;
@@ -94,6 +138,4 @@ void TraverseStructure<NodeT>::traverser( for_what_t for_what, NodeT *node, int 
             node->createCommands( filesDb );
             break;
     }
-
-    dirTargetMap[ node->getDir() ] = true;
 }

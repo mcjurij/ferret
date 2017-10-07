@@ -433,10 +433,11 @@ void OutputCollector::htmlProjectNodes( BaseNode *node, FileManager &fileMan, in
     map<string,string>::const_iterator it = dirTargetMap.find( node->getDir() );
     if( it != dirTargetMap.end() )
         return;
-    
-    for( size_t i=0; i < xmlNode->childNodes.size(); i++)
+
+    vector<ProjectXmlNode *> childNodes = xmlNode->getChildNodes();
+    for( size_t i=0; i < childNodes.size(); i++)
     {
-        BaseNode *d = xmlNode->childNodes[ i ];
+        BaseNode *d = childNodes[ i ];
         htmlProjectNodes( d, fileMan, level + 1);
     }
     
@@ -499,9 +500,10 @@ void OutputCollector::htmlProjectNode( bool index, BaseNode *node, FileManager &
     os << "<p>Uses:\n";
     os << "<table>\n";
     
-    for( size_t i=0; i < xmlNode->childNodes.size(); i++)
+    vector<ProjectXmlNode *> childNodes = xmlNode->getChildNodes();
+    for( size_t i=0; i < childNodes.size(); i++)
     {
-        BaseNode *d = xmlNode->childNodes[ i ];
+        BaseNode *d = childNodes[ i ];
         os << "<tr><td><a href=\"" << dirTargetMap[ d->getDir() ] << "\">\n";
         os << d->getModule() + " / " + d->getName() + " / " + d->getTarget();
         os << "</a></td></tr>\n";

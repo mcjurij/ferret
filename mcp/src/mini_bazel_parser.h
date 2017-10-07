@@ -50,7 +50,7 @@ public:
     void addConstant( const std::string &name, double val);
     
 private:
-    void scanner_init( const char *fmb );
+    void scanner_init( const std::string &fmb );
     void scanner_reset();
     char consume_char();
     char peek_char();
@@ -74,8 +74,8 @@ private:
             
         } while( current_token.type == T_ISWHITE );
 
-//      cout << "just consumed: " << token_type_to_str( current_token.type ) << ": "
-//           << ((current_token.value  && *(current_token.value))?current_token.value:"") << "\n";
+        //std::cout << "just consumed: " << token_type_to_str( current_token.type ) << ": "
+        //          << ((current_token.value  && *(current_token.value))?current_token.value:"") << "\n";
     }
     
     bool is_here( token_type_t tt )
@@ -118,7 +118,7 @@ private:
     char current_token_value[1024];
     char current_char;
     
-    int current_pos;
+    int current_pos, current_line;
     std::string scanner_inp;
     token_t current_token;
     

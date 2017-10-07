@@ -23,6 +23,15 @@ ProjectXmlNode::ProjectXmlNode( const string &d, const string &module, const str
                                 const vector<string> &usetools, const vector<string> &localLibs)
     : BaseNode( d, module, name, target, type, cppflags, cflags, usetools, localLibs)
 {
+    setName( name );
+}
+
+
+void ProjectXmlNode::setName( const string &n )
+{
+    name = n;
+    nodeName = module + "*" + name;
+    nameToNodeMap[ nodeName ] = this;
 }
 
 
@@ -217,7 +226,7 @@ ProjectXmlNode *ProjectXmlNode::traverseXml( const string &start, ProjectXmlTime
 
     if( node )
     {
-        node->collectSrcs();
+        //node->collectFiles();
         
         node->incdirs = incdirs;
         
@@ -342,3 +351,25 @@ vector<string> ProjectXmlNode::traverseXmlStructureForChildren( int level )
     return allSubDirs;
 }
 
+
+int ProjectXmlNode::checkForNewFiles( FileManager &fileMan )
+{
+    size_t i;
+    int cnt = 0;
+    vector<File> sources = nodeFiles.getSourceFiles();
+    
+    for( i=0; i < sources.size(); i++)
+    {
+        const File &f = sources[i];
+        
+        if( !fileMan.hasFileName( f.getPath() ) )   // already in files db?
+        {
+            sourceIds.push_back( fileMan.addNewFile( f.getPath(), this) );
+            cnt++;
+        }
+        else
+            sourceIds.push_back( fileMan.getIdForFile( f.getPath() ) );
+    }
+
+    return cnt;
+}
