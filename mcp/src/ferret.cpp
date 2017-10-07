@@ -73,6 +73,7 @@ static void show_usage()
         "   --make                  write Makefile\n"
         "   --html                  write HTML directory containing depedency structure\n"
         "   --info                  show info level messages\n"
+        "   build  <target>         enter experimental bazel mode\n"
 #ifdef  USE_CURSES
         "   --cur or --curses       enter curses mode, press 'm' for pop up\n"
 #endif
@@ -573,7 +574,7 @@ static void grokAndDoBuild( bool initMode, bool initAndBuild, bool doWriteIgnHdr
 //------------------------------------------------------------------------------
 int main( int argc, char **argv)
 {
-    vector<string> args;     // non-option arguments
+    vector<string> args;     // non-option bazel arguments
     int arg_err = 0;
     bool initMode = false;
     bool quickMode = false;
@@ -588,7 +589,8 @@ int main( int argc, char **argv)
     bool initAndBuild = false;
     bool doCurses = false;
     bool bazelMode = false;
-    
+
+    string initBaseDir = ".";
     string targetArg, propertiesFileArg, startProjArg;
     set<string> userTargets;
     string bazelStartDir;
@@ -604,22 +606,20 @@ int main( int argc, char **argv)
         if( arg.at(0) == '-' )
         {
             if( arg == "--init" )
-                initMode = true;
-            else if( arg == "--bazel" )
             {
-                bazelMode = true;
+                initMode = true;
                 if( (i+1)<argc )
                 {
                     i++;
-                    bazelStartDir = argv[i];
+                    initBaseDir = argv[i];
                 }
                 else
                 {
-                    cerr << "error: option bazel requires an argument. start directory\n";
+                    cerr << "error: option --init requires an argument. base directory\n";
                     arg_err++;
                 }
             }
-            else if( arg == "-q" )
+            else  if( arg == "-q" )
                 quickMode = true;
             else if( arg == "--times" )
                 printTimes = true;
@@ -755,7 +755,7 @@ int main( int argc, char **argv)
     if( compileModeSet )
         initMode = true;
     
-    if( initMode && args.size() == 0 )
+    if( initMode && initBaseDir == "" )
         show_usage();
 
     if( !initMode && propertiesFileArg != "" )
@@ -766,8 +766,23 @@ int main( int argc, char **argv)
     
     if( initMode && (doClean || doEClean || doObjOnlyClean) )
         show_usage();
-    
-    if( targetArg != "" )
+
+    if( args.size() > 0 && args[0] == "build" )
+    {
+        if( args.size() > 1 )
+        {
+            bazelMode = true;
+            bazelStartDir = args[1];
+            if( verbosity > 0 )
+                cout << "entering bazel mode\n";
+        }
+        else
+        {
+            cerr << "error: build command needs a target directory.\n";
+            show_usage();
+        }
+    }
+    else if( targetArg != "" )
     {
         vector<string> targets = split( ',', targetArg );
         for( vector<string>::iterator it = targets.begin(); it != targets.end(); it++)
@@ -783,9 +798,9 @@ int main( int argc, char **argv)
     
     ferretDbDir = "ferret_db";
     
-    if( args.size() > 0 )
+    if( initBaseDir != "" )
     {
-        string chdirpath = args[0];
+        string chdirpath = initBaseDir;
         
         if( chdirpath.length() == 0 )
         {
