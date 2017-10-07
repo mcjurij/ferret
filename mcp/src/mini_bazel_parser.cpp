@@ -146,7 +146,9 @@ void MiniBazelParserOperators::finishAssign()
             currNode->setHdrs( assignValues );
         else if( assignName == "deps" )
             currNode->setDeps( assignValues );
-
+        else if( assignName == "visibility" )
+            currNode->setVisibility( assignValues );
+        
         assignValues.clear();
     }
     assignName = "";

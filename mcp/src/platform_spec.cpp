@@ -12,13 +12,13 @@
 using namespace std;
 
 
-void ToolSpec::addCppFlag( const std::string &flag )
+void ToolSpec::addCppFlag( const string &flag )
 {
     cppflags.push_back( flag );
 }
 
 
-void ToolSpec::addCFlag( const std::string &flag )
+void ToolSpec::addCFlag( const string &flag )
 {
     cflags.push_back( flag );
 }
@@ -149,25 +149,25 @@ bool ToolSpec::parseToolSpec( SimpleXMLStream *xmls )
 }
 
 // -----------------------------------------------------------------------------
-void CompileMode::addCppFlag( const std::string &flag )
+void CompileMode::addCppFlag( const string &flag )
 {
     cppflags.push_back( flag );
 }
 
 
-void CompileMode::addCFlag( const std::string &flag )
+void CompileMode::addCFlag( const string &flag )
 {
     cflags.push_back( flag );
 }
 
 
-void CompileMode::addLFlag( const std::string &flag )
+void CompileMode::addLFlag( const string &flag )
 {
     lflags.push_back( flag );
 }
 
 
-void CompileMode::addLEFlag( const std::string &flag )
+void CompileMode::addLEFlag( const string &flag )
 {
     eflags.push_back( flag );
 }
@@ -515,7 +515,7 @@ void PlatformSpec::addTool( ToolSpec t )
 }
 
 
-bool PlatformSpec::hasCompileMode( const std::string &mode )
+bool PlatformSpec::hasCompileMode( const string &mode )
 {
     size_t i;
     
