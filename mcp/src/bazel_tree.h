@@ -2,17 +2,32 @@
 #define FERRET_BAZEL_TREE_H_
 
 #include <string>
+#include <map>
 
+
+class BazelNode;
 
 class BazelTree {
-
-public:
     BazelTree();
+    
+public:
+    static BazelTree *getTheBazelTree();
 
-    std::string findWorkspaceBase();
+    BazelNode *traverse( const std::string &start );
+
+    std::string getBaseDir() const
+    { return baseDir; }
     
 private:
-    std::string cwd, bzlCwd;
+    std::string findWorkspaceBase();
+       
+    BazelNode *traverseBUILD( const std::string &start, int level);
+    
+private:
+    static BazelTree *theBazelTree;
+    
+    std::string cwd, bzlCwd, baseDir;
+    std::map<std::string,BazelNode *> bazelPathToNodeMap;
 };
 
 

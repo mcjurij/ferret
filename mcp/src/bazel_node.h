@@ -30,8 +30,6 @@ public:
     std::string getPackage() const
     { return getDir(); };
     
-    static BazelNode *traverseBUILD( const std::string &start, int level=0);
-
     void addChildNode( BazelNode *n )
     { childNodes.push_back( n ); }
     

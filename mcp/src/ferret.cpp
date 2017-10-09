@@ -74,6 +74,7 @@ static void show_usage()
         "   --make                  write Makefile\n"
         "   --html                  write HTML directory containing depedency structure\n"
         "   --info                  show info level messages\n"
+        "   init   <target>         enter experimental bazel mode\n"
         "   build  <target>         enter experimental bazel mode\n"
 #ifdef  USE_CURSES
         "   --cur or --curses       enter curses mode, press 'm' for pop up\n"
@@ -768,11 +769,16 @@ int main( int argc, char **argv)
     if( initMode && (doClean || doEClean || doObjOnlyClean) )
         show_usage();
 
-    if( args.size() > 0 && args[0] == "build" )
+    if( args.size() > 0 && (args[0] == "build" || args[0] == "init") )
     {
         bazelMode = true;
         if( verbosity > 0 )
             cout << "entering bazel mode\n";
+
+        if( args[0] == "init" )
+            initMode = true;
+        
+        initBaseDir = BazelTree::getTheBazelTree()->getBaseDir();
         
         if( args.size() > 1 )
         {
@@ -997,7 +1003,7 @@ int main( int argc, char **argv)
     else
     {
         // always start with reading all BUILD files
-        rootNode = BazelNode::traverseBUILD( bazelStartDir );
+        rootNode = BazelTree::getTheBazelTree()->traverse( bazelStartDir );
         //if( ProjectXmlNode::hasXmlErrors() )
         //    emergency_exit( 7 );
         

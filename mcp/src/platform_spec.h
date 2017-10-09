@@ -150,13 +150,12 @@ class Executor;
 
 class PlatformSpec
 {
+    PlatformSpec()
+    {}
     
 public:
     static PlatformSpec *getThePlatformSpec();
     
-    PlatformSpec()
-    {}
-
     bool read( const std::string &fn );
 
     void addCompileMode( CompileMode cm );
