@@ -22,6 +22,7 @@
 #include "output_collector.h"
 #include "script_template.h"
 #include "project_xml_timestamps.h"
+#include "bazel_tree.h"
 
 using namespace std;
 
@@ -615,7 +616,7 @@ int main( int argc, char **argv)
                 }
                 else
                 {
-                    cerr << "error: option --init requires an argument. base directory\n";
+                    cerr << "error: option init requires an argument. base directory\n";
                     arg_err++;
                 }
             }
@@ -769,12 +770,13 @@ int main( int argc, char **argv)
 
     if( args.size() > 0 && args[0] == "build" )
     {
+        bazelMode = true;
+        if( verbosity > 0 )
+            cout << "entering bazel mode\n";
+        
         if( args.size() > 1 )
         {
-            bazelMode = true;
             bazelStartDir = args[1];
-            if( verbosity > 0 )
-                cout << "entering bazel mode\n";
         }
         else
         {
@@ -784,7 +786,7 @@ int main( int argc, char **argv)
     }
     else if( targetArg != "" )
     {
-        vector<string> targets = split( ',', targetArg );
+        vector<string> targets = split( ',', targetArg);
         for( vector<string>::iterator it = targets.begin(); it != targets.end(); it++)
             userTargets.insert( *it );
     }
