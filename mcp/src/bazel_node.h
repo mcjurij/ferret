@@ -28,7 +28,7 @@ public:
     virtual void setName( const std::string &n );
 
     std::string getPackage() const
-    { return getDir(); };
+    { return "//"+ getDir(); };
     
     void addChildNode( BazelNode *n )
     { childNodes.push_back( n ); }

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <cassert>
 
 #include "find_files.h"
 #include "glob_utility.h"
@@ -32,10 +33,30 @@ BazelTree *BazelTree::getTheBazelTree()
 
 BazelNode *BazelTree::traverse( const string &start )
 {
-    return traverseBUILD( start, 0);
+    return traverseBUILD( convertBazelToFs( start ), 0);
 }
 
+
+string BazelTree::convertBazelToFs( const string &p )
+{
+    assert( cwd.length() > 0 );
     
+    if( p.length() == 0 )
+        return bzlCwd;
+    else if( p.length() >= 2  && p[0] == '/' && p[1] == '/' )
+        return p.substr(2);
+    else if( p[0] != '/' )
+    {
+        if( bzlCwd.length() == 0 )
+            return p;
+        else
+            return bzlCwd + '/' + p;
+    }
+    else
+        return p;
+}
+
+
 static string appendParts( const vector<string> &v )
 {
     string s;
@@ -137,12 +158,14 @@ BazelNode *BazelTree::traverseBUILD( const string &start, int level)
     }
     
     MiniBazelParser parser( buffer.str(), start);
-    BazelNode *node, *startNode;
+    bool ok = parser.parse();
     
-    parser.parse();
-
+    if( !ok )
+        return 0;
+    
+    BazelNode *node, *startNode;
     startNode = parser.getStartNode();
-
+    
     for( node = startNode; node; node = node->getSibling())
     {
         bazelPathToNodeMap[ node->getNodePath() ] = node;
@@ -162,13 +185,7 @@ BazelNode *BazelTree::traverseBUILD( const string &start, int level)
                 continue;
             
             if( dep[0] == ':' )
-                dep = start + dep; 
-
-            if( dep.length() > 2  && dep[0] == '/' && dep[1] == '/' )
-            {
-                dep = dep.substr(2);                             // FIXME for now we remove //
-                cout  << "bazel   using " << dep << " without // in front\n";
-            }
+                dep = "//" + start + dep; 
             
             map<string,BazelNode *>::const_iterator nit = bazelPathToNodeMap.find( dep );
             if( nit != bazelPathToNodeMap.end() )
@@ -181,17 +198,21 @@ BazelNode *BazelTree::traverseBUILD( const string &start, int level)
                 string dir, name;
                 breakBazelDep( dep, dir, name);
 
-                traverseBUILD( dir, level+1);
-                nit = bazelPathToNodeMap.find( dep );
+                dir = convertBazelToFs( dir );
                 
-                if( nit != bazelPathToNodeMap.end() )
+                if( traverseBUILD( dir, level+1) )
                 {
-                    cout << "bazel   found dep from " << node->getNodePath() << " to " << nit->second->getNodePath() << " (in dir " << dir << ")\n";
-
-                    if( nit->second->checkVisibility( node ) )
-                        node->addChildNode( nit->second );
-                    else
-                        cout << "bazel   found dep from " << node->getNodePath() << " to " << nit->second->getNodePath() << " node is not visible!\n";
+                    nit = bazelPathToNodeMap.find( dep );
+                    
+                    if( nit != bazelPathToNodeMap.end() )
+                    {
+                        cout << "bazel   found dep from " << node->getNodePath() << " to " << nit->second->getNodePath() << " (in dir " << dir << ")\n";
+                        
+                        if( nit->second->checkVisibility( node ) )
+                            node->addChildNode( nit->second );
+                        else
+                            cout << "bazel   found dep from " << node->getNodePath() << " to " << nit->second->getNodePath() << " node is not visible!\n";
+                    }
                 }
             }
         }
@@ -201,3 +222,5 @@ BazelNode *BazelTree::traverseBUILD( const string &start, int level)
     
     return startNode;
 }
+
+

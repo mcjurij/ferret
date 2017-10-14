@@ -18,6 +18,8 @@ public:
     std::string getBaseDir() const
     { return baseDir; }
     
+    std::string convertBazelToFs( const std::string &p );
+    
 private:
     std::string findWorkspaceBase();
        

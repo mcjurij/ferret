@@ -26,6 +26,7 @@ void BazelNode::setName( const string &n )
     nameToNodeMap[ nodeName ] = this;
 
     bazelPath = getPackage() + ':' + name;
+    cout << "BazelNode::setName   bazelPath = " << bazelPath << "\n";
 }
 
 
@@ -49,6 +50,7 @@ vector<string> BazelNode::traverseStructureForChildren( int level )
     {
         BazelNode *sub = closureNodes[i];
         string subsrcdir = sub->getDir();
+        cout << "BazelNode::traverseStructureForChildren   sub->getDir() = " << sub->getDir() << "\n";
         searchIncDirs.push_back( subsrcdir );
 
         if( sub->getType() == "library" /* || sub->getType() == "staticlib"  || sub->getType() == "static" */ )
@@ -150,8 +152,8 @@ bool BazelNode::checkVisibility( BazelNode *fromNode )
         {
             string v = visibility[i];
 
-            if( v.length() > 2  && v[0] == '/' && v[1] == '/' )
-                v = v.substr(2);                             // FIXME for now we remove //
+            //if( v.length() > 2  && v[0] == '/' && v[1] == '/' )
+            //    v = v.substr(2);                             // FIXME for now we remove //
             
             string pkg, nodeName;
             breakBazelDep( v, pkg, nodeName);
